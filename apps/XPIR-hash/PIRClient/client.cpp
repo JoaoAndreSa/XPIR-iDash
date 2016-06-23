@@ -15,7 +15,7 @@ std::map<char,std::string> parseEntry(int argc,char* argv[]){
 		}
 		entry.insert(std::make_pair(element.at(1),elemenmatch));
 	}
-	return entry; 
+	return entry;
 }
 
 void writeToFile(string filename, string output){

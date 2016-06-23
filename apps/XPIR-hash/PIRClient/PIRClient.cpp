@@ -69,22 +69,6 @@ void PIRClient::senduInt64(uint64_t integer){
     sendXBytes(sizeof(uint64_t),(void*)(&v));
 }
 
-void PIRClient::sendVector_s(std::vector<char*> vector_c){
-    uint64_t pos=0;
-    senduInt64(m_xpir->getD());
-
-    for(uint64_t j=1 ; j<=m_xpir->getD(); j++){
-        uint32_t length=m_xpir->getQsize(j);
-        senduInt32(length);
-
-        senduInt(m_xpir->getN()[j-1]);
-        for (uint64_t i=0; i<m_xpir->getN()[j-1]; i++){
-            sendXBytes(length,(void*)vector_c[pos]);
-            pos++;
-        }
-    }
-}
-
 // This assumes buffer is at least x bytes long,
 // and that the socket is blocking.
 void PIRClient::readXBytes(uint64_t x, void* buffer){
@@ -107,45 +91,6 @@ uint32_t PIRClient::readuInt32(){
     readXBytes(sizeof(uint32_t), (void*)(&v));
 
     return static_cast<uint32_t>(ntohl(v));
-}
-
-std::vector<char*> PIRClient::readVector_s(){
-    std::vector<char*> vector_s;
-
-    uint64_t size=readuInt64();
-    uint32_t message_length=readuInt32();
-
-    double start = omp_get_wtime();
-    for(uint64_t i=0; i<size;i++){
-        char* buffer = new char[message_length];
-        readXBytes(message_length,(void*)buffer);
-        vector_s.push_back(buffer);
-    }
-    double end = omp_get_wtime();
-    cout << "SimplePIR: Send reply took " << end-start << " seconds" << endl;
-    return vector_s;
-}
-
-XPIRcSequential::REPLY PIRClient::readReply(){
-	XPIRcSequential::REPLY reply;
-	reply.nbRepliesGenerated=readuInt64();
-	reply.aggregated_maxFileSize=readuInt64();
-	reply.reply=readVector_s();
-	return reply;
-}
-
-std::vector<char*> PIRClient::queryGeneration(uint64_t chosen_element){
-    std::vector<char*> query;
-    query=m_xpir->queryGeneration(chosen_element);
-
-    return query;
-}
-
-char* PIRClient::replyExtraction(XPIRcSequential::REPLY reply){
-	char* response;
-    response=m_xpir->replyExtraction(reply);
-
-    return response;
 }
 
 //return num_entries if SNPs are equal 
@@ -277,39 +222,13 @@ uint64_t PIRClient::sendData(std::vector<std::string> data){
     return num_entries;
 }
 
-uint64_t PIRClient::considerPacking(uint64_t pos){
-    if(m_xpir->getAlpha()>1){
-        return floor(static_cast<double>(pos)/m_xpir->getAlpha());
+uint64_t PIRClient::considerPacking(uint64_t pos, uint64_t alpha){
+    if(alpha>1){
+        return floor(static_cast<double>(pos)/alpha);
     }else{
         return pos;
     }
 }
-
-std::string PIRClient::extractCiphertext(char* response, uint64_t aggregated_entrySize, uint64_t pos){
-    if(response[aggregated_entrySize*(pos%m_xpir->getAlpha())]=='0'){
-        cout << "Reply: " << endl << endl;
-        return "";
-    }
-
-    unsigned char decryptedtext[1024];
-    int decryptedtextlen = symmetricDecrypt(decryptedtext,response+aggregated_entrySize*(pos%m_xpir->getAlpha()));
-
-    std::string response_s(reinterpret_cast<char*>(decryptedtext));
-    cout << "Reply: " << response_s << endl << endl;
-
-    return response_s;
-}
-
-std::string PIRClient::extractPlaintext(char* response, uint64_t aggregated_entrySize, uint64_t pos){
-    if(response+aggregated_entrySize*(pos%m_xpir->getAlpha())=='\0'){
-        return "";
-    }else{
-        std::string response_s(response+aggregated_entrySize*(pos%m_xpir->getAlpha()));
-        cout << "Reply: " << response_s << endl << endl;
-        return response_s;
-    }
-}
-
 
 //***PUBLIC METHODS***//
 uint64_t PIRClient::uploadData(std::string filename){
@@ -338,54 +257,8 @@ uint64_t PIRClient::uploadData(std::string filename){
 	return sendData(data);
 }
 
-void PIRClient::initXPIR(uint64_t num_entries){
-    m_xpir= new XPIRcSequential(readParamsPIR(num_entries),1,nullptr);
-}
-
 void PIRClient::initSHA256(){
     m_SHA_256= new SHA_256(readParamsSHA());
-}
-
-std::string PIRClient::searchQuery(uint64_t num_entries,std::map<char,std::string> entry){
-    string query_str=entry['c']+" "+entry['p']+" # "+entry['r']+" "+entry['a'];
-    uint64_t pos=m_SHA_256->hash(query_str);
-    uint64_t pack_pos=considerPacking(m_SHA_256->hash(query_str));
-
-    std::vector<char*> query=queryGeneration(pack_pos);
-    sendVector_s(query);
-    std::cout << "SimplePIR: Query sent" << "\n";
-
-    XPIRcSequential::REPLY reply = readReply();
-    char* response;
-    response=replyExtraction(reply);
-    std::string response_s;
-
-    //if ciphertext
-    response_s=extractCiphertext(response,reply.aggregated_maxFileSize,pos);
-    //------ ### ------
-
-    //if plaintext
-    //response_s=extractPlaintext(response,reply.aggregated_maxFileSize,pos);
-    //------ ### ------
-
-    if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
-
-    m_xpir->cleanQueryBuffer();
-    cleanupVector(query);
-    delete[] response;
-
-    return response_s;
-}
-
-void PIRClient::cleanupVector(vector<char*> v){
-    for(uint64_t i=0;i<v.size();i++){
-        delete[] v[i];
-    }
-}
-
-void PIRClient::cleanup(){
-    delete m_SHA_256;
-	delete m_xpir;
 }
 
 void PIRClient::setRTTStart(){

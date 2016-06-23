@@ -19,7 +19,6 @@ protected:
 	struct sockaddr_in m_svrAdd;
 	AES_cbc_256 m_cbc;
 	SHA_256* m_SHA_256;
-	XPIRcSequential* m_xpir;
 
 	//Time variables
 	double m_RTT_start;
@@ -42,50 +41,47 @@ public:
 	static void errorWriteSocket(int cond){if(cond==1){std::cerr << "ERROR writing to socket" << "\n";}}
 	static void errorReadSocket(int cond){if(cond==1){std::cerr << "ERROR reading socket"<< "\n";}}
 
-protected:
-	void createSocket();
-	void connectToServer();
-	void getServerAddress();
-
-	void sleepForBytes(unsigned int);
-	void sendXBytes(uint64_t, void*);
-	void senduChar_s(unsigned char*,int);
-	void sendInt(int);
-	void senduInt(unsigned int);
-	void senduInt32(uint32_t);
-	void senduInt64(uint64_t);
-	void sendVector_s(std::vector<char*>);
-	void readXBytes(uint64_t, void*);
-	uint64_t readuInt64();
-	uint32_t readuInt32();
-	std::vector<char*> readVector_s();
-	XPIRcSequential::REPLY readReply();
-	std::vector<char*> queryGeneration(uint64_t);
-	char* replyExtraction(XPIRcSequential::REPLY);
-	int compareSNPs(std::string, std::map<char,std::string>);
-	int verifyParams(uint64_t,uint64_t,uint64_t,unsigned int*);
-	PIRParameters readParamsPIR(uint64_t);
-	int readParamsSHA();
-	int symmetricEncrypt(unsigned char*,std::string);
-	int symmetricDecrypt(unsigned char*,char*);
-	void sendCiphertext(int,unsigned char*);
-	void sendPlaintext(int,std::string);
-	uint64_t sendData(std::vector<std::string>);
-	uint64_t considerPacking(uint64_t);
-	std::string extractCiphertext(char*, uint64_t, uint64_t);
-	std::string extractPlaintext(char*, uint64_t, uint64_t);
-
-public:
 	uint64_t uploadData(std::string);
-	void initXPIR(uint64_t);
 	void initSHA256();
-	std::string searchQuery(uint64_t,std::map<char,std::string>);
-	void cleanupVector(std::vector<char*>);
-	void cleanup();
+	virtual void initXPIR(uint64_t)=0;
+
+	uint64_t considerPacking(uint64_t,uint64_t);
+	virtual std::string searchQuery(uint64_t,std::map<char,std::string>)=0;
+
+	virtual void cleanup()=0;
 
 	//Getters and Setters
 	void setRTTStart();
 	double getRTTStart();
 	void setRTTStop();
 	double getRTTStop();
+
+protected:
+	void createSocket();
+	void connectToServer();
+	void getServerAddress();
+
+	void sleepForBytes(unsigned int);
+
+	void sendXBytes(uint64_t, void*);
+	void senduChar_s(unsigned char*,int);
+	void sendInt(int);
+	void senduInt(unsigned int);
+	void senduInt32(uint32_t);
+	void senduInt64(uint64_t);
+
+	void readXBytes(uint64_t, void*);
+	uint64_t readuInt64();
+	uint32_t readuInt32();
+
+	int compareSNPs(std::string, std::map<char,std::string>);
+	int verifyParams(uint64_t,uint64_t,uint64_t,unsigned int*);
+	PIRParameters readParamsPIR(uint64_t);
+	int readParamsSHA();
+
+	int symmetricEncrypt(unsigned char*,std::string);
+	int symmetricDecrypt(unsigned char*,char*);
+	void sendCiphertext(int,unsigned char*);
+	void sendPlaintext(int,std::string);
+	uint64_t sendData(std::vector<std::string>);
 };
