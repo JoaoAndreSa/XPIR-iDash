@@ -10,14 +10,20 @@ CFLAGS = -I/home/user/Desktop/XPIR -L/home/user/Desktop/XPIR/_build/pir -pthread
 TARGET = server
 
 # othe code that needs to be compiled
-PIRServer = PIRServer
-XPIRc = ../XPIR/XPIRc
 Constants = ../Constants/constants
+
+PIRServer = PIRServer
+PIRServerParallel = Parallel/PIRServerParallel
+PIRServerSequential = Sequential/PIRServerSequential
+
+XPIRc = ../XPIR/XPIRc
+XPIRcParallel = ../XPIR/Parallel/XPIRcParallel
+XPIRcSequential = ../XPIR/Sequential/XPIRcSequential
 
 all: $(TARGET)
 
 $(TARGET): $(TARGET).cpp
-	$(CC) $(TARGET).cpp $(PIRServer).cpp $(XPIRc).cpp $(Constants).cpp $(CFLAGS) -o $(TARGET) 
+	$(CC) $(TARGET).cpp $(PIRServer).cpp $(PIRServerParallel).cpp $(PIRServerSequential).cpp $(XPIRc).cpp $(XPIRcParallel).cpp $(XPIRcSequential).cpp $(Constants).cpp $(CFLAGS) -o $(TARGET) 
 
 clean:
 	$(RM) $(TARGET)

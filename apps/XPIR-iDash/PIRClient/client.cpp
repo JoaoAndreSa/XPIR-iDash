@@ -1,4 +1,6 @@
 #include "PIRClient.hpp"
+#include "Parallel/PIRClientParallel.hpp"
+#include "Sequential/PIRClientSequential.hpp"
 
 std::map<char,std::string> parseEntry(int argc,char* argv[]){
 	
@@ -34,14 +36,19 @@ int main(int argc, char* argv[]){
 	PIRClient::errorExit(argc<5,"Syntax : ./client [-c chromosome] [-p startPosition] [-r refAllele] [-a altAllele] [-f vcfFile]");	
 	std::map<char,std::string> entry = parseEntry(argc,argv);
 
-	PIRClient c(const_cast<char*>(Constants::hostname),Constants::port);
+	PIRClient* c;
+	if(Constants::parallel){
+		c=new PIRClientParallel(const_cast<char*>(Constants::hostname),Constants::port);
+	}else{
+		c=new PIRClientSequential(const_cast<char*>(Constants::hostname),Constants::port);
+	}
 
-	c.initSHA256();
-	uint64_t num_entries=c.uploadData(entry['f']);
-	c.initXPIR(num_entries);
+	c->initSHA256();
+	uint64_t num_entries=c->uploadData(entry['f']);
+	c->initXPIR(num_entries);
 
-	c.setRTTStart();
-	std::string resp=c.searchQuery(num_entries,entry);
+	c->setRTTStart();
+	std::string resp=c->searchQuery(num_entries,entry);
 	string output="";
 	if(resp==""){
 		output+="Query variation not in file.\n";
@@ -51,12 +58,12 @@ int main(int argc, char* argv[]){
         std::cout << output;
         std::cout << resp << "\n\n"; 
     }
-    c.cleanup();
+    c->cleanup();
 
-    c.setRTTStop();
+    c->setRTTStop();
 
     std::ostringstream strs;
-	strs << (c.getRTTStop()-c.getRTTStart());
+	strs << (c->getRTTStop()-c->getRTTStart());
 	std::string time = "Elapsed time (RTT): "+strs.str()+"(s)\n";
    	std::cout << time;
 

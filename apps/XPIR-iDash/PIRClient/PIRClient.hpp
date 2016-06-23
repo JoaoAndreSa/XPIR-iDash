@@ -4,11 +4,14 @@
 
 #include "AES/AES_cbc_256.hpp"
 #include "SHA256/SHA_256.hpp"
-#include "../XPIR/XPIRc.hpp"
+
+#include "../XPIR/Parallel/XPIRcParallel.hpp"
+#include "../XPIR/Sequential/XPIRcSequential.hpp"
+
 #include "../Constants/constants.hpp"
 
 class PIRClient{
-private:
+protected:
 	//Connection variables
 	int m_listenFd, m_portNo;
 	char* m_sname;
@@ -16,7 +19,7 @@ private:
 	struct sockaddr_in m_svrAdd;
 	AES_cbc_256 m_cbc;
 	SHA_256* m_SHA_256;
-	XPIRc* m_xpir;
+	XPIRcSequential* m_xpir;
 
 	//Time variables
 	double m_RTT_start;
@@ -39,7 +42,7 @@ public:
 	static void errorWriteSocket(int cond){if(cond==1){std::cerr << "ERROR writing to socket" << "\n";}}
 	static void errorReadSocket(int cond){if(cond==1){std::cerr << "ERROR reading socket"<< "\n";}}
 
-private:
+protected:
 	void createSocket();
 	void connectToServer();
 	void getServerAddress();
@@ -56,9 +59,9 @@ private:
 	uint64_t readuInt64();
 	uint32_t readuInt32();
 	std::vector<char*> readVector_s();
-	XPIRc::REPLY readReply();
+	XPIRcSequential::REPLY readReply();
 	std::vector<char*> queryGeneration(uint64_t);
-	char* replyExtraction(XPIRc::REPLY);
+	char* replyExtraction(XPIRcSequential::REPLY);
 	int compareSNPs(std::string, std::map<char,std::string>);
 	int verifyParams(uint64_t,uint64_t,uint64_t,unsigned int*);
 	PIRParameters readParamsPIR(uint64_t);

@@ -11,15 +11,21 @@ TARGET = client
 
 # other code that needs to be compiled
 AES_CBC = AES/AES_cbc_256
-PIRClient = PIRClient
-XPIRc = ../XPIR/XPIRc
 SHA1 = SHA256/SHA_256
 Constants = ../Constants/constants
+
+PIRClient = PIRClient
+PIRClientParallel = Parallel/PIRClientParallel
+PIRClientSequential = Sequential/PIRClientSequential
+
+XPIRc = ../XPIR/XPIRc
+XPIRcParallel = ../XPIR/Parallel/XPIRcParallel
+XPIRcSequential = ../XPIR/Sequential/XPIRcSequential
 
 all: $(TARGET)
 
 $(TARGET): $(TARGET).cpp
-	$(CC) $(TARGET).cpp $(AES_CBC).cpp $(SHA1).cpp $(PIRClient).cpp $(XPIRc).cpp $(Constants).cpp $(CFLAGS) -o $(TARGET) 
+	$(CC) $(TARGET).cpp $(AES_CBC).cpp $(SHA1).cpp $(PIRClient).cpp $(PIRClientParallel).cpp $(PIRClientSequential).cpp $(XPIRc).cpp $(XPIRcParallel).cpp $(XPIRcSequential).cpp $(Constants).cpp $(CFLAGS) -o $(TARGET) 
 
 clean:
 	$(RM) $(TARGET)

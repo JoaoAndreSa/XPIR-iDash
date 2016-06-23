@@ -1,72 +1,102 @@
 Query variation in file:
-Elapsed time (RTT): 0.593247(s)
+Elapsed time (RTT): 0.543812(s)
 
 Query variation in file:
-Elapsed time (RTT): 0.574188(s)
+Elapsed time (RTT): 0.559407(s)
 
 Query variation not in file.
-Elapsed time (RTT): 0.554448(s)
+Elapsed time (RTT): 0.565614(s)
 
 Query variation not in file.
-Elapsed time (RTT): 0.57616(s)
+Elapsed time (RTT): 0.612139(s)
 
 Query variation in file:
-Elapsed time (RTT): 0.563079(s)
+Elapsed time (RTT): 0.577037(s)
 
 Query variation in file:
-Elapsed time (RTT): 0.523022(s)
+Elapsed time (RTT): 0.692446(s)
 
 Query variation not in file.
-Elapsed time (RTT): 0.540594(s)
+Elapsed time (RTT): 0.548587(s)
 
 Query variation not in file.
-Elapsed time (RTT): 0.52407(s)
+Elapsed time (RTT): 0.53145(s)
 
 Query variation in file:
-Elapsed time (RTT): 1.25055(s)
+Elapsed time (RTT): 1.12735(s)
 
 Query variation in file:
-Elapsed time (RTT): 1.12959(s)
+Elapsed time (RTT): 1.1655(s)
 
 Query variation not in file.
-Elapsed time (RTT): 1.14241(s)
+Elapsed time (RTT): 1.26797(s)
 
 Query variation not in file.
-Elapsed time (RTT): 1.22841(s)
+Elapsed time (RTT): 1.20776(s)
 
 Query variation in file:
-Elapsed time (RTT): 0.993066(s)
+Elapsed time (RTT): 1.1612(s)
 
 Query variation in file:
-Elapsed time (RTT): 1.04803(s)
+Elapsed time (RTT): 1.09462(s)
 
 Query variation not in file.
-Elapsed time (RTT): 0.992225(s)
+Elapsed time (RTT): 1.08601(s)
 
 Query variation not in file.
-Elapsed time (RTT): 0.98594(s)
+Elapsed time (RTT): 1.04362(s)
 
 Query variation in file:
-Elapsed time (RTT): 6.01699(s)
+Elapsed time (RTT): 6.28696(s)
 
 Query variation in file:
-Elapsed time (RTT): 6.50267(s)
+Elapsed time (RTT): 6.44863(s)
 
 Query variation not in file.
-Elapsed time (RTT): 7.24487(s)
+Elapsed time (RTT): 6.40675(s)
 
 Query variation not in file.
-Elapsed time (RTT): 6.39447(s)
+Elapsed time (RTT): 6.83416(s)
 
 Query variation in file:
-Elapsed time (RTT): 2.43592(s)
+Elapsed time (RTT): 2.44475(s)
 
 Query variation in file:
-Elapsed time (RTT): 2.21886(s)
+Elapsed time (RTT): 2.35544(s)
 
 Query variation not in file.
-Elapsed time (RTT): 2.32053(s)
+Elapsed time (RTT): 2.4694(s)
 
 Query variation not in file.
-Elapsed time (RTT): 2.34198(s)
+Elapsed time (RTT): 2.55882(s)
+
+Query variation in file:
+Elapsed time (RTT): 6.60141(s)
+
+Query variation in file:
+Elapsed time (RTT): 2.49749(s)
+
+Query variation in file:
+Elapsed time (RTT): 1.17504(s)
+
+Query variation in file:
+Elapsed time (RTT): 0.981387(s)
+
+Query variation in file:
+Elapsed time (RTT): 0.548963(s)
+
+Query variation in file:
+Elapsed time (RTT): 0.536416(s)
+
+Query variation in file:
+Elapsed time (RTT): 1.14531(s)
+
+Query variation in file:
+Elapsed time (RTT): 1.15012(s)
+
+Query variation in file:
+Elapsed time (RTT): 1.17081(s)
+
+Query variation in file:
+Elapsed time (RTT): 1.22809(s)
 

@@ -126,8 +126,8 @@ std::vector<char*> PIRClient::readVector_s(){
     return vector_s;
 }
 
-XPIRc::REPLY PIRClient::readReply(){
-	XPIRc::REPLY reply;
+XPIRcSequential::REPLY PIRClient::readReply(){
+	XPIRcSequential::REPLY reply;
 	reply.nbRepliesGenerated=readuInt64();
 	reply.aggregated_maxFileSize=readuInt64();
 	reply.reply=readVector_s();
@@ -141,7 +141,7 @@ std::vector<char*> PIRClient::queryGeneration(uint64_t chosen_element){
     return query;
 }
 
-char* PIRClient::replyExtraction(XPIRc::REPLY reply){
+char* PIRClient::replyExtraction(XPIRcSequential::REPLY reply){
 	char* response;
     response=m_xpir->replyExtraction(reply);
 
@@ -311,7 +311,7 @@ std::string PIRClient::extractPlaintext(char* response, uint64_t aggregated_entr
 }
 
 
-//***PUBLIC METHODS***//s
+//***PUBLIC METHODS***//
 uint64_t PIRClient::uploadData(std::string filename){
 	std::string line;
 
@@ -339,7 +339,7 @@ uint64_t PIRClient::uploadData(std::string filename){
 }
 
 void PIRClient::initXPIR(uint64_t num_entries){
-    m_xpir= new XPIRc(readParamsPIR(num_entries),1,nullptr);
+    m_xpir= new XPIRcSequential(readParamsPIR(num_entries),1,nullptr);
 }
 
 void PIRClient::initSHA256(){
@@ -355,7 +355,7 @@ std::string PIRClient::searchQuery(uint64_t num_entries,std::map<char,std::strin
     sendVector_s(query);
     std::cout << "SimplePIR: Query sent" << "\n";
 
-    XPIRc::REPLY reply = readReply();
+    XPIRcSequential::REPLY reply = readReply();
     char* response;
     response=replyExtraction(reply);
     std::string response_s;
