@@ -1,0 +1,5 @@
+  * check old makefiles in branch old-master to ensure nothing has been forgotten in cmake
+  
+  * check other computers/architecutres  (e.g. osx where there are $home fields in cmakelists)
+  * deal with release compilation/execution on OSX
+
