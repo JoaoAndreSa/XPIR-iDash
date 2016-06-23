@@ -1,6 +1,10 @@
 #include "XPIRcParallel.hpp"
 
 //***PUBLIC METHODS***//
+PIRReplyWriter* XPIRcParallel::getReplyWriter(){
+	return m_replyWriter;
+}
+
 PIRQueryGenerator_internal* XPIRcParallel::getQGenerator(){
 	return m_q_generator;
 }
@@ -13,12 +17,8 @@ PIRReplyExtraction_internal* XPIRcParallel::getRExtractor(){
 	return m_r_extractor;
 }
 
-CryptographicSystem* XPIRcParallel::getCrypto(){
-	return m_crypto;
-}
-
-HomomorphicCrypto* XPIRcParallel::getCryptoClient(){
-	return m_crypto_c;
+CryptographicSystem* XPIRcParallel::getCryptoServer(){
+	return m_crypto_s;
 }
 
 imported_database_t XPIRcParallel::getImportedDB(){

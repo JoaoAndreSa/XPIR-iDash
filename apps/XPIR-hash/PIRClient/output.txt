@@ -118,3 +118,9 @@ Elapsed time (RTT): 1.20216(s)
 Query variation in file:
 Elapsed time (RTT): 1.23372(s)
 
+Query variation in file:
+Elapsed time (RTT): 1.17679(s)
+
+Query variation in file:
+Elapsed time (RTT): 1.19146(s)
+

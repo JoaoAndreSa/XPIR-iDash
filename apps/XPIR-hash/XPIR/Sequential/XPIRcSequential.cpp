@@ -115,14 +115,6 @@ void XPIRcSequential::freeQueries(){
 	m_r_generator->freeQueries();
 }
 
-uint32_t XPIRcSequential::getQsize(uint64_t d){
-	return (uint32_t) m_crypto->getPublicParameters().getQuerySizeFromRecLvl(d)/GlobalConstant::kBitsPerByte;
-}
-
-uint32_t XPIRcSequential::getRsize(){
-	return (uint32_t) m_crypto->getPublicParameters().getCiphBitsizeFromRecLvl(m_params.d)/GlobalConstant::kBitsPerByte;
-}
-
 void XPIRcSequential::cleanup(){
 	if(m_q_generator!=nullptr) delete m_q_generator;
 	if(m_r_generator!=nullptr) delete m_r_generator;

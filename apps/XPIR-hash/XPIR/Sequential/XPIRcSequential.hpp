@@ -9,7 +9,6 @@ private:
 	PIRReplyGenerator* m_r_generator;
 	PIRReplyExtraction* m_r_extractor;
 
-	HomomorphicCrypto* m_crypto;
 	imported_database* m_imported_db;
 
 public:
@@ -54,7 +53,5 @@ public:
 	char* replyExtraction(REPLY);
 	void cleanQueryBuffer();
 	void freeQueries();
-	uint32_t getQsize(uint64_t);
-	uint32_t getRsize();
 	void cleanup();
 };

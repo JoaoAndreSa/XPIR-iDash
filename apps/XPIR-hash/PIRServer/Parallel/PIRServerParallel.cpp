@@ -10,7 +10,7 @@ void PIRServerParallel::downloadWorker(){
 
   for(unsigned int j=0; j<m_xpir->getD(); j++){
     //Compute and allocate the size in bytes of a query ELEMENT of dimension j 
-    unsigned int message_length=m_xpir->getCrypto()->getPublicParameters().getQuerySizeFromRecLvl(j+1)/8;
+    unsigned int message_length=m_xpir->getCryptoServer()->getPublicParameters().getQuerySizeFromRecLvl(j+1)/8;
 
     for (unsigned int i=0; i< m_xpir->getN()[j]; i++){
       if (i==0 && j == 0) cout << "PIRSession: Starting query element reception"  << endl;
@@ -35,7 +35,7 @@ void PIRServerParallel::uploadWorker(){
 
 
   // Ciphertext byte size
-  unsigned int length=m_xpir->getCrypto()->getPublicParameters().getCiphBitsizeFromRecLvl(m_xpir->getD())/GlobalConstant::kBitsPerByte;
+  unsigned int length=m_xpir->getCryptoServer()->getPublicParameters().getCiphBitsizeFromRecLvl(m_xpir->getD())/GlobalConstant::kBitsPerByte;
   uint64_t bytes_sent=0;
 
   // Number of ciphertexts in the reply
@@ -81,6 +81,7 @@ void PIRServerParallel::job (){
   // This is just a download thread. Reply generation is unlocked (by a mutex)
   // when this thread finishes.
  	m_downThread = boost::thread(&PIRServerParallel::downloadWorker, this);
+  while(1);
 
   // Start reply generation when mutex unlocked
   // Start a thread which uploads the reply as it is generated
