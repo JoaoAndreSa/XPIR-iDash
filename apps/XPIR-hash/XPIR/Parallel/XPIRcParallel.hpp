@@ -17,8 +17,6 @@ private:
 	PIRQueryGenerator_internal* m_q_generator;
 	GenericPIRReplyGenerator* m_r_generator;
 	PIRReplyExtraction_internal* m_r_extractor;
-	
-	CryptographicSystem* m_crypto_s;
 
 	bool m_imported;
 	imported_database_t m_imported_db;
@@ -36,18 +34,13 @@ public:
 			std::vector<std::string> fields;
     		boost::split(fields,m_params.crypto_params,boost::is_any_of(":"));
 
-			m_crypto_s=HomomorphicCryptoFactory_internal::getCrypto(fields.at(0));
-    		m_crypto_s->setNewParameters(m_params.crypto_params);
-
 	    	m_r_generator = PIRReplyGeneratorFactory::getPIRReplyGenerator(fields.at(0),m_params,m_db);
-    		m_r_generator->setCryptoMethod(m_crypto_s);
+    		m_r_generator->setCryptoMethod(m_crypto);
     		m_r_generator->setPirParams(m_params);
 
     		m_imported=0;
 		}else{
 			m_r_generator=nullptr;
-
-			m_crypto=HomomorphicCryptoFactory_internal::getCryptoMethod(m_params.crypto_params);
 
 			m_q_generator=new PIRQueryGenerator_internal(m_params,*m_crypto);
 			m_r_extractor=new PIRReplyExtraction_internal(m_params,*m_crypto);
@@ -60,8 +53,8 @@ public:
 	PIRQueryGenerator_internal* getQGenerator();
 	GenericPIRReplyGenerator* getRGenerator();
 	PIRReplyExtraction_internal* getRExtractor();
-	CryptographicSystem* getCryptoServer();
 	imported_database_t getImportedDB();
 	void setImportedDB(imported_database_t db);
 	bool isImported();
+	void setImported(bool);
 };

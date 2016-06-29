@@ -358,6 +358,10 @@ void PIRClientSimple::uploadWorker(PIRQueryGenerator_internal& queryGen)
  **/
 void PIRClientSimple::startProcessResult()
 {
+	std::cout << catalog.getFileName(chosenElement) << std::endl;
+	std::cout << catalog.getFileSize(chosenElement) << std::endl;
+	std::cout << catalog.getMaxFileSize() << std::endl;
+
 	replyExt = new PIRReplyExtraction_internal(pirParams,*cryptoMethod);
 	replyExt->setFileParam(catalog.getFileName(chosenElement), catalog.getFileSize(chosenElement)); 
 

@@ -17,5 +17,4 @@ private:
 	void sendVector_s(vector<char*>, uint32_t);
 	void sendReply(XPIRcSequential::REPLY, uint32_t);
 
-	void initXPIR();
 };

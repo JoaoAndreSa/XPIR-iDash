@@ -18,7 +18,7 @@
 #include "PIRSession.hpp"
 #include "pir/replyGenerator/PIROptimizer.hpp"
 
-#define NDSS_UPLOAD_SPEED 100000000UL
+#define NDSS_UPLOAD_SPEED 10000000UL
 PIRSession::pointer PIRSession::create(boost::asio::io_service& ios)
 {
   return PIRSession::pointer(new PIRSession(ios));
@@ -480,14 +480,17 @@ void PIRSession::startProcessResult(session_option_t session_option)
   // If we got a preimported database generate reply directly from it 
   if (session_option.got_preimported_database == true) 
   {
+    std::cout << "ERRADO" << std::endl;
     std::cout << "PIRSession: Already got an imported database available, using it" << std::endl;
     generator->generateReplyGenericFromData(session_option.data);
   }
   else if (session_option.keep_database == true) {
+    std::cout << "CORRETO" << std::endl;
     savedDatabase = generator->generateReplyGeneric(true);
   } 
   else if (session_option.keep_database == false) 
   {
+    std::cout << "OK" << std::endl;
     generator->generateReplyGeneric(false);
   }
   
@@ -517,11 +520,10 @@ void PIRSession::uploadWorker()
   uint64_t totalbytesent=0;
   // Number of ciphertexts in the reply
   unsigned long reply_nbr = generator->computeReplySizeInChunks(maxFileBytesize), i = 0;
-#ifdef DEBUG
+
   cout << "PIRSession: Number of ciphertexts to send is " << reply_nbr << endl;
   cout << "PIRSession: maxFileBytesize is  " << maxFileBytesize << endl;
   cout << "PIRSession: Ciphertext bytesize is " << byteSize << endl;
-#endif
 
   try
   {

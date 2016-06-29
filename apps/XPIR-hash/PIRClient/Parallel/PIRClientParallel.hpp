@@ -5,18 +5,18 @@
 class PIRClientParallel: public PIRClient {
 private:
 	XPIRcParallel* m_xpir;
+	uint64_t m_maxFileBytesize;
 
 public:
 	PIRClientParallel(char* sname, int portNo) : PIRClient(sname,portNo){}
-
-	void initXPIR(uint64_t);
+	
 	std::string searchQuery(uint64_t,std::map<char,std::string>);
 	
 	void cleanup();
 
 private:
 	void downloadWorker();
-	void startProcessResult(uint64_t);
+	void startProcessResult();
 	void uploadWorker();
 	void startProcessQuery(uint64_t);
 

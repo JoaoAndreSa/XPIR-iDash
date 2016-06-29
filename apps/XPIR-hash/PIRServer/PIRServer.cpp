@@ -111,11 +111,11 @@ void PIRServer::downloadData(){
         char* recvBuff;
 
         //if ciphertext
-        recvBuff=readCiphertext(buflen);
+        //recvBuff=readCiphertext(buflen);
         //------ ### ------    
 
         //if plaintext
-        //recvBuff=readPlaintext(buflen,m_connFd);
+        recvBuff=readPlaintext(buflen);
         //------ ### ------    
 
         //Create file where entry will be stored 

@@ -9,8 +9,6 @@ private:
 public:
 	PIRClientSequential(char* sname, int portNo) : PIRClient(sname,portNo){}
 
-	void initXPIR(uint64_t);
-
 	std::string searchQuery(uint64_t,std::map<char,std::string>);
 
 	void cleanupVector(std::vector<char*>);

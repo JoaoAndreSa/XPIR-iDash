@@ -45,10 +45,10 @@ int main(int argc, char* argv[]){
 
 	c->initSHA256();
 	uint64_t num_entries=c->uploadData(entry['f']);
-	c->initXPIR(num_entries);
 
 	c->setRTTStart();
 	std::string resp=c->searchQuery(num_entries,entry);
+	c->setRTTStop();
 	string output="";
 	if(resp==""){
 		output+="Query variation not in file.\n";
@@ -59,8 +59,6 @@ int main(int argc, char* argv[]){
         std::cout << resp << "\n\n"; 
     }
     c->cleanup();
-
-    c->setRTTStop();
 
     std::ostringstream strs;
 	strs << (c->getRTTStop()-c->getRTTStart());

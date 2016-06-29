@@ -4,7 +4,7 @@ namespace Constants{
 
     //client+server
     extern const char hostname[]{"localhost"};
-    extern const int port(12345);
+    extern const int port(12346);
     extern const uint64_t bandwith_limit(10000000);
     extern const bool parallel(true);
 

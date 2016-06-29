@@ -23,9 +23,6 @@ private:
 
 public:
 	XPIRcSequential(PIRParameters params, int type, DBHandler* db) : XPIRc(params,type,db) {
-		m_crypto=HomomorphicCryptoFactory::getCryptoMethod(m_params.crypto_params);
-		m_crypto->setandgetAbsBitPerCiphertext(m_params.n[0]);
-
 		// Absorption capacity of an LWE encryption scheme depends on the number of sums that are going
 		// to be done in the PIR protocol, it must therefore be initialized
 		// Warning here we suppose the biggest dimension is in d[0] 

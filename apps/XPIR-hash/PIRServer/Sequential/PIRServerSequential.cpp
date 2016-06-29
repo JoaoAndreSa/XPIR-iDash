@@ -37,18 +37,14 @@ void PIRServerSequential::sendReply(XPIRcSequential::REPLY reply,uint32_t size){
     sendVector_s(reply.reply,size);
 }
 
-void PIRServerSequential::initXPIR(){
-    DBDirectoryProcessor db;
-    m_xpir = new XPIRcSequential(readParamsPIR(),0,&db);
-}
-
 void PIRServerSequential::job (){
 	std::cout << "THREAD [" << m_id << "]" << "\n";
 
     //#-------SETUP PHASE--------#
     //read file from client
 	downloadData();
-    initXPIR();
+    DBDirectoryProcessor db;
+    m_xpir = new XPIRcSequential(readParamsPIR(),0,&db);
 
     //#-------QUERY PHASE--------#
     vector<char*> query=readVector_s();

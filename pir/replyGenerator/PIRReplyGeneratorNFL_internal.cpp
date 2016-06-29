@@ -168,6 +168,7 @@ imported_database_t PIRReplyGeneratorNFL_internal::generateReplyGeneric(bool kee
   const uint64_t nbFiles = dbhandler->getNbStream();
   const unsigned int polysize = cryptoMethod->getpolyDegree()*cryptoMethod->getnbModuli();
   const unsigned int jumpcipher = 2*polysize / sizeof(uint64_t);
+
 	currentMaxNbPolys=0;
 	lwe_in_data *input = new lwe_in_data[iterations];
   lwe_cipher *resul = new lwe_cipher[iterations];

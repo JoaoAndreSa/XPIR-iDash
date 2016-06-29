@@ -43,7 +43,6 @@ public:
 
 	uint64_t uploadData(std::string);
 	void initSHA256();
-	virtual void initXPIR(uint64_t)=0;
 
 	uint64_t considerPacking(uint64_t,uint64_t);
 	virtual std::string searchQuery(uint64_t,std::map<char,std::string>)=0;

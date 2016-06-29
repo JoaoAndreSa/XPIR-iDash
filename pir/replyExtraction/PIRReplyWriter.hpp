@@ -56,6 +56,8 @@ class PIRReplyWriter
     shared_queue<char*>* getClearDataQueue();
     void join();
     void setdontWrite(bool newvalue);
+
+    char* extractResponse(uint64_t,uint64_t,uint64_t,uint64_t);
 };
 
 #endif

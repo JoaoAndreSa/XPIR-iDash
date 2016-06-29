@@ -37,7 +37,7 @@ std::vector<char*> PIRClientSequential::readVector_s(){
         vector_s.push_back(buffer);
     }
     double end = omp_get_wtime();
-    cout << "SimplePIR: Send query took " << end-start << " seconds" << endl;
+    cout << "SimplePIR: Send reply took " << end-start << " seconds" << endl;
     return vector_s;
 }
 
@@ -82,11 +82,9 @@ std::string PIRClientSequential::extractPlaintext(char* response, uint64_t aggre
 }
 
 //***PUBLIC METHODS***//
-void PIRClientSequential::initXPIR(uint64_t num_entries){
-    m_xpir= new XPIRcSequential(readParamsPIR(num_entries),1,nullptr);
-}
-
 std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::string> entry){
+    m_xpir= new XPIRcSequential(readParamsPIR(num_entries),1,nullptr);
+
     string query_str=entry['c']+" "+entry['p']+" # "+entry['r']+" "+entry['a'];
     uint64_t pos=m_SHA_256->hash(query_str);
     uint64_t pack_pos=considerPacking(m_SHA_256->hash(query_str),m_xpir->getAlpha());

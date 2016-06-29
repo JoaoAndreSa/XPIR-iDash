@@ -202,18 +202,17 @@ uint64_t PIRClient::sendData(std::vector<std::string> data){
 
         if(data[i]!=""){
             //to send ciphertext
-            unsigned char ciphertext[1024];
-            int ciphertexlen = symmetricEncrypt(ciphertext,data[i]);
-            sendCiphertext(ciphertexlen,ciphertext);
+            //unsigned char ciphertext[1024];
+            //int ciphertexlen = symmetricEncrypt(ciphertext,data[i]);
+            //sendCiphertext(ciphertexlen,ciphertext);
+            //------ ### ------
+            //to send plaintext
+            sendPlaintext(data[i].length()+1,data[i]);
             //------ ### ------
         }else{
             std::string blank("0");
             sendPlaintext(blank.length(),blank.c_str());
         }
-
-        //to send plaintext
-        //sendPlaintext(data[i].length()+1,data[i]);
-        //------ ### ------
 
         num_entries++;
     }

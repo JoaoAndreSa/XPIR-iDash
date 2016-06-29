@@ -17,10 +17,6 @@ PIRReplyExtraction_internal* XPIRcParallel::getRExtractor(){
 	return m_r_extractor;
 }
 
-CryptographicSystem* XPIRcParallel::getCryptoServer(){
-	return m_crypto_s;
-}
-
 imported_database_t XPIRcParallel::getImportedDB(){
 	return m_imported_db;
 }
@@ -31,4 +27,8 @@ void XPIRcParallel::setImportedDB(imported_database_t db){
 
 bool XPIRcParallel::isImported(){
 	return m_imported;
+}
+
+void XPIRcParallel::setImported(bool imported){
+	m_imported=imported;
 }

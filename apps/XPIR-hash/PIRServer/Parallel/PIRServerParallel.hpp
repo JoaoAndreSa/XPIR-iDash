@@ -18,5 +18,4 @@ public:
 private:
 	void uploadWorker();
 	void downloadWorker();
-	void initXPIR();
 };

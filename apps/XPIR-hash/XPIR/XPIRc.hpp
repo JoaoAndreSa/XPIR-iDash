@@ -15,11 +15,11 @@ class XPIRc{
 protected:
 	int m_type;
 
-	PIRParameters m_params;
-	DBHandler* m_db;
 	uint64_t m_maxFileSize;
 
 	HomomorphicCrypto* m_crypto;
+	DBHandler* m_db;
+	PIRParameters m_params;
 
 public:
 	// if type==0 (server) else type==1 (client)
@@ -29,12 +29,15 @@ public:
 		m_db=db;
 
 		if(type==0) m_maxFileSize = m_db->getmaxFileBytesize();
+
+		m_crypto=HomomorphicCryptoFactory::getCryptoMethod(m_params.crypto_params);
+		m_crypto->setandgetAbsBitPerCiphertext(m_params.n[0]);
 	}
-	
+
 	uint64_t getD();
 	uint64_t getAlpha();
 	unsigned int* getN();
-	uint64_t getMaxSize();
+	DBHandler* getDB();
 	HomomorphicCrypto* getCrypto();
 	uint32_t getQsize(uint64_t);
 	uint32_t getRsize();

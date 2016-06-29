@@ -12,8 +12,8 @@ unsigned int* XPIRc::getN(){
 	return m_params.n;
 }
 
-uint64_t XPIRc::getMaxSize(){
-	return m_maxFileSize;
+DBHandler* XPIRc::getDB(){
+	return m_db;
 }
 
 HomomorphicCrypto* XPIRc::getCrypto(){
