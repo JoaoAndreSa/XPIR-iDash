@@ -39,7 +39,7 @@ void run(int listenFd, struct sockaddr_in svrAdd, struct sockaddr_in clntAdd, so
         PIRServer::errorExit(connFd<0,"Cannot accept connection");
         std::cout << "Connection successful" << "\n";
 
-        if(Constants::parallel){
+        if(Constants::pipeline){
         	PIRServerParallel s(connFd,threads);
         	pool.push_back(boost::thread(boost::bind(&PIRServerParallel::job,&s)));
 		}

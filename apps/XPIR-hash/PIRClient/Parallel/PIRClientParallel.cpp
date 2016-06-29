@@ -9,9 +9,8 @@ void PIRClientParallel::downloadWorker(){
 
   for (unsigned int i=1; i<m_xpir->getD(); i++){
   	nbr = ceil(nbr * double(m_xpir->getCrypto()->getPublicParameters().getCiphBitsizeFromRecLvl(i)/GlobalConstant::kBitsPerByte) / double(m_xpir->getCrypto()->getPublicParameters().getAbsorptionBitsize(i) / GlobalConstant::kBitsPerByte));
-  } 
-	
-  cout << nbr << endl;
+  }
+
 	for (unsigned int i=0 ; i<nbr; i++){
     if (i==0) cout << "PIRClient: Starting reply element reception"  << endl;
 
@@ -71,15 +70,14 @@ std::string PIRClientParallel::searchQuery(uint64_t num_entries,std::map<char,st
     startProcessResult();
     joinAllThreads();
 
-    cout << pos << endl;
-
     char* tmp = m_xpir->getReplyWriter()->extractResponse(pos,m_maxFileBytesize,m_xpir->getAlpha(),m_xpir->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte);
 
-    for(int i=0;i<(m_xpir->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte) ; i++){
-      printf("%c",tmp[i]);
+    std::string response_s(reinterpret_cast<char*>(tmp));
+    cout << "Reply: " << response_s << endl << endl;
 
-    }
-    return "";
+    if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
+
+    return response_s;
 }
 
 void PIRClientParallel::cleanup(){

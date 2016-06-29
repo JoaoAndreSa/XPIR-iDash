@@ -37,7 +37,7 @@ int main(int argc, char* argv[]){
 	std::map<char,std::string> entry = parseEntry(argc,argv);
 
 	PIRClient* c;
-	if(Constants::parallel){
+	if(Constants::pipeline){
 		c=new PIRClientParallel(const_cast<char*>(Constants::hostname),Constants::port);
 	}else{
 		c=new PIRClientSequential(const_cast<char*>(Constants::hostname),Constants::port);

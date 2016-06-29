@@ -1,3 +1,12 @@
+/**
+    XPIR-hash
+    constants.cpp
+    Purpose: Define global constants
+
+    @author Joao Sa
+    @version 1.0 01/07/16
+*/
+
 #pragma once
 
 namespace Constants{
@@ -5,8 +14,8 @@ namespace Constants{
     //client+server
     extern const char hostname[];
     extern const int port;
-    extern const uint64_t bandwith_limit; //=0 (means no bandwith limit)
-    extern const bool parallel; 
+    extern const uint64_t bandwith_limit; //=0bps (means no bandwith limit)
+    extern const bool pipeline; 
     
     //server
     extern const int n_threads;

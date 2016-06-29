@@ -104,8 +104,6 @@ void PIRServerParallel::job (){
 	if (m_upThread.joinable())  m_upThread.join();
 	if (m_downThread.joinable()) m_downThread.join();
 
-  while(1);
-
   // When everything is sent, close the socket
   close(m_connFd);
   std::cout << "THREAD [" << m_id << "] EXITED" << "\n";

@@ -1,19 +1,21 @@
+#!/bin/bash
+
+#    XPIR-hash
+#    simple_test.sh
+#    Purpose: Run a simple batch of tests (multiple runs)
+#
+#    @author Joao Sa
+#    @version 1.0 01/07/16
+
+
 #####-------- SIMPLE TEST BASH --------#####
-lxterminal --working-directory=Desktop/XPIR/apps/XPIRt/PIRServer/ -e "./server > log.txt"
+#START SERVER
+lxterminal --working-directory=Desktop/XPIR/apps/XPIRt/PIRServer/ -e "./server"
 sleep 1
 
 
-
-
-
-
-
-
-
-
-
-
-#####-------- 1000 ENTRIES --------#####
+#START CLIENT
+#####-------- 1,000 ENTRIES --------#####
 cd ..
 cd PIRClient
 rm -rf logs/log_1000.txt
@@ -28,22 +30,22 @@ cd Constants
 
 cd ..
 cd PIRClient
-./client -c 1 -p 161617087 -r T -a . -f RCV000015246_1000.vcf >> logs/log_1000.txt #in db single file
-./client -c 1 -p 160955085 -r CTA -a TTG -f RCV000015246_1000.vcf >> logs/log_1000.txt #in db multiple files
-./client -c 2 -p 161617087 -r T -a . -f RCV000015246_1000.vcf >> logs/log_1000.txt #not in db single file
-./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_1000.vcf >> logs/log_1000.txt #not in db multiple files
+./client -c 1 -p 161617087 -r T -a . -f RCV000015246_1000.vcf 		>> logs/log_1000.txt 	#in db
+./client -c 1 -p 160955085 -r CTA -a TTG -f RCV000015246_1000.vcf 	>> logs/log_1000.txt 	#in db
+./client -c 2 -p 161617087 -r T -a . -f RCV000015246_1000.vcf 		>> logs/log_1000.txt 	#not in db
+./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_1000.vcf 	>> logs/log_1000.txt 	#not in db
 
-# ///////////////////--------PACKING & DIM (15,9*8)---------////////////////////////////////
+# ///////////////////--------PACKING & DIM (15,9x8)---------////////////////////////////////
 cd ..
 cd Constants
 ./changeParamsPIR 2 15 9 8 0 0 LWE:97:1024:60
 
 cd ..
 cd PIRClient
-./client -c 1 -p 161617087 -r T -a . -f RCV000015246_1000.vcf >> logs/log_1000.txt #in db single file
-./client -c 1 -p 160955085 -r CTA -a TTG -f RCV000015246_1000.vcf >> logs/log_1000.txt #in db multiple files
-./client -c 2 -p 161617087 -r T -a . -f RCV000015246_1000.vcf >> logs/log_1000.txt #not in db single file
-./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_1000.vcf >> logs/log_1000.txt #not in db multiple files
+./client -c 1 -p 161617087 -r T -a . -f RCV000015246_1000.vcf 		>> logs/log_1000.txt 	#in db
+./client -c 1 -p 160955085 -r CTA -a TTG -f RCV000015246_1000.vcf 	>> logs/log_1000.txt 	#in db
+./client -c 2 -p 161617087 -r T -a . -f RCV000015246_1000.vcf 		>> logs/log_1000.txt 	#not in db
+./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_1000.vcf 	>> logs/log_1000.txt 	#not in db
 
 
 
@@ -51,12 +53,7 @@ cd PIRClient
 
 
 
-
-
-
-
-
-#####-------- 10000 ENTRIES --------#####
+#####-------- 10,000 ENTRIES --------#####
 rm -rf logs/log_10000.txt
 
 cd ..
@@ -68,22 +65,22 @@ cd Constants
 
 cd ..
 cd PIRClient
-./client -c 1 -p 161617087 -r T -a . -f RCV000015246_10000.vcf >> logs/log_10000.txt #in db single file
-./client -c 1 -p 164781110 -r ATATAAG -a . -f RCV000015246_10000.vcf >> logs/log_10000.txt  #in db multiple files
-./client -c 2 -p 161617087 -r T -a . -f RCV000015246_10000.vcf >> logs/log_10000.txt  #not in db single file
-./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_10000.vcf >> logs/log_10000.txt  #not in db multiple files
+./client -c 1 -p 161617087 -r T -a . -f RCV000015246_10000.vcf 			>> logs/log_10000.txt 	#in db
+./client -c 1 -p 164781110 -r ATATAAG -a . -f RCV000015246_10000.vcf 	>> logs/log_10000.txt  	#in db
+./client -c 2 -p 161617087 -r T -a . -f RCV000015246_10000.vcf 			>> logs/log_10000.txt  	#not in db
+./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_10000.vcf 		>> logs/log_10000.txt  	#not in db
 
-# ///////////////////--------PACKING & DIM (15,24*23)---------////////////////////////////////
+# ///////////////////--------PACKING & DIM (15,24x23)---------////////////////////////////////
 cd ..
 cd Constants
 ./changeParamsPIR 2 15 24 23 0 0 LWE:97:1024:60
 
 cd ..
 cd PIRClient
-./client -c 1 -p 161617087 -r T -a . -f RCV000015246_10000.vcf >> logs/log_10000.txt #in db single file
-./client -c 1 -p 164781110 -r ATATAAG -a . -f RCV000015246_10000.vcf >> logs/log_10000.txt  #in db multiple files
-./client -c 2 -p 161617087 -r T -a . -f RCV000015246_10000.vcf >> logs/log_10000.txt  #not in db single file
-./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_10000.vcf >> logs/log_10000.txt  #not in db multiple files
+./client -c 1 -p 161617087 -r T -a . -f RCV000015246_10000.vcf 			>> logs/log_10000.txt 	#in db
+./client -c 1 -p 164781110 -r ATATAAG -a . -f RCV000015246_10000.vcf 	>> logs/log_10000.txt  	#in db
+./client -c 2 -p 161617087 -r T -a . -f RCV000015246_10000.vcf 			>> logs/log_10000.txt  	#not in db
+./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_10000.vcf 		>> logs/log_10000.txt  	#not in db
 
 
 
@@ -91,13 +88,7 @@ cd PIRClient
 
 
 
-
-
-
-
-
-
-######-------- 100000 ENTRIES --------#####
+######-------- 100,000 ENTRIES --------#####
 rm -rf logs/log_100000.txt
 
 cd ..
@@ -109,22 +100,22 @@ cd Constants
 
 cd ..
 cd PIRClient
-./client -c 1 -p 160955085 -r CTA -a TTG -f RCV000015246_100000.vcf >> logs/log_100000.txt #in db single file
-./client -c 1 -p 161617087 -r T -a . -f RCV000015246_100000.vcf >> logs/log_100000.txt  #in db multiple files
-./client -c 2 -p 161617087 -r T -a . -f RCV000015246_100000.vcf >> logs/log_100000.txt  #not in db single file
-./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_100000.vcf >> logs/log_100000.txt  #not in db multiple files
+./client -c 1 -p 160955085 -r CTA -a TTG -f RCV000015246_100000.vcf 	>> logs/log_100000.txt 	#in db
+./client -c 1 -p 161617087 -r T -a . -f RCV000015246_100000.vcf 		>> logs/log_100000.txt  #in db
+./client -c 2 -p 161617087 -r T -a . -f RCV000015246_100000.vcf 		>> logs/log_100000.txt  #not in db
+./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_100000.vcf 	>> logs/log_100000.txt  #not in db
 
-# ///////////////////--------PACKING & DIM (28,48*49)---------////////////////////////////////
+# ///////////////////--------PACKING & DIM (28,48x49)---------////////////////////////////////
 cd ..
 cd Constants
 ./changeParamsPIR 2 28 49 48 0 0 LWE:97:1024:60
 
 cd ..
 cd PIRClient
-./client -c 1 -p 160955085 -r CTA -a TTG -f RCV000015246_100000.vcf >> logs/log_100000.txt #in db single file
-./client -c 1 -p 161617087 -r T -a . -f RCV000015246_100000.vcf >> logs/log_100000.txt  #in db multiple files
-./client -c 2 -p 161617087 -r T -a . -f RCV000015246_100000.vcf >> logs/log_100000.txt  #not in db single file
-./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_100000.vcf >> logs/log_100000.txt  #not in db multiple files
+./client -c 1 -p 160955085 -r CTA -a TTG -f RCV000015246_100000.vcf 	>> logs/log_100000.txt 	#in db
+./client -c 1 -p 161617087 -r T -a . -f RCV000015246_100000.vcf 		>> logs/log_100000.txt  #in db
+./client -c 2 -p 161617087 -r T -a . -f RCV000015246_100000.vcf 		>> logs/log_100000.txt 	#not in db
+./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_100000.vcf 	>> logs/log_100000.txt  #not in db
 
 cd ..
 cd PIRServer
