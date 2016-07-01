@@ -1,43 +1,92 @@
+/**
+    XPIR-hash
+    PIRServerSequential.cpp
+    Purpose: Child class that binds to each server thread and executes sequential PIR.
+
+    @author Joao Sa
+    @version 1.0 01/07/16
+*/
+
+/**
+
+                  PIRServer
+                      |
+           ----------- -----------
+           |                     |
+  PIRServerSequential(*)  PIRServerPipeline
+
+*/
+
 #include "PIRServerSequential.hpp"
 
 //***PRIVATE METHODS***//
+/**
+    Read a char* vector from socket (in other words read query array).
+
+    @param
+
+    @return vector_s query
+*/
 vector<char*> PIRServerSequential::readVector_s(){
     vector<char*> vector_s;
 
-    uint64_t size=readuInt64();
+    uint64_t size=m_socket.readuInt64();
 
     double start = omp_get_wtime();
     for(uint64_t j=1; j<=size; j++){
-        uint32_t message_length=readuInt32();
+        uint32_t message_length=m_socket.readuInt32();
 
-        unsigned int n_size=readuInt();
+        unsigned int n_size=m_socket.readuInt();
         for(uint64_t i=0; i<n_size;i++){
             char* buffer = new char[message_length];
-            readXBytes(message_length,(void*)buffer);
+            m_socket.readXBytes(message_length,(void*)buffer);
             vector_s.push_back(buffer);
         }
     }
     double end = omp_get_wtime();
-    cout << "SimplePIR: Send query took " << end-start << " seconds" << endl;
+    cout << "PIRServer: Send query took " << end-start << " seconds" << endl;
     return vector_s;
 }
 
-void PIRServerSequential::sendVector_s(vector<char*> vector_c, uint32_t length){
-    senduInt64(static_cast<uint64_t>(vector_c.size()));
-    senduInt32(length);
-    
+/**
+    Send a char* vector through socket (in other words send reply data).
+
+    @param vector_c reply
+
+    @return
+*/
+void PIRServerSequential::sendVector_s(vector<char*> vector_c){
+    m_socket.senduInt64(static_cast<uint64_t>(vector_c.size()));
+    uint32_t length=m_xpir->getQsize(m_xpir->getD());
+    m_socket.senduInt32(length);
+
     for (uint64_t i=0; i<vector_c.size(); i++) {
-        sendXBytes(length,(void*)vector_c[i]);
+        m_socket.sendXBytes(length,(void*)vector_c[i]);
     }
 }
 
-void PIRServerSequential::sendReply(XPIRcSequential::REPLY reply,uint32_t size){
-    senduInt64(reply.nbRepliesGenerated);
-    senduInt64(reply.aggregated_maxFileSize);
-    sendVector_s(reply.reply,size);
+/**
+    Sends all reply parameters: data, nbRepliesGenerated, maxFileSize).
+
+    @param reply container struct with all reply data
+
+    @return
+*/
+void PIRServerSequential::sendReply(XPIRcSequential::REPLY reply){
+    m_socket.senduInt64(reply.nbRepliesGenerated);
+    m_socket.senduInt64(reply.maxFileSize);
+    sendVector_s(reply.reply);
+    std::cout << "PIRServer: Reply sent" << "\n";
 }
 
+/**
+    What the thread executes (binding function).
+
+    @param
+    @return
+*/
 void PIRServerSequential::job (){
+    m_id = boost::this_thread::get_id();
 	std::cout << "THREAD [" << m_id << "]" << "\n";
 
     //#-------SETUP PHASE--------#
@@ -50,13 +99,14 @@ void PIRServerSequential::job (){
     vector<char*> query=readVector_s();
 
     XPIRcSequential::REPLY reply=m_xpir->replyGeneration(query);
-    sendReply(reply,m_xpir->getQsize(m_xpir->getD()));
-    std::cout << "SimplePIR: Reply sent" << "\n";
+    sendReply(reply);
 
-    m_xpir->freeQueries();
+    //#-------CLEANUP PHASE--------#
+    m_xpir->cleanReplyBuffer();
     cleanupVector(reply.reply);
     m_xpir->cleanup();
     delete m_xpir;
     close(m_connFd);
+    
     std::cout << "THREAD [" << m_id << "] EXITED" << "\n";
 }

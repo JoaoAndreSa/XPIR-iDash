@@ -1,3 +1,22 @@
+/**
+    XPIR-hash
+    PIRClient.cpp
+    Purpose: Parent class (abstract) that binds to each client. Can have to modes of operation: Sequential or Pipeline (child classes).
+
+    @author Joao Sa
+    @version 1.0 01/07/16
+*/
+
+/**
+
+                  PIRClient(*)
+                      |
+           ----------- -----------
+           |                     |
+  PIRClientSequential    PIRClientPipeline
+
+*/
+
 #include "PIRClient.hpp"
 
 //***PRIVATE METHODS***//

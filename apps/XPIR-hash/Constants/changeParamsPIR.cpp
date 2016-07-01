@@ -12,6 +12,7 @@
 		dimensionality: - recursion (0<d<4)
 		alpha:			- packing (number of elements per ciphertext/polynomial)
 		
+		(ordered values, the biggest dimension is always in N[0])
 		N[0]:			- number of query elements in dimension 1
 		N[1]:			- (...) 2 (should 0 if d<2)
 		N[2]:			- (...) 3 (should 0 if d<3)

@@ -1,87 +1,106 @@
+/**
+    XPIR-hash
+    PIRServer.cpp
+    Purpose: Parent class (abstract) that binds to each thread. Can have to modes of operation: Sequential or Pipeline (child classes)
+
+    @author Joao Sa
+    @version 1.0 01/07/16
+*/
+
+/**
+
+                  PIRServer (*)
+                      |
+           ----------- -----------
+           |                     |
+    PIRServerSequential   PIRServerPipeline
+
+*/
+
 #include "PIRServer.hpp"
 
 //***PRIVATE METHODS***//
-// This assumes buffer is at least x bytes long,
-// and that the socket is blocking.
-void PIRServer::readXBytes(uint64_t x, void* buffer){
-    int bytesRead = 0;
-    while (bytesRead < x){
-        unsigned int result = read(m_connFd, ((uint8_t*)buffer)+bytesRead, x - bytesRead); errorReadSocket(result<0);
-        bytesRead += result;
-    }
-}
+/**
+    Reads ciphertext from socket (does not require to add '\0' to then end).
 
-int PIRServer::readInt(){
-    int v=0;
-    readXBytes(sizeof(int), (void*)(&v));
+    @param buflen size of the element to be read.
 
-    return static_cast<int>(ntohl(v));
-}
-
-unsigned int PIRServer::readuInt(){
-    unsigned int v=0;
-    readXBytes(sizeof(unsigned int), (void*)(&v));
-
-    return static_cast<unsigned int>(ntohl(v));
-}
-
-uint32_t PIRServer::readuInt32(){
-    uint32_t v=0;
-    readXBytes(sizeof(uint32_t), (void*)(&v));
-
-    return static_cast<uint32_t>(ntohl(v));
-}
-
-uint64_t PIRServer::readuInt64(){
-    uint64_t v=0;
-    readXBytes(sizeof(uint64_t), (void*)(&v));
-
-    return static_cast<uint64_t>(ntohl(v));
-}
-
+    @return recvBuff buffer where we store the bytes.
+*/
 char* PIRServer::readCiphertext(int buflen){
     char* recvBuff = new char[buflen];
-    readXBytes(buflen,(void*)recvBuff);
+    m_socket.readXBytes(buflen,(void*)recvBuff);
     return recvBuff;
 }
 
+/**
+    Reads plaintext from socket (adds a '\0' to end of the stream).
+
+    @param buflen size of the element to be read.
+
+    @return recvBuff buffer where we store the bytes.
+*/
 char* PIRServer::readPlaintext(int buflen){
     char* recvBuff = new char[buflen+1];
-    readXBytes(buflen,(void*)recvBuff);
+    m_socket.readXBytes(buflen,(void*)recvBuff);
     recvBuff[buflen]='\0';
     return recvBuff;
 
 }
 
-/* Check for errors on paramsPIR.txt file (e.g. dimension>4 || alpha<1...) */
+/**
+    Check for errors on paramsPIR.txt file (e.g. dimension>4 || alpha<1...). 
+    List of errors checked:
+        - 4 < dimension < 1;
+        - num_elements in db < alpha < 1;
+        - alpha * N[i] (where i=0..d) < num_elements in db (the aggregation and dimension parameters have to fit the amount of 
+            data in DB - example: 1000 entries> alpha=10, d=2, N[0]=10, N[1]=10 - 10*10*10>=1000 CORRECT)
+
+    @param
+
+    @return params PIR parameters.
+*/
 PIRParameters PIRServer::readParamsPIR(){
     std::string line;
     PIRParameters params;
 
-    ifstream f("../Constants/paramsPIR.txt");
+    try{
 
-    PIRServer::error(m_id,f==NULL || f.is_open()==0,"Error reading file");
-    if (f.is_open()){
-        getline(f,line);
-        params.d=atoi(line.c_str());
+        ifstream f("../Constants/paramsPIR.txt");
 
-        getline(f,line);
-        params.alpha=atoi(line.c_str());
-
-        for(int i=0;i<4;i++){
+        PIRServer::error(m_id,f==NULL || f.is_open()==0,"Error reading paramsPIR.txt file");
+        if (f.is_open()){
             getline(f,line);
-            params.n[i]=atoi(line.c_str());
-        }
-        PIRServer::error(m_id,params.d<1 || params.d>4 || params.alpha<1 || params.alpha>m_num_entries || verifyParams(params.d,params.alpha,params.n),"Wrong PIR parameters");
+            params.d=atoi(line.c_str());
 
-        getline(f,line);
-        params.crypto_params=line;
+            getline(f,line);
+            params.alpha=atoi(line.c_str());
+
+            for(int i=0;i<4;i++){
+                getline(f,line);
+                params.n[i]=atoi(line.c_str());
+            }
+            PIRServer::error(m_id,params.d<1 || params.d>4 || params.alpha<1 || params.alpha>m_num_entries || verifyParams(params.d,params.alpha,params.n)==0,"Wrong PIR parameters");
+
+            getline(f,line);
+            params.crypto_params=line;
+        }
+        f.close();
+
+    }catch (std::ios_base::failure &fail){
+        PIRServer::error(m_id,1,"Error reading paramsPIR.txt file");
     }
-    f.close();
 
     return params;
 }
 
+/**
+    Check 3rd error on the previous list of errors - see function readParamsPIR().
+
+    @param
+
+    @return 0/1 0-INCORRECT, 1-CORRECT.
+*/
 int PIRServer::verifyParams(uint64_t d, uint64_t alpha, unsigned int* n){
     int total=alpha;
 
@@ -89,14 +108,26 @@ int PIRServer::verifyParams(uint64_t d, uint64_t alpha, unsigned int* n){
         total*=n[i];
     }
 
-    if(total<m_num_entries) return 1;
-    else return 0;
+    if(total<m_num_entries) return 0;
+    else return 1;
 }
 
+/**
+    Cleans DB folder to allow for another batch of files sent by the client.
+
+    @param
+    @return
+*/
 void PIRServer::removeDB(){
     std::system("exec rm -rf db/*");
 }
 
+/**
+    Reads data to be stored by the server
+
+    @param
+    @return
+*/
 void PIRServer::downloadData(){
     /* Erase data in db folder */
     removeDB();
@@ -106,9 +137,18 @@ void PIRServer::downloadData(){
     uint64_t entry=0;
 
     double start = omp_get_wtime();
-    while(buflen!=0){  
-        buflen=readInt(); if(buflen==0){break;}
+    while(buflen!=0){ 
+        buflen=m_socket.readInt(); if(buflen==0){break;}
         char* recvBuff;
+
+        //if(Constants::encrypted){   //if CIPHERTEXT
+        //    recvBuff=m_socket.readChar_s(buflen);
+        //}else{                      //if PLAINTEXT
+            //recvBuff=m_socket.readChar_s(buflen+1);
+            //recvBuff[buflen]='\0';
+        //}
+
+        cout << recvBuff << endl;
 
         //if ciphertext
         //recvBuff=readCiphertext(buflen);
@@ -122,14 +162,20 @@ void PIRServer::downloadData(){
         ostringstream oss;
         oss << entry;
 
-        ofstream f("db/"+oss.str(), ios::out|ios::binary);
+        try{
 
-        PIRServer::error(m_id,f==nullptr || f.is_open()==0,"Error reading file");
-        if(f.is_open()){
-            f.write(recvBuff,buflen);
+            ofstream f("db/"+oss.str(), ios::out|ios::binary);
+
+            PIRServer::error(m_id,f==nullptr || f.is_open()==0,"Error writing DB file");
+            if(f.is_open()){
+                f.write(recvBuff,buflen);
+            }
+            f.close();
+
+        }catch (std::ios_base::failure &fail){
+            PIRServer::error(m_id,1,"Error writing DB file");
         }
 
-        f.close();
         delete[] recvBuff;
         entry++;
     }
@@ -139,39 +185,13 @@ void PIRServer::downloadData(){
     m_num_entries=entry;
 }
 
-void PIRServer::sleepForBytes(unsigned int bytes){
-    uint64_t seconds=(bytes*8)/Constants::bandwith_limit;
-    uint64_t nanoseconds=((((double)bytes*8.)/(double)Constants::bandwith_limit)-(double)seconds)*1000000000UL;
+/**
+    Free allocated memory.
 
-    struct timespec req={0},rem={0};
-    req.tv_sec=seconds;
-    req.tv_nsec=nanoseconds;
+    @param v vector of char* to be freed
 
-    nanosleep(&req,&rem);
-}
-
-// This assumes buffer is at least x bytes long,
-// and that the socket is blocking.
-void PIRServer::sendXBytes(uint64_t x, void* buffer){
-    int bytesWrite = 0;
-    while (bytesWrite < x){
-        int result = write(m_connFd, ((uint8_t*)buffer)+bytesWrite, x - bytesWrite); errorWriteSocket(result<0);
-        bytesWrite += result;
-
-        if(Constants::bandwith_limit!=0) sleepForBytes(result);
-    }
-}
-
-void PIRServer::senduInt64(uint64_t integer){
-    uint64_t v = htonl(integer);
-    sendXBytes(sizeof(uint64_t),(void*)(&v));
-}
-
-void PIRServer::senduInt32(uint32_t integer){
-    uint32_t v = htonl(integer);
-    sendXBytes(sizeof(uint32_t),(void*)(&v));
-}
-
+    @return
+*/
 void PIRServer::cleanupVector(vector<char*> v){
     for(uint64_t i=0;i<v.size();i++){
         delete[] v[i];

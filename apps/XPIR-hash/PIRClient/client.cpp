@@ -1,9 +1,31 @@
+/**
+    XPIR-hash
+    client.cpp
+    Purpose: CLIENT main
+
+    @author Joao Sa
+    @version 1.0 01/07/16
+*/
+
 #include "PIRClient.hpp"
-#include "Parallel/PIRClientParallel.hpp"
+#include "Pipeline/PIRClientPipeline.hpp"
 #include "Sequential/PIRClientSequential.hpp"
 
+/**
+    Parse query. It's organised in the following way:
+    	-c (chromosome)
+    	-p (position)
+    	-r (reference allele)
+    	-a (alternate allele)
+    	-f (db file)
+
+    @param argc number of input elements
+    @param argv array with all query input elements
+
+    @return entry map (dictionary) that stores the data of a query in a key-value way
+*/
+int
 std::map<char,std::string> parseEntry(int argc,char* argv[]){
-	
 	std::map<char,std::string> entry;
 
 	for(int i=1;i<argc;i+=2){
@@ -18,28 +40,44 @@ std::map<char,std::string> parseEntry(int argc,char* argv[]){
 	return entry;
 }
 
+/**
+    Parse query. It's organised in the following way:
+    	-c (chromosome)
+    	-p (position)
+    	-r (reference allele)
+    	-a (alternate allele)
+    	-f (db file)
+
+    @param argc number of input elements
+    @param argv array with all query input elements
+
+    @return entry map (dictionary) that stores the data of a query in a key-value way
+*/
 void writeToFile(string filename, string output){
-	ofstream f(filename, std::ios_base::app);
- 	if (f.is_open()){
-		f << output << "\n";
-		f.close();
-		return;
-	}
-  	PIRClient::errorExit(1,"Unable to open file");
+	try{
+		ofstream f(filename, std::ios_base::app);
+	 	if (f.is_open()){
+			f << output << "\n";
+			f.close();
+			return;
+		}
+  		PIRClient::errorExit(1,"Unable to open file");
+	}catch (std::ios_base::failure &fail){
+        PIRClient::errorExit(1,"Error writing output file");
+    }
 }
 
 int main(int argc, char* argv[]){
 	//example input: ./client -c 1 -p 161276680 -r A -a T -f RCV000015246_10000.vcf -> Query variation in file;
 	//               ./client -c 1 -p 160929435 -r G -a A -f RCV000015246_10000.vcf -> Query variation in file;
 	//				 ./client -c 2 -p 161276680 -r A -a T -f RCV000015246_10000.vcf -> Query variation not in file;
-	//				 ./client -c 1 -p 155951628	-r A -a G -f RCV000015246_100000.vcf
 	PIRClient::errorExit(argc<5,"Syntax : ./client [-c chromosome] [-p startPosition] [-r refAllele] [-a altAllele] [-f vcfFile]");	
 	std::map<char,std::string> entry = parseEntry(argc,argv);
 
 	PIRClient* c;
-	if(Constants::pipeline){
-		c=new PIRClientParallel(const_cast<char*>(Constants::hostname),Constants::port);
-	}else{
+	if(Constants::pipeline){	//if PIPELINE execution
+		c=new PIRClientPipeline(const_cast<char*>(Constants::hostname),Constants::port);
+	}else{						//if SEQUENTIAL execution
 		c=new PIRClientSequential(const_cast<char*>(Constants::hostname),Constants::port);
 	}
 

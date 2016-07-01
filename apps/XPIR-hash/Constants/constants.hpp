@@ -15,8 +15,9 @@ namespace Constants{
     extern const char hostname[];
     extern const int port;
     extern const uint64_t bandwith_limit; //=0bps (means no bandwith limit)
-    extern const bool pipeline; 
-    
+    extern const bool pipeline;
+    extern const bool encrypted; 
+
     //server
     extern const int n_threads;
     extern const int max_connects;

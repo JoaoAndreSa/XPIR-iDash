@@ -1,3 +1,22 @@
+/**
+    XPIR-hash
+    PIRClientSequential.cpp
+    Purpose: Child class that executes client using sequential PIR.
+
+    @author Joao Sa
+    @version 1.0 01/07/16
+*/
+
+/**
+
+                  PIRClient
+                      |
+           ----------- -----------
+           |                     |
+  PIRClientSequential(*)   PIRClientPipeline
+
+*/
+
 #include "PIRClientSequential.hpp"
 
 //***PRIVATE METHODS***//
@@ -44,7 +63,7 @@ std::vector<char*> PIRClientSequential::readVector_s(){
 XPIRcSequential::REPLY PIRClientSequential::readReply(){
 	XPIRcSequential::REPLY reply;
 	reply.nbRepliesGenerated=readuInt64();
-	reply.aggregated_maxFileSize=readuInt64();
+	reply.maxFileSize=readuInt64();
 	reply.reply=readVector_s();
 	return reply;
 }
@@ -99,11 +118,11 @@ std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,
     std::string response_s;
 
     //if ciphertext
-    response_s=extractCiphertext(response,reply.aggregated_maxFileSize,pos);
+    //response_s=extractCiphertext(response,reply.maxFileSize,pos);
     //------ ### ------
 
     //if plaintext
-    //response_s=extractPlaintext(response,reply.aggregated_maxFileSize,pos);
+    response_s=extractPlaintext(response,reply.maxFileSize,pos);
     //------ ### ------
 
     if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);

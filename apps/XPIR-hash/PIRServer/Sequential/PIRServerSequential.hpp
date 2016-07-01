@@ -1,3 +1,22 @@
+/**
+    XPIR-hash
+    PIRServerSequential.cpp
+    Purpose: Child class that binds to each server thread and executes sequential PIR.
+
+    @author Joao Sa
+    @version 1.0 01/07/16
+*/
+
+/**
+
+                  PIRServer
+                      |
+           ----------- -----------
+           |                     |
+  PIRServerSequential(*)  PIRServerPipeline
+
+*/
+
 #pragma once
 
 #include "../PIRServer.hpp"
@@ -7,14 +26,21 @@ class PIRServerSequential: public PIRServer {
 	XPIRcSequential* m_xpir;
 
 public:
-	PIRServerSequential(int connFd, uint64_t id) : PIRServer(connFd, id) {}
-	
-	void job();
+	/**
+    	Constructor for PIRServerSequential object.
+
+    	@param connFd (check parent class)
+
+    	@return
+	*/
+	PIRServerSequential(Socket socket) : PIRServer(socket) {}
+
+	void job();								                //what the thread executes
 
 private:
-	vector<char*> readVector_s();
+	vector<char*> readVector_s();				     //read a char* vector from socket (in other words read query array)
+	void sendVector_s(vector<char*>);	       //send a char* vector through socket (in other words send reply data)
 
-	void sendVector_s(vector<char*>, uint32_t);
-	void sendReply(XPIRcSequential::REPLY, uint32_t);
+	void sendReply(XPIRcSequential::REPLY);	 //sends all reply parameters: data, nbRepliesGenerated, maxFileSize)
 
 };

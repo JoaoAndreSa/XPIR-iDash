@@ -1,3 +1,22 @@
+/**
+    XPIR-hash
+    PIRClientSequential.hpp
+    Purpose: Child class that executes client using sequential PIR.
+
+    @author Joao Sa
+    @version 1.0 01/07/16
+*/
+
+/**
+
+                  PIRClient
+                      |
+           ----------- -----------
+           |                     |
+  PIRClientSequential(*)   PIRClientPipeline
+
+*/
+
 #pragma once
 
 #include "../PIRClient.hpp"

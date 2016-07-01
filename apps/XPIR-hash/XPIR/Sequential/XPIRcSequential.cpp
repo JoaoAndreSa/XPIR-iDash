@@ -1,68 +1,106 @@
+/**
+    XPIR-hash
+    XPIRcSequential.cpp
+    Purpose: Child class that encloses the XPIR library function calls for the sequential execution
+
+    @authors: Marc-Olivier Killijian, Carlos Aguillar & Joao Sa
+    @version 1.0 01/07/16
+*/
+
+/**
+
+			    XPIRc
+			      |
+	   ----------- -----------
+	   |                     |
+  XPIRcPipeline        XPIRcSequential (*)
+
+*/
+
 #include "XPIRcSequential.hpp"
 
 //***PRIVATE METHODS***//
+/**
+	Imports the database/filesystem (stored on the db/ folder) to be used by the remaining PIR operations.
+
+	@param
+	@return
+*/
 void XPIRcSequential::import_database(){
-	// Import database
-	// This could have been done on the "Database setup" phase if:
-	//  - the contents are static
-	//  - AND the imported database fits in RAM
-	//  - AND the server knows in advance the PIR and crypto parameters (e.g. chosen by him)
-	cout << "SimplePIR: Importing database ..." << endl;
-	// Warning aggregation is dealt with internally the bytes_per_db_element parameter here
-	// is to be given WITHOUT multiplying it by params.alpha
-	m_imported_db = m_r_generator->importData(/* uint64_t offset*/ 0, /*uint64_tbytes_per_db_element */ m_db->getmaxFileBytesize());
-	cout << "SimplePIR: Database imported" << endl;
-	
+	/**
+		Import database
+		This can be done on the "Database setup" phase because:
+			- the contents are static
+			- the imported database fits in RAM
+			- the server knows in advance the PIR and crypto parameters (e.g. read from file)
+	*/
+	cout << "PIRServer: Importing database ..." << endl;
+	/**
+		Warning aggregation is dealt with internally, the bytes_per_db_element parameter here is to be given WITHOUT multiplying it by params.alpha
+	*/
+	m_imported_db = m_r_generator->importData(/* uint64_t offset*/ 0, /*uint64_t bytes_per_db_element */ m_db->getmaxFileBytesize());
+	cout << "PIRServer: Database imported" << endl;
 }
 
-//***PUBLIC METHODS***//
-vector<char*> XPIRcSequential::queryGeneration(uint64_t chosen_element){
-	/*******************************************************************************
-	* Query generation phase (client-side)                                       
-	******************************************************************************/
 
-	// Create the query generator object
-	cout << "SimplePIR: Generating query ..." << endl;
-	// Generate a query to get the FOURTH element in the database (indexes begin at 0)
-	// Warning : if we had set params.alpha=2 elements would be aggregated 2 by 2 and 
-	// generatequery would only accept as input 0 (the two first elements) or 1 (the other two)
+//***PUBLIC METHODS***//
+/**
+	Query generation phase (client-side). Stores encrypted query elements in an array to be sent to the server.
+
+	@param chosen_element position of element queried
+
+	@return query array that cointains the corresponding encrypted query (all its elements)
+*/
+vector<char*> XPIRcSequential::queryGeneration(uint64_t chosen_element){
+	cout << "PIRClient: Generating query ..." << endl;
+	/**
+		Generate a query to get an element in the database (indexes begin at 0).
+		Warning: if we set params.alpha=2, elements would be aggregated 2 by 2 and generateQuery
+		would only accept as input 0 (the two first elements) or 1 (the other two)
+	*/
 	m_q_generator->generateQuery(chosen_element);
 
-	// In a real application the client would pop the queries from q with popQuery and 
-	// send them through the network and the server would receive and push them into s 
-	// using pushQuery
+	/**
+		The client pops the queries from m_q_generator with popQuery and 
+		send them through the network and the server would receive and 
+		push them into m_r_generator using pushQuery.
+	*/
 	vector<char*> query;
 	char* query_element;
 	while (m_q_generator->popQuery(&query_element)){
 		query.push_back(query_element);
 	}
-	cout << "SimplePIR: Query generated" << endl;
+	cout << "PIRClient: Query generated" << endl;
 
 	return query;
 }
 
-XPIRcSequential::REPLY XPIRcSequential::replyGeneration(vector<char*> query){
-	/******************************************************************************
-	* Reply generation phase (server-side)
-	******************************************************************************/
+/**
+	Reply generation phase (server-side). Stores encrypted elements in array to be sent to the client.
 
-	// In a real application the client would pop the queries from q with popQuery and 
-	// send them through the network and the server would receive and push them into s 
-	// using pushQuery
+	@param query array of encrypted query elements
+
+	@return reply encrypted response message that contains data, number of reply elements and 
+	              the size of the biggest aggegated file
+*/
+XPIRcSequential::REPLY XPIRcSequential::replyGeneration(vector<char*> query){
+
 	for(int i=0;i<query.size();i++){
 		m_r_generator->pushQuery(query[i]);
 	}
-			
+
 	// Once the query is known and the database imported launch the reply generation
-	cout << "SimplePIR: Generating reply ..." << endl;
+	cout << "PIRServer: Generating reply ..." << endl;
 	double start = omp_get_wtime();
 	m_r_generator->generateReply(m_imported_db);
 	double end = omp_get_wtime();
-	cout << "SimplePIR: Reply generated in " << end-start << " seconds" << endl;
+	cout << "PIRServer: Reply generated in " << end-start << " seconds" << endl;
 
-	// In a real application the server would pop the replies from s with popReply and 
-	// send them through the network together with nbRepliesGenerated and aggregated_maxFileSize 
-	// and the client would receive the replies and push them into r using pushEncryptedReply
+	/**
+		The server would pop the replies from m_r_generator with popReply and
+		sends them through the network together with nbRepliesGenerated and maxFileSize
+		and the client would receive the replies and push them into m_r_extractor using pushEncryptedReply
+	*/
 	XPIRcSequential::REPLY reply;
 
 	char* reply_element;
@@ -71,53 +109,70 @@ XPIRcSequential::REPLY XPIRcSequential::replyGeneration(vector<char*> query){
 	}
 
 	reply.nbRepliesGenerated=m_r_generator->getnbRepliesGenerated();  
-	cout << "SimplePIR: "<< reply.nbRepliesGenerated << " Replies generated " << endl;	
+	cout << "PIRServer: "<< reply.nbRepliesGenerated << " Replies generated " << endl;	
 
-	reply.aggregated_maxFileSize=m_maxFileSize;
+	reply.maxFileSize=m_db->getmaxFileBytesize();
 	return reply;
 }
 
+/**
+	Reply extraction phase (client-side). Decrypts reply (homomorphic decryption) and returns result.
+
+	@param reply encrypted response message sent by the server
+
+	@return result decrypted reply
+*/
 char* XPIRcSequential::replyExtraction(XPIRcSequential::REPLY reply){
-	delete m_r_generator;
-	m_r_generator = new PIRReplyGenerator(m_params,*m_crypto,m_db);
-  	m_r_generator->setPirParams(m_params);
-	/******************************************************************************
-	* Reply extraction phase (client-side)
-	******************************************************************************/
-	
 	for(int i=0;i<reply.reply.size();i++){
 		m_r_extractor->pushEncryptedReply(reply.reply[i]);
 	}
 
-	cout << "SimplePIR: Extracting reply ..." << endl;
-	m_r_extractor->extractReply(reply.aggregated_maxFileSize);
-	cout << "SimplePIR: Reply extracted" << endl;
+	cout << "PIRClient: Extracting reply ..." << endl;
+	m_r_extractor->extractReply(reply.maxFileSize);
+	cout << "PIRClient: Reply extracted" << endl;
 
 	// In a real application instead of writing to a buffer we could write to an output file
 	char *outptr, *result, *tmp;
 
-	outptr = result = (char*)calloc(m_r_extractor->getnbPlaintextReplies(reply.aggregated_maxFileSize)*m_r_extractor->getPlaintextReplyBytesize(), sizeof(char));
+	outptr = result = (char*)calloc(m_r_extractor->getnbPlaintextReplies(reply.maxFileSize)*m_r_extractor->getPlaintextReplyBytesize(), sizeof(char));
 	while (m_r_extractor->popPlaintextResult(&tmp)) {
 		memcpy(outptr, tmp, m_r_extractor->getPlaintextReplyBytesize());
 		outptr+=m_r_extractor->getPlaintextReplyBytesize();
 		free(tmp);
 	}
-	// Result is in ... result
 	return result;
 }
 
+/**
+	Frees the allocated memory taken by queries generated by m_q_generator
+
+	@param
+	@return
+*/
 void XPIRcSequential::cleanQueryBuffer(){
 	m_q_generator->cleanQueryBuffer();
 }
 
-void XPIRcSequential::freeQueries(){
-	char* reply_element_tmp;
+/**
+	Frees the allocated memory taken by the queries pushed into m_r_generator
+
+	@param
+	@return
+*/
+void XPIRcSequential::cleanReplyBuffer(){
 	m_r_generator->freeQueries();
 }
 
+/**
+	Deletes allocated 'tools'..
+
+	@param
+	@return
+*/
 void XPIRcSequential::cleanup(){
-	if(m_q_generator!=nullptr) delete m_q_generator;
-	if(m_r_generator!=nullptr) delete m_r_generator;
-	if(m_r_extractor!=nullptr) delete m_r_extractor;
-	if(m_imported_db!=nullptr) delete m_imported_db;
+	if(m_q_generator!=nullptr){delete m_q_generator;}
+	if(m_r_generator!=nullptr){delete m_r_generator;}
+	if(m_r_extractor!=nullptr){delete m_r_extractor;}
+	if(m_imported_db!=nullptr){delete m_imported_db;}
+	upperCleanup();
 }
