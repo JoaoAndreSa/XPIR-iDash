@@ -112,14 +112,15 @@ void PIRServerPipeline::job (){
     //read file from client
   	downloadData();
     DBDirectoryProcessor db;
-    m_xpir = new XPIRcPipeline(readParamsPIR(),0,&db);
+    m_xpir = new XPIRcPipeline(Tools::readParamsPIR(m_num_entries),0,&db);
 
     m_socket.senduInt64(m_xpir->getDB()->getmaxFileBytesize());
 
-    //#-------SETUP PHASE--------#
+    //#-------QUERY PHASE--------#
     // This is just a download thread. Reply generation is unlocked (by a mutex) when this thread finishes.
    	m_downThread = boost::thread(&PIRServerPipeline::downloadWorker, this);
 
+    //#-------REPLY PHASE--------#
     /**
         Start reply generation when mutex unlocked.
         Start a thread which uploads the reply as it is generated.
@@ -136,14 +137,15 @@ void PIRServerPipeline::job (){
         m_xpir->setImportedDB(m_xpir->getRGenerator()->generateReplyGeneric(true));
         m_xpir->setImported(true);
     }
-    
+
     // Wait for child threads
   	if (m_upThread.joinable())  m_upThread.join();
   	if (m_downThread.joinable()) m_downThread.join();
 
+    //#-------CLEANUP PHASE--------#
     // When everything is sent, clean 'tools' and close the socket
     m_xpir->cleanup();
     delete m_xpir;
-    close(m_connFd);
+    m_socket.closeSocket();
     std::cout << "THREAD [" << m_id << "] EXITED" << "\n";
 }

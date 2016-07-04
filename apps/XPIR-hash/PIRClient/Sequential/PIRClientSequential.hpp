@@ -2,6 +2,8 @@
     XPIR-hash
     PIRClientSequential.hpp
     Purpose: Child class that executes client using sequential PIR.
+			 NOTE: In sequential PIR, client generates the entire query and only then does he send it to the server.
+             Furthermore, he has to wait and get all reply elements before starting the reply extraction.
 
     @author Joao Sa
     @version 1.0 01/07/16
@@ -26,21 +28,29 @@ private:
 	XPIRcSequential* m_xpir;
 
 public:
-	PIRClientSequential(char* sname, int portNo) : PIRClient(sname,portNo){}
+	/**
+    	Constructor for PIRClientSequential object.
 
-	std::string searchQuery(uint64_t,std::map<char,std::string>);
+    	@param socket (check parent class)
 
-	void cleanupVector(std::vector<char*>);
-	void cleanup();
+    	@return
+	*/
+	PIRClientSequential(Socket socket) : PIRClient(socket){}
+
+	std::string searchQuery(uint64_t,std::map<char,std::string>);	//main function for the class -> query variant(s)
 
 private:
-	void sendVector_s(std::vector<char*>);
-	std::vector<char*> queryGeneration(uint64_t);
+	//QUERY GENERATION & SEND QUERY
+	void sendQuery(std::vector<char*>);
+	std::vector<char*> queryGeneration(uint64_t);					//generate and return query
 
-	std::vector<char*> readVector_s();
-	XPIRcSequential::REPLY readReply();
+	//READ REPLY
+	std::vector<char*> readReplyData();
+	XPIRcSequential::REPLY readReply();								/*read all elements of reply (not just data but also the number of reply
+																	  elements generated and the max file size)*/
 
+	//REPLY EXTRACTION
 	char* replyExtraction(XPIRcSequential::REPLY);
-	std::string extractCiphertext(char*, uint64_t, uint64_t);
-	std::string extractPlaintext(char*, uint64_t, uint64_t);
+	std::string extractCiphertext(char*, uint64_t, uint64_t);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
+	std::string extractPlaintext(char*, uint64_t, uint64_t);		//extract the exact plaintext (with aggregation the reply contains more than one element)
 };

@@ -28,14 +28,13 @@
 #include "../XPIR/Sequential/XPIRcSequential.hpp"
 
 #include "../Constants/constants.hpp"
+#include "../Socket/Socket.hpp"
+#include "../Tools/Tools.hpp"
 
 class PIRClient{
 protected:
 	//Connection variables
-	int m_listenFd, m_portNo;
-	char* m_sname;
-	struct hostent *m_server;
-	struct sockaddr_in m_svrAdd;
+	Socket m_socket;
 
 	//Encryption and hashing variables
 	AES_cbc_256 m_cbc;
@@ -47,37 +46,21 @@ protected:
 
 public:
 	/**
-    	Constructor (super class) for PIRServer object.
+    	Constructor (super class) for PIRClient object.
 
-    	@param sname server address name.
-    	@param portNo port to connect.
+    	@param socket
 
     	@return
 	*/
-	PIRClient(char* sname, int portNo){
-		srand(static_cast <unsigned int> (time(0)));
-		//Start server connection
-		errorExit((portNo > 65535) || (portNo < 2000),"Please enter port number between 2000 - 65535");
-		
-		m_portNo=portNo;
-		m_sname=sname;
-
-		createSocket();
-		getServerAddress();
-		connectToServer();
+	PIRClient(Socket socket){
+		m_socket=socket;
 	}
-
-	static void errorExit(int cond, std::string err){if(cond==1){std::cerr << err << "\n"; exit(1);}}		//For errors on main thread
-	static void errorWriteSocket(int cond){if(cond==1){std::cerr << "ERROR writing to socket" << "\n";}}	//For errors while writing in socket
-	static void errorReadSocket(int cond){if(cond==1){std::cerr << "ERROR reading socket"<< "\n";}}			//For errors while reading from socket
 
 	uint64_t uploadData(std::string);				//prepares and uploads the DB data to send to the server
 	void initSHA256();
 
 	uint64_t considerPacking(uint64_t,uint64_t);	//returns the position relative to the aggregation/packing value
-	virtual std::string searchQuery(uint64_t,std::map<char,std::string>)=0;	//kind of the main function of the class
-
-	virtual void cleanup()=0;						//clean 'tools'
+	virtual std::string searchQuery(uint64_t,std::map<char,std::string>)=0;	//kind of the main function of all PIRClient classes (children)
 
 	//Getters and Setters
 	void setRTTStart();
@@ -86,31 +69,11 @@ public:
 	double getRTTStop();
 
 protected:
-	void createSocket();											//initializes socket descriptor
-	void connectToServer();											//
-	void getServerAddress();										//
+	int compareSNPs(std::string, std::map<char,std::string>);		//compares two SNPs and returns 1 if they are equal or 0 otherwise
 
-	void sleepForBytes(unsigned int);								//
-
-	void sendXBytes(uint64_t, void*);								//send X amount of bytes to the socket (we convert any type to a bunch of bytes)
-	void senduChar_s(unsigned char*,int);							//sends an unsigned char array to the socket;
-	void sendInt(int);												//sends an integer to the socket;
-	void senduInt(unsigned int);									//sends an unsigned integer to the socket;
-	void senduInt32(uint32_t);										//sends an unsigned integer (32 bits) to the socket;
-	void senduInt64(uint64_t);										//sends an unsigned integer (64 bits) to the socket;
-
-	void readXBytes(uint64_t, void*);								//
-	uint64_t readuInt64();											//
-	uint32_t readuInt32();											//
-
-	int compareSNPs(std::string, std::map<char,std::string>);		//
-	int verifyParams(uint64_t,uint64_t,uint64_t,unsigned int*);		//
-	PIRParameters readParamsPIR(uint64_t);							//
-	int readParamsSHA();											//
-
-	int symmetricEncrypt(unsigned char*,std::string);				//
-	int symmetricDecrypt(unsigned char*,char*);						//
-	void sendCiphertext(int,unsigned char*);						//
-	void sendPlaintext(int,std::string);							//
-	uint64_t sendData(std::vector<std::string>);					//
+	int symmetricEncrypt(unsigned char*,std::string);				//symmetric encrypt plaintext and return the result
+	int symmetricDecrypt(unsigned char*,char*);						//symmetric decrypt ciphertext and return the result
+	void sendCiphertext(int,unsigned char*);						//send ciphertext through socket (length+data)
+	void sendPlaintext(int,std::string);							//send plaintext through socket (length+data)
+	uint64_t sendData(std::vector<std::string>);					//encrypt and send every variant in vcf file to server
 };

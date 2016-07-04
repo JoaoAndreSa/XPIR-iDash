@@ -12,6 +12,8 @@ Constants = ../Constants/constants
 
 Socket = ../Socket/Socket
 
+Tools = ../Tools/Tools
+
 PIRServer = PIRServer
 PIRServerPipeline = Pipeline/PIRServerPipeline
 PIRServerSequential = Sequential/PIRServerSequential
@@ -23,7 +25,7 @@ XPIRcSequential = ../XPIR/Sequential/XPIRcSequential
 all: $(TARGET)
 
 $(TARGET): $(TARGET).cpp
-	$(CC) $(TARGET).cpp $(PIRServer).cpp $(PIRServerPipeline).cpp $(PIRServerSequential).cpp $(XPIRc).cpp $(XPIRcPipeline).cpp $(XPIRcSequential).cpp $(Socket).cpp $(Constants).cpp $(CFLAGS) -o $(TARGET) 
+	$(CC) $(TARGET).cpp $(PIRServer).cpp $(PIRServerPipeline).cpp $(PIRServerSequential).cpp $(XPIRc).cpp $(XPIRcPipeline).cpp $(XPIRcSequential).cpp $(Socket).cpp $(Tools).cpp $(Constants).cpp $(CFLAGS) -o $(TARGET) 
 
 clean:
 	$(RM) $(TARGET)

@@ -1,3 +1,24 @@
+/**
+    XPIR-hash
+    PIRClientPipeline.hpp
+    Purpose: Child class that executes client using pipelien PIR.
+       NOTE: In pipeline PIR, client sends query to the server while he is generating it server.
+             Furthermore, he does not need to wait and get all reply elements before starting the reply extraction.
+
+    @author Joao Sa
+    @version 1.0 01/07/16
+*/
+
+/**
+
+                  PIRClient
+                      |
+           ----------- -----------
+           |                     |
+  PIRClientSequential    PIRClientPipeline(*) 
+
+*/
+
 #include "PIRClientPipeline.hpp"
 
 //***PRIVATE METHODS***//
@@ -17,7 +38,7 @@ void PIRClientPipeline::downloadWorker(){
   	char* recvBuf = new char[message_length];
 
   	// Get a reply element
-    readXBytes(message_length,(void*)recvBuf);
+    m_socket.readXBytes(message_length,(void*)recvBuf);
   	m_xpir->getRExtractor()->repliesBuffer.push(recvBuf);
   }
   cout << "PIRClient: Finish reply element reception" << endl;
@@ -38,7 +59,7 @@ void PIRClientPipeline::uploadWorker(){
 		length=m_xpir->getCrypto()->getPublicParameters().getQuerySizeFromRecLvl(j) / GlobalConstant::kBitsPerByte;
 		for (unsigned int i=0; i<m_xpir->getN()[j-1]; i++){
 			tmp = m_xpir->getQGenerator()->queryBuffer.pop_front();
-			sendXBytes(length,(void*)tmp);
+			m_socket.sendXBytes(length,(void*)tmp);
 			free(tmp);
     }
   }
@@ -58,9 +79,9 @@ void PIRClientPipeline::joinAllThreads(){
 
 //***PUBLIC METHODS***//
 std::string PIRClientPipeline::searchQuery(uint64_t num_entries,std::map<char,std::string> entry){
-    m_xpir= new XPIRcPipeline(readParamsPIR(num_entries),1,nullptr);
+    m_xpir= new XPIRcPipeline(Tools::readParamsPIR(num_entries),1,nullptr);
 
-    m_maxFileBytesize = readuInt64();
+    m_maxFileBytesize = m_socket.readuInt64();
 
     string query_str=entry['c']+" "+entry['p']+" # "+entry['r']+" "+entry['a'];
     uint64_t pos=m_SHA_256->hash(query_str);
@@ -77,10 +98,7 @@ std::string PIRClientPipeline::searchQuery(uint64_t num_entries,std::map<char,st
 
     if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
 
+    delete m_SHA_256;
+    delete m_xpir;
     return response_s;
-}
-
-void PIRClientPipeline::cleanup(){
-	delete m_SHA_256;
-  delete m_xpir;
 }

@@ -2,6 +2,7 @@
     XPIR-hash
     PIRServerSequential.cpp
     Purpose: Child class that binds to each server thread and executes sequential PIR.
+             NOTE: In sequential PIR, server has to wait and get all query elements before starting the reply generation.
 
     @author Joao Sa
     @version 1.0 01/07/16
@@ -93,20 +94,21 @@ void PIRServerSequential::job (){
     //read file from client
 	downloadData();
     DBDirectoryProcessor db;
-    m_xpir = new XPIRcSequential(readParamsPIR(),0,&db);
+    m_xpir = new XPIRcSequential(Tools::readParamsPIR(m_num_entries),0,&db);
 
     //#-------QUERY PHASE--------#
     vector<char*> query=readVector_s();
 
+    //#-------REPLY PHASE--------#
     XPIRcSequential::REPLY reply=m_xpir->replyGeneration(query);
     sendReply(reply);
 
     //#-------CLEANUP PHASE--------#
     m_xpir->cleanReplyBuffer();
-    cleanupVector(reply.reply);
+    Tools::cleanupVector(reply.reply);
     m_xpir->cleanup();
     delete m_xpir;
-    close(m_connFd);
-    
+    m_socket.closeSocket();
+
     std::cout << "THREAD [" << m_id << "] EXITED" << "\n";
 }

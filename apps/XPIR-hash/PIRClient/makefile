@@ -12,6 +12,10 @@ AES_CBC = AES/AES_cbc_256
 SHA1 = SHA256/SHA_256
 Constants = ../Constants/constants
 
+Socket = ../Socket/Socket
+
+Tools = ../Tools/Tools
+
 PIRClient = PIRClient
 PIRClientPipeline = Pipeline/PIRClientPipeline
 PIRClientSequential = Sequential/PIRClientSequential
@@ -23,7 +27,7 @@ XPIRcSequential = ../XPIR/Sequential/XPIRcSequential
 all: $(TARGET)
 
 $(TARGET): $(TARGET).cpp
-	$(CC) $(TARGET).cpp $(AES_CBC).cpp $(SHA1).cpp $(PIRClient).cpp $(PIRClientPipeline).cpp $(PIRClientSequential).cpp $(XPIRc).cpp $(XPIRcPipeline).cpp $(XPIRcSequential).cpp $(Constants).cpp $(CFLAGS) -o $(TARGET) 
+	$(CC) $(TARGET).cpp $(AES_CBC).cpp $(SHA1).cpp $(PIRClient).cpp $(PIRClientPipeline).cpp $(PIRClientSequential).cpp $(XPIRc).cpp $(XPIRcPipeline).cpp $(XPIRcSequential).cpp $(Socket).cpp $(Tools).cpp $(Constants).cpp $(CFLAGS) -o $(TARGET) 
 
 clean:
 	$(RM) $(TARGET)

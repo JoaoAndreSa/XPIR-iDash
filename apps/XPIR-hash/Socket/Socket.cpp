@@ -28,8 +28,9 @@ void Socket::createSocket(){
     @return
 */
 void Socket::connectToServer(){
-	m_connFd = connect(m_socketFd,(struct sockaddr *) &m_svrAdd, sizeof(m_svrAdd));
-    errorExit(m_connFd<0,"Cannot connect!");
+	int check = connect(m_socketFd,(struct sockaddr *) &m_svrAdd, sizeof(m_svrAdd));
+    errorExit(check<0,"Cannot connect!");
+    m_connFd = m_socketFd;
 }
 
 /**
@@ -39,14 +40,14 @@ void Socket::connectToServer(){
     @return
 */
 void Socket::getServerAddress(){
-	m_server = gethostbyname(m_sname);
+	m_server = gethostbyname(Constants::hostname);
 	errorExit(m_server==NULL,"Host does not exist");
 
 	bzero((char *)&m_svrAdd, sizeof(m_svrAdd));
     m_svrAdd.sin_family = AF_INET;
 
     bcopy((char *)m_server->h_addr, (char *)&m_svrAdd.sin_addr.s_addr, m_server->h_length);
-    m_svrAdd.sin_port = htons(m_portNo);
+    m_svrAdd.sin_port = htons(Constants::port);
 }
 
 /**
@@ -131,13 +132,29 @@ void Socket::readXBytes(uint64_t x, void* buffer){
 }
 
 /**
-    Reads an unsigned char array from the socket and returns it.
+    Reads an unsigned char array (string) from the socket and returns it.
+    We need to add '\0' to the end of the stream.
 
     @param buflen size of the element to be read.
 
     @return recvBuff buffer where we store the bytes.
 */
 char* Socket::readChar_s(int buflen){
+    char* recvBuff = new char[buflen+1];
+    readXBytes(buflen,(void*)recvBuff);
+    recvBuff[buflen]='\0';
+    return recvBuff;
+}
+
+/**
+    Reads an unsigned char array (binary) from the socket and returns it.
+    e.g. a ciphertext (we only need to read a set of random chars)
+
+    @param buflen size of the element to be read.
+
+    @return recvBuff buffer where we store the bytes.
+*/
+char* Socket::readChar(int buflen){
     char* recvBuff = new char[buflen];
     readXBytes(buflen,(void*)recvBuff);
     return recvBuff;
@@ -276,4 +293,14 @@ void Socket::senduInt32(uint32_t integer){
 void Socket::senduInt64(uint64_t integer){
     uint64_t v = htonl(integer);
     sendXBytes(sizeof(uint64_t),(void*)(&v));
+}
+
+/**
+    Closes socket.
+
+    @param
+    @return
+*/
+void Socket::closeSocket(){
+    close(m_connFd);
 }

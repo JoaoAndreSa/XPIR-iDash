@@ -24,7 +24,6 @@
 
     @return entry map (dictionary) that stores the data of a query in a key-value way
 */
-int
 std::map<char,std::string> parseEntry(int argc,char* argv[]){
 	std::map<char,std::string> entry;
 
@@ -61,9 +60,9 @@ void writeToFile(string filename, string output){
 			f.close();
 			return;
 		}
-  		PIRClient::errorExit(1,"Unable to open file");
+  		Socket::errorExit(1,"Unable to open file");
 	}catch (std::ios_base::failure &fail){
-        PIRClient::errorExit(1,"Error writing output file");
+        Socket::errorExit(1,"Error writing output file");
     }
 }
 
@@ -71,14 +70,18 @@ int main(int argc, char* argv[]){
 	//example input: ./client -c 1 -p 161276680 -r A -a T -f RCV000015246_10000.vcf -> Query variation in file;
 	//               ./client -c 1 -p 160929435 -r G -a A -f RCV000015246_10000.vcf -> Query variation in file;
 	//				 ./client -c 2 -p 161276680 -r A -a T -f RCV000015246_10000.vcf -> Query variation not in file;
-	PIRClient::errorExit(argc<5,"Syntax : ./client [-c chromosome] [-p startPosition] [-r refAllele] [-a altAllele] [-f vcfFile]");	
+	Socket::errorExit(argc<5,"Syntax : ./client [-c chromosome] [-p startPosition] [-r refAllele] [-a altAllele] [-f vcfFile]");	
 	std::map<char,std::string> entry = parseEntry(argc,argv);
+
+	//Start server connection
+	Socket::errorExit((Constants::port > 65535) || (Constants::port < 2000),"Please choose a port number between 2000 - 65535");
+	Socket socket(1);
 
 	PIRClient* c;
 	if(Constants::pipeline){	//if PIPELINE execution
-		c=new PIRClientPipeline(const_cast<char*>(Constants::hostname),Constants::port);
+		c=new PIRClientPipeline(socket);
 	}else{						//if SEQUENTIAL execution
-		c=new PIRClientSequential(const_cast<char*>(Constants::hostname),Constants::port);
+		c=new PIRClientSequential(socket);
 	}
 
 	c->initSHA256();
@@ -96,7 +99,6 @@ int main(int argc, char* argv[]){
         std::cout << output;
         std::cout << resp << "\n\n"; 
     }
-    c->cleanup();
 
     std::ostringstream strs;
 	strs << (c->getRTTStop()-c->getRTTStart());

@@ -34,7 +34,7 @@ public:
 	/**
     	Constructor for PIRServerPipeline object.
 
-    	@param connFd (check parent class)
+    	@param socket (check parent class)
 
     	@return
 	*/

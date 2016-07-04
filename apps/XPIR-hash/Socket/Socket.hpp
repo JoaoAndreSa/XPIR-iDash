@@ -7,6 +7,8 @@
     @version 1.0 01/07/16
 */
 
+#pragma once
+
 #include <iostream>
 #include <stdint.h>
 #include <netdb.h>
@@ -16,14 +18,14 @@
 #include <cstring>
 #include <time.h>
 
- #include "../Constants/constants.hpp"
+#include "../Constants/constants.hpp"
 
 class Socket{
 private:
 	bool m_type;							//if =0 server, if =1 client
 
 	//Connection variables
-	int m_socketFd, m_portNo;
+	int m_socketFd, m_portNo, m_connFd;
 	char* m_sname;
 	struct hostent *m_server;
 	struct sockaddr_in m_svrAdd,m_clntAdd;
@@ -31,7 +33,6 @@ private:
 
 
 public:
-	int m_connFd;
 	/**
     	Constructor for Socket object.
 
@@ -59,7 +60,8 @@ public:
 
 	//READING
 	void readXBytes(uint64_t, void*);   	//read X amount of bytes from the socket (we can then cast it to whatever type we need)
-	char* readChar_s(int);					//reads an char array from the socket and returns it
+	char* readChar_s(int);					//reads an char array (string) from the socket and returns it
+	char* readChar(int);					//reads an char array (binary) from the socket and returns it
 	int readInt();							//reads an integer from the socket and returns it
 	unsigned int readuInt();				//reads an unsigned integer from the socket and returns it
 	uint32_t readuInt32();					//reads an unsigned integer (32bits) from the socket and returns it
@@ -77,6 +79,9 @@ public:
 	static void errorExit(int cond, std::string err){if(cond==1){std::cerr << err << "\n"; exit(1);}}		//For errors on main thread
 	static void errorWriteSocket(int cond){if(cond==1){std::cerr << "ERROR writing to socket" << "\n";}}	//For errors while writing in socket
 	static void errorReadSocket(int cond){if(cond==1){std::cerr << "ERROR reading socket"<< "\n";}}			//For errors while reading from socket
+
+	//CLOSE
+	void closeSocket();						//closes socket
 
 private:
 	//CREATION
