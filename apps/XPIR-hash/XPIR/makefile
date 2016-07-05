@@ -4,14 +4,14 @@ CC = g++ -std=c++11
 # compiler flags:
 #  -g    adds debugging information to the executable file
 #  -Wall turns on most, but not all, compiler warnings
-CFLAGS = -I/home/user/Desktop/XPIR -L/home/user/Desktop/XPIR/_build/pir -lssl -lcrypto -lpir_static -lgmp -lmpfr -fopenmp -lboost_thread -lboost_system
+CFLAGS = -I../../.. -L../../../_build/pir -lssl -lcrypto -lpir_static -lgmp -lmpfr -fopenmp -lboost_thread -lboost_system
 
 # the build target executable:
 TARGET = simplePIR
 
 # othe code that needs to be compiled
 XPIRc = XPIRc
-AES_CBC = /home/user/Desktop/XPIR/apps/XPIRt/PIRClient/AES/AES_cbc_256
+AES_CBC = ..//PIRClient/AES/AES_cbc_256
 
 all: $(TARGET)
 
