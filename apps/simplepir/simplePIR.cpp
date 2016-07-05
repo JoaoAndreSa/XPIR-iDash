@@ -296,7 +296,7 @@ int main(int argc, char * argv[]) {
   std::cout << "params.alpha = 1; params.d = 1; crypto_params = LWE:80:2048:120;" << std::endl; 
   std::cout << "======================================================================" << std::endl;
   DBDirectoryProcessor db7;
-  if (db6.getErrorStatus()==true){
+  if (db7.getErrorStatus()==true){
     std::cout << "SimplePIR : Error with db directory skipping test ..." << std::endl << std::endl;
   } else {
     database_size = db7.getDBSizeBits()/8; nb_files = db7.getNbStream(); 
