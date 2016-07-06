@@ -67,7 +67,7 @@ std::vector<char*> PIRClientSequential::readReplyData(){
         replyData.push_back(buffer);
     }
     double end = omp_get_wtime();
-    cout << "SimplePIR: Send reply took " << end-start << " seconds" << endl;
+    cout << "PIRClient: Send reply took " << end-start << " seconds" << endl;
     return replyData;
 }
 
@@ -157,7 +157,7 @@ std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,
     //#-------QUERY PHASE--------#
     std::vector<char*> query=queryGeneration(pack_pos);
     sendQuery(query);
-    std::cout << "SimplePIR: Query sent" << "\n";
+    std::cout << "PIRClient: Query sent" << "\n";
 
     //#-------REPLY PHASE--------#
     XPIRcSequential::REPLY reply = readReply();

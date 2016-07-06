@@ -109,8 +109,6 @@ void Socket::sleepForBytes(unsigned int bytes){
     req.tv_sec=seconds;
     req.tv_nsec=nanoseconds;
 
-    std::cout << bytes << "sleep for " << seconds << "seconds" << nanoseconds << "nanoseconds" << std::endl;
-
     nanosleep(&req,&rem);
 }
 

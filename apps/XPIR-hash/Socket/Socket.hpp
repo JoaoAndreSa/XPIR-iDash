@@ -25,7 +25,7 @@ private:
 	bool m_type;							//if =0 server, if =1 client
 
 	//Connection variables
-	int m_socketFd, m_portNo, m_connFd;
+	int m_socketFd, m_portNo;
 	char* m_sname;
 	struct hostent *m_server;
 	struct sockaddr_in m_svrAdd,m_clntAdd;
@@ -33,6 +33,7 @@ private:
 
 
 public:
+	int m_connFd;
 	/**
     	Constructor for Socket object.
 

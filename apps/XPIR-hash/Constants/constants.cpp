@@ -13,7 +13,7 @@ namespace Constants{
 
     //client+server
     extern const char hostname[]{"localhost"};
-    extern const int port(12346);
+    extern const int port(12345);
     extern const double bandwith_limit(10000000); //=0bps (means no bandwith limit)
     //extern const uint64_t bandwith_limit(0);
     extern const bool pipeline(false);

@@ -44,6 +44,7 @@ public:
 	*/
 	PIRServer(Socket socket){
 		m_socket=socket;
+		std::cout << "OLALALALA" <<  m_socket.m_connFd << std::endl;
 	}
 
 protected:
