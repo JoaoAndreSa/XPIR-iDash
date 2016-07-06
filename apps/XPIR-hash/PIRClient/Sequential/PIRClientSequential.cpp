@@ -150,7 +150,6 @@ std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,
     m_xpir= new XPIRcSequential(Tools::readParamsPIR(num_entries),1,nullptr);
 
     //#-------SETUP PHASE--------#
-    //prepare and send file to server
     string query_str=entry['c']+" "+entry['p']+" # "+entry['r']+" "+entry['a'];
     uint64_t pos=m_SHA_256->hash(query_str);
     uint64_t pack_pos=considerPacking(m_SHA_256->hash(query_str),m_xpir->getAlpha());

@@ -40,6 +40,7 @@ private:
 
 	bool m_imported;								//whether the data has been imported before or not (if m_imported_db has been instanciated)
 	imported_database_t m_imported_db;				//it seems the same object as in XPIRcSequential but it's not
+	uint64_t m_maxFileSize;
 
 	PIRReplyWriter* m_replyWriter;					//needed for the reply extraction
 	messageListener m_messageListeners; 
@@ -84,6 +85,8 @@ public:
 	PIRReplyExtraction_internal* getRExtractor();	//m_r_extractor getter
 	imported_database_t getImportedDB();			//m_imported_db getter
 	void setImportedDB(imported_database_t db);		//m_imported_db setter
+	uint64_t getMaxFileSize();						//m_maxFileSize getter (only makes sense for client since he does not have access to db object);
+	void setMaxFileSize(uint64_t);					//m_maxFileSize setter
 	bool isImported();								//m_imported getter
 	void setImported(bool);							//m_importedsetter
 	void cleanup();									//clean 'tools'

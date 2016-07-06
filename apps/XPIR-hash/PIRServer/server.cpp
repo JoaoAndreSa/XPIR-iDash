@@ -18,7 +18,7 @@ int main(int argc, char* argv[]){
 	//Create an asio::io_service and a thread_group (through pool in essence)
 	boost::asio::io_service ioService;
 	/**
-		TODO: 	 For threadpool to actually make sense we need to have th database previously stored on the server.
+		TODO: 	 For threadpool to actually make sense we need to have the database previously stored on the server.
 		WARNING: Multiple threads executing at the same time would lead to concurrency problems due to overwriting files
 	*/
 	boost::thread_group threadpool;

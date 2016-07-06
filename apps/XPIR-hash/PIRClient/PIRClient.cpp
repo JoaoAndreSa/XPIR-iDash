@@ -119,25 +119,32 @@ void PIRClient::sendPlaintext(int plaintexlen,string str){
 */
 uint64_t PIRClient::sendData(std::vector<std::string> catalog){
     uint64_t num_entries=0;
+
+    uint64_t bytes_sent=0;
     for(uint64_t i=0; i<catalog.size();i++){
-
         if(catalog[i]!=""){
-
-             if(!Constants::encrypted){   //if PLAINTEXT
+            if(!Constants::encrypted){   //if PLAINTEXT
+                double start = omp_get_wtime();
                 sendPlaintext(catalog[i].length()+1,catalog[i]);
+                bytes_sent+=catalog[i].length()+1;
+                 double end = omp_get_wtime();
+                std::cout << bytes_sent <<"PIRClient: Send file took " << end-start << " (s)\n";
             }else{                        //if CIPHERTEXT
                 unsigned char ciphertext[1024];
                 int ciphertexlen = symmetricEncrypt(ciphertext,catalog[i]);
                 sendCiphertext(ciphertexlen,ciphertext);
+                bytes_sent+=ciphertexlen;
             }
         }else{
             std::string blank("0");
             sendPlaintext(blank.length(),blank);
+            bytes_sent+=blank.length();
         }
 
         num_entries++;
     }
     m_socket.sendInt(0);    //signal EOF (no more things to write)
+
 
     return num_entries;
 }
@@ -181,6 +188,7 @@ uint64_t PIRClient::uploadData(std::string filename){
         //send the size of the vector to be stored
         std::vector<std::string>catalog(m_SHA_256->getSizeBits());
 
+        double start = omp_get_wtime();
         if (f.is_open()){
             while(getline(f,line)){
                 if(line[0]!='#'){
@@ -193,6 +201,8 @@ uint64_t PIRClient::uploadData(std::string filename){
             }
         }
         f.close();
+        double end = omp_get_wtime();
+        std::cout << "PIRClient: Prepare file took " << end-start << " (s)\n";
 
         num_entries=sendData(catalog);
 

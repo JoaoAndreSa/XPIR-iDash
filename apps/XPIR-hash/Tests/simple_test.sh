@@ -10,7 +10,7 @@
 
 #####-------- SIMPLE TEST BASH --------#####
 #START SERVER
-lxterminal --working-directory=Desktop/XPIR/apps/XPIRt/PIRServer/ -e "./server"
+lxterminal --working-directory=Desktop/XPIR/apps/XPIR-hash/PIRServer/ -e "./server"
 sleep 1
 
 

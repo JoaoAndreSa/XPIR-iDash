@@ -3,7 +3,7 @@
     XPIRcPipeline.cpp
     Purpose: Child class that encloses the XPIR library function calls for the parallel execution
 
-    @authors: Joao Sa
+    @authors: Marc-Olivier Killijian, Carlos Aguillar & Joao Sa
     @version 1.0 01/07/16
 */
 
@@ -42,6 +42,14 @@ imported_database_t XPIRcPipeline::getImportedDB(){
 
 void XPIRcPipeline::setImportedDB(imported_database_t db){
 	m_imported_db=db;
+}
+
+uint64_t XPIRcPipeline::getMaxFileSize(){
+	return m_maxFileSize;
+}
+
+void XPIRcPipeline::setMaxFileSize(uint64_t maxFileSize){
+	m_maxFileSize=maxFileSize;
 }
 
 bool XPIRcPipeline::isImported(){

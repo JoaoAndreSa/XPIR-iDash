@@ -14,8 +14,9 @@ namespace Constants{
     //client+server
     extern const char hostname[]{"localhost"};
     extern const int port(12346);
-    extern const uint64_t bandwith_limit(10000000); //=0bps (means no bandwith limit)
-    extern const bool pipeline(true);
+    extern const double bandwith_limit(10000000); //=0bps (means no bandwith limit)
+    //extern const uint64_t bandwith_limit(0);
+    extern const bool pipeline(false);
     extern const bool encrypted(false);             //=true (DB is symmetrically encrypted); =false (DB is in plaintext)
 
     //server

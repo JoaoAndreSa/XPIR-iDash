@@ -71,7 +71,7 @@ void PIRServerPipeline::uploadWorker(){
     GenericPIRReplyGenerator* generator=m_xpir->getRGenerator();
 
     // Ciphertext byte size
-    unsigned int length=m_xpir->getRsize();
+    unsigned int length=m_xpir->getRsize(m_xpir->getD());
     uint64_t bytes_sent=0;
 
     // Number of ciphertexts in the reply

@@ -1,28 +1,136 @@
+PIRClient: Generating query ...
 PIRQueryGenerator_internal: Generated a 35 element query
-PIRQueryGenerator_internal: All the queries have been generated, total time is 0.00198347 seconds
-PIRClient: Query sent
-PIRClient: Starting reply element reception
+PIRQueryGenerator_internal: All the queries have been generated, total time is 0.00189939 seconds
+PIRClient: Query generated
+SimplePIR: Query sent
+SimplePIR: Send reply took 0.0549794 seconds
+PIRClient: Extracting reply ...
 PIRReplyExtraction_internal: Waiting for first replies...
 PIRReplyExtraction_internal: Starting reply extraction...
-PIRClient: Finish reply element reception
-PIRReplyExtraction_internal: Reply extraction finished, 7 reply elements decrypted in 0.109279 seconds
+PIRReplyExtraction_internal: Reply extraction finished, 5 reply elements decrypted in 0.000234604 seconds
+PIRClient: Reply extracted
+Reply: 1	161617087	rs71835235	T	 	.	.	SVTYPE=DEL;END=161617088	->1	161630509	rs111983671	T	G	.	.	SVTYPE=SNP;END=161630510	
+
+Query variation in file:
+1	161617087	rs71835235	T	 	.	.	SVTYPE=DEL;END=161617088	
+
+Elapsed time (RTT): 0.564444(s)
+PIRClient: Generating query ...
+PIRQueryGenerator_internal: Generated a 35 element query
+PIRQueryGenerator_internal: All the queries have been generated, total time is 0.00200005 seconds
+PIRClient: Query generated
+SimplePIR: Query sent
+SimplePIR: Send reply took 0.0542957 seconds
+PIRClient: Extracting reply ...
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Starting reply extraction...
+PIRReplyExtraction_internal: Reply extraction finished, 5 reply elements decrypted in 0.000134726 seconds
+PIRClient: Reply extracted
+Reply: 1	160955085	.	CTA	TTG	.	.	SVTYPE=SUB;END=160955088	->1	161256811	rs4636483	A	G	.	.	SVTYPE=SNP;END=161256812	->1	161611457	rs4657074	G	A	.	.	SVTYPE=SNP;END=161611458	
+
+Query variation in file:
+1	160955085	.	CTA	TTG	.	.	SVTYPE=SUB;END=160955088	
+
+Elapsed time (RTT): 0.576231(s)
+PIRClient: Generating query ...
+PIRQueryGenerator_internal: Generated a 35 element query
+PIRQueryGenerator_internal: All the queries have been generated, total time is 0.00191369 seconds
+PIRClient: Query generated
+SimplePIR: Query sent
+SimplePIR: Send reply took 0.0541053 seconds
+PIRClient: Extracting reply ...
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Starting reply extraction...
+PIRReplyExtraction_internal: Reply extraction finished, 5 reply elements decrypted in 0.000125973 seconds
+PIRClient: Reply extracted
+Reply: 0
+
+Query variation not in file.
+Elapsed time (RTT): 0.560373(s)
+PIRClient: Generating query ...
+PIRQueryGenerator_internal: Generated a 35 element query
+PIRQueryGenerator_internal: All the queries have been generated, total time is 0.00186462 seconds
+PIRClient: Query generated
+SimplePIR: Query sent
+SimplePIR: Send reply took 0.0544594 seconds
+PIRClient: Extracting reply ...
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Starting reply extraction...
+PIRReplyExtraction_internal: Reply extraction finished, 5 reply elements decrypted in 0.000215438 seconds
+PIRClient: Reply extracted
+Reply: 1	161210575	rs34731114	G	A	.	.	SVTYPE=SNP;END=161210576	
+
+Query variation not in file.
+Elapsed time (RTT): 0.538171(s)
+PIRClient: Generating query ...
+PIRQueryGenerator_internal: Generated a 9 element query
+PIRQueryGenerator_internal: Generated a 8 element query
+PIRQueryGenerator_internal: All the queries have been generated, total time is 0.00095608 seconds
+PIRClient: Query generated
+SimplePIR: Query sent
+SimplePIR: Send reply took 0.183697 seconds
+PIRClient: Extracting reply ...
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Starting reply extraction...
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Reply extraction finished, 17 reply elements decrypted in 0.000430966 seconds
+PIRClient: Reply extracted
 Reply: 1	161617087	rs71835235	T	 	.	.	SVTYPE=DEL;END=161617088	
 
 Query variation in file:
 1	161617087	rs71835235	T	 	.	.	SVTYPE=DEL;END=161617088	
 
-Elapsed time (RTT): 0.596916(s)
-PIRQueryGenerator_internal: Generated a 35 element query
-PIRQueryGenerator_internal: All the queries have been generated, total time is 0.00205379 seconds
-PIRClient: Query sent
-PIRClient: Starting reply element reception
+Elapsed time (RTT): 0.425813(s)
+PIRClient: Generating query ...
+PIRQueryGenerator_internal: Generated a 9 element query
+PIRQueryGenerator_internal: Generated a 8 element query
+PIRQueryGenerator_internal: All the queries have been generated, total time is 0.00106797 seconds
+PIRClient: Query generated
+SimplePIR: Query sent
+SimplePIR: Send reply took 0.295445 seconds
+PIRClient: Extracting reply ...
 PIRReplyExtraction_internal: Waiting for first replies...
 PIRReplyExtraction_internal: Starting reply extraction...
-PIRClient: Finish reply element reception
-PIRReplyExtraction_internal: Reply extraction finished, 4 reply elements decrypted in 0.0721421 seconds
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Reply extraction finished, 25 reply elements decrypted in 0.00115374 seconds
+PIRClient: Reply extracted
 Reply: 1	160955085	.	CTA	TTG	.	.	SVTYPE=SUB;END=160955088	
 
 Query variation in file:
 1	160955085	.	CTA	TTG	.	.	SVTYPE=SUB;END=160955088	
 
-Elapsed time (RTT): 0.568602(s)
+Elapsed time (RTT): 0.586897(s)
+PIRClient: Generating query ...
+PIRQueryGenerator_internal: Generated a 9 element query
+PIRQueryGenerator_internal: Generated a 8 element query
+PIRQueryGenerator_internal: All the queries have been generated, total time is 0.0019499 seconds
+PIRClient: Query generated
+SimplePIR: Query sent
+SimplePIR: Send reply took 0.295726 seconds
+PIRClient: Extracting reply ...
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Starting reply extraction...
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Reply extraction finished, 25 reply elements decrypted in 0.00115231 seconds
+PIRClient: Reply extracted
+Reply: 0
+
+Query variation not in file.
+Elapsed time (RTT): 0.532437(s)
+PIRClient: Generating query ...
+PIRQueryGenerator_internal: Generated a 9 element query
+PIRQueryGenerator_internal: Generated a 8 element query
+PIRQueryGenerator_internal: All the queries have been generated, total time is 0.00105598 seconds
+PIRClient: Query generated
+SimplePIR: Query sent
+SimplePIR: Send reply took 0.32416 seconds
+PIRClient: Extracting reply ...
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Starting reply extraction...
+PIRReplyExtraction_internal: Waiting for first replies...
+PIRReplyExtraction_internal: Reply extraction finished, 25 reply elements decrypted in 0.000992174 seconds
+PIRClient: Reply extracted
+Reply: 1	160961803	rs35582516	 	A	.	.	SVTYPE=INS;END=160961803	
+
+Query variation not in file.
+Elapsed time (RTT): 0.586039(s)

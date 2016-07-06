@@ -63,15 +63,16 @@ public:
 		m_crypto->setandgetAbsBitPerCiphertext(m_params.n[0]);
 	}
 
-	uint64_t getD();   					//m_params.d getter (recursion/dimension value)
-	uint64_t getAlpha();				//m_params.alpha getter (aggregation value)
-	unsigned int* getN();				//m_params.n getter (recursion array)
+	uint64_t getD();   						//m_params.d getter (recursion/dimension value)
+	uint64_t getAlpha();					//m_params.alpha getter (aggregation value)
+	unsigned int* getN();					//m_params.n getter (recursion array)
 	DBHandler* getDB();
 	HomomorphicCrypto* getCrypto();
-	uint32_t getQsize(uint64_t);		//get query element size in bits
-	uint32_t getRsize();				//get reply element size in bits
-	virtual void cleanup()=0;	
+	uint32_t getQsize(uint64_t);			//get query element size in bytes
+	uint32_t getRsize(uint64_t);			//get reply element size in bytes
+	uint32_t getAbsorptionSize(uint64_t); 	//get absorption size in bytes
+	virtual void cleanup()=0;
 
 protected:
-	void upperCleanup();	  			//clean 'tools'
+	void upperCleanup();	  				//clean 'tools'
 };

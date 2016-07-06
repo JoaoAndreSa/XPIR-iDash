@@ -26,11 +26,10 @@
 class PIRClientPipeline: public PIRClient {
 private:
 	XPIRcPipeline* m_xpir;
-	uint64_t m_maxFileBytesize;
 
 public:
 	/**
-    	Constructor for PIRClientSequential object.
+    	Constructor for PIRClientPipeline object.
 
     	@param socket (check parent class)
 
@@ -41,8 +40,8 @@ public:
 	std::string searchQuery(uint64_t,std::map<char,std::string>);	//main function for the class -> query variant(s)
 
 private:
-	void downloadWorker();
-	void startProcessResult();
+	void downloadWorker();                                        //donwload thread handler (reads reply)
+	void startProcessResult();                                    //initiate reply extraction (reading and exctraction are do)
 	void uploadWorker();
 	void startProcessQuery(uint64_t);
 
