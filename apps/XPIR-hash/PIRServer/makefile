@@ -1,9 +1,9 @@
- # the compiler: gcc for C program, define as g++ for C++
+  # the compiler: gcc for C program, define as g++ for C++
 CC = g++ -std=c++11 -g
 
 # compiler flags:
-CFLAGS = -I/home/user/Desktop/XPIR -L/home/user/Desktop/XPIR/_build/pir -pthread -lpir_static -lgmp -lmpfr -fopenmp -lboost_thread -lboost_system
- 
+CFLAGS = -I../../.. -I../../../pir -L../../../local/lib -L../../../_build/pir -pthread -lpir_static -lgmp -lmpfr -fopenmp -lboost_thread -lboost_system
+
 # the build target executable:
 TARGET = server
 

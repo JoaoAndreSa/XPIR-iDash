@@ -2,7 +2,7 @@
 CC = g++ -std=c++11
 
 # compiler flags:
-CFLAGS = -I/home/user/Desktop/XPIR -L/home/user/Desktop/XPIR/_build/pir -lssl -lcrypto -lpir_static -lgmp -lmpfr -fopenmp -lboost_thread -lboost_system
+CFLAGS = -I../../.. -I../../../pir -L../../../local/lib -L../../../_build/pir -lssl -lcrypto -lpir_static -lgmp -lmpfr -fopenmp -lboost_thread -lboost_system
 
 # the build target executable:
 TARGET = client
