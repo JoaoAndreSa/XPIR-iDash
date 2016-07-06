@@ -1,5 +1,5 @@
 #####-------- SIMPLE TEST BASH --------#####
-lxterminal --working-directory=Desktop/XPIR/apps/XPIRt/PIRServer/ -e "./server > log.txt"
+lxterminal --working-directory=Desktop/XPIR/apps/XPIR-hash/PIRServer/ -e "./server"
 sleep 1
 
 
