@@ -108,6 +108,9 @@ void PIRServerPipeline::job (){
     m_id = boost::this_thread::get_id();
     std::cout << "THREAD [" << m_id << "]" << "\n";
 
+    boost::thread upThread;       //thread for uploading reply
+    boost::thread downThread;       //thread for downloading query
+
     //#-------SETUP PHASE--------#
     //read file from client
   	downloadData();
@@ -118,14 +121,14 @@ void PIRServerPipeline::job (){
 
     //#-------QUERY PHASE--------#
     // This is just a download thread. Reply generation is unlocked (by a mutex) when this thread finishes.
-   	m_downThread = boost::thread(&PIRServerPipeline::downloadWorker, this);
+   	downThread = boost::thread(&PIRServerPipeline::downloadWorker, this);
 
     //#-------REPLY PHASE--------#
     /**
         Start reply generation when mutex unlocked.
         Start a thread which uploads the reply as it is generated.
     */
-    m_upThread = boost::thread(&PIRServerPipeline::uploadWorker, this);
+    upThread = boost::thread(&PIRServerPipeline::uploadWorker, this);
 
     /**
         Generate reply once unlocked by the query downloader thread.
@@ -139,8 +142,8 @@ void PIRServerPipeline::job (){
     }
 
     // Wait for child threads
-  	if (m_upThread.joinable())  m_upThread.join();
-  	if (m_downThread.joinable()) m_downThread.join();
+  	if (upThread.joinable())  upThread.join();
+  	if (downThread.joinable()) downThread.join();
 
     //#-------CLEANUP PHASE--------#
     // When everything is sent, clean 'tools' and close the socket

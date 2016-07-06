@@ -41,17 +41,19 @@ int main(int argc, char* argv[]){
 
         if(Constants::pipeline){	//if PIPELINE execution
         	PIRServerPipeline s(socket);
- 			//This will assign tasks to the thread pool.
-      		ioService.post(boost::bind(&PIRServerPipeline::job,&s)); 	//bind thread to object s (parallel)
+
+        	//This will assign tasks to the thread pool.
+      		ioService.post(boost::bind(&PIRServerPipeline::job,s));	//bind thread to object s (sequential)c
 		}
 		else{						//if SEQUENTIAL execution
-		    PIRServerSequential s(socket);
+			PIRServerSequential s(socket);
+
 		    //This will assign tasks to the thread pool.
-		    ioService.post(boost::bind(&PIRServerSequential::job,&s));	//bind thread to object s (sequential)
+		    ioService.post(boost::bind(&PIRServerSequential::job,s));	//bind thread to object s (sequential)c
 		}
     }
 
-	/**
+	/**clear
 		This will stop the ioService processing loop. Any tasks you add behind this point will not execute.
 	*/
 	ioService.stop();

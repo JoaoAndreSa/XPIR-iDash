@@ -26,8 +26,6 @@
 class PIRServerPipeline: public PIRServer {
 
 private:
-	boost::thread m_upThread;		  //thread for uploading reply
-	boost::thread m_downThread;		//thread for downloading query
 	XPIRcPipeline* m_xpir;
 
 public:
