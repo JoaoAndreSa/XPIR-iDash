@@ -2,7 +2,6 @@
     XPIR-hash
     server.cpp
     Purpose: SERVER main
-
     @author Joao Sa
     @version 1.0 01/07/16
 */

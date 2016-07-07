@@ -27,7 +27,11 @@
     @return
 */
 void PIRServer::removeDB(){
-    std::system("exec rm -rf db/*");
+    int ret_val=std::system("exec rm -rf db/*");
+
+    if (ret_val==1){
+        cout << "Error performing system call" << endl;
+    }
 }
 
 /**

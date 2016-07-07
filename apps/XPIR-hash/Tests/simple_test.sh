@@ -10,7 +10,7 @@
 
 #####-------- SIMPLE TEST BASH --------#####
 #START SERVER
-lxterminal --working-directory=Desktop/XPIR/apps/XPIR-hash/PIRServer/ -e "./server"
+lxterminal --working-directory=Desktop/XPIR/_build/apps/XPIR-hash/PIRServer/ -e "./server"
 sleep 1
 
 
@@ -22,7 +22,7 @@ rm -rf logs/log_1000.txt
 rm -rf output.txt
 
 cd ..
-cd Constants
+cd Tests
 ./changeParamsSHA 10
 
 # ///////////////////--------PACKING (30)---------////////////////////////////////
@@ -37,7 +37,7 @@ cd PIRClient
 
 # ///////////////////--------PACKING & DIM (15,9x8)---------////////////////////////////////
 cd ..
-cd Constants
+cd Tests
 ./changeParamsPIR 2 15 9 8 0 0 LWE:97:1024:60
 
 cd ..
@@ -57,7 +57,7 @@ cd PIRClient
 rm -rf logs/log_10000.txt
 
 cd ..
-cd Constants
+cd Tests
 ./changeParamsSHA 13
 
 # ///////////////////--------PACKING (217)---------////////////////////////////////
@@ -72,7 +72,7 @@ cd PIRClient
 
 # ///////////////////--------PACKING & DIM (15,24x23)---------////////////////////////////////
 cd ..
-cd Constants
+cd Tests
 ./changeParamsPIR 2 15 24 23 0 0 LWE:97:1024:60
 
 cd ..
@@ -92,7 +92,7 @@ cd PIRClient
 rm -rf logs/log_100000.txt
 
 cd ..
-cd Constants
+cd Tests
 ./changeParamsSHA 16
 
 # ///////////////////--------PACKING (1643)---------////////////////////////////////
@@ -107,7 +107,7 @@ cd PIRClient
 
 # ///////////////////--------PACKING & DIM (28,48x49)---------////////////////////////////////
 cd ..
-cd Constants
+cd Tests
 ./changeParamsPIR 2 28 49 48 0 0 LWE:97:1024:60
 
 cd ..

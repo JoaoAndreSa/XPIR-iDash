@@ -21,4 +21,3 @@ add_custom_command(
 )
 
 add_custom_target(simplepirdb ALL DEPENDS .simplepirdb)
-	

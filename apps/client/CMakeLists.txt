@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6.0)
 
-set (CMAKE_EXE_LINKER_FLAGS "-fopenmp") 
+set (CMAKE_EXE_LINKER_FLAGS "-fopenmp")
 include_directories(..)
 include_directories(../..)
 

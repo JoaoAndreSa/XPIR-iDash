@@ -4,9 +4,10 @@ add_subdirectory("client")
 add_subdirectory("optim")
 add_subdirectory("server")
 add_subdirectory("simplepir")
+add_subdirectory("XPIR-hash")
 
 set(CMAKE_CXX_FLAGS "-std=c++11")
-set (CMAKE_EXE_LINKER_FLAGS "-fopenmp")
+set(CMAKE_EXE_LINKER_FLAGS "-fopenmp")
 
 include_directories(..)
 include_directories(../..)

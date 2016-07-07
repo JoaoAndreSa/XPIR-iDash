@@ -205,12 +205,19 @@ char* PIRReplyWriter::extractResponse(uint64_t chosenElement, uint64_t maxFileSi
   char* tmp;
   char* response = new char[chunkSize+1];
 
+  cout << chosenElement << " " << chosenElement % alpha << endl; 
+
   for (uint64_t i=firstElement; i<=lastElement; i++){
     
     if(i == chosenElement){
 
       while(bytestoskip > chunkSize){
         tmp = clearChunks.pop_front();
+
+        //for(int i=0;i<chunkSize;i++){
+        //  cout << tmp[i];
+        //}
+
         free(tmp);
         bytestoskip -= chunkSize;
       }
@@ -221,6 +228,12 @@ char* PIRReplyWriter::extractResponse(uint64_t chosenElement, uint64_t maxFileSi
         uint64_t current_bytesskipped = 0; 
 
         tmp = clearChunks.front();
+
+        //for(int i=0;i<chunkSize;i++){
+        //  cout << tmp[i];
+        //}
+
+
         if(bytestoskip!=0){
           memcpy(response, tmp+bytestoskip, min(leftChars, chunkSize - bytestoskip));
           writtenchars = min(leftChars, chunkSize - bytestoskip);
@@ -235,6 +248,11 @@ char* PIRReplyWriter::extractResponse(uint64_t chosenElement, uint64_t maxFileSi
 
         if (bytestoskip==0){
           clearChunks.pop_front();
+
+          //for(int i=0;i<chunkSize;i++){
+          //  cout << tmp[i];
+          //}
+
           free(tmp);
         }
         leftChars -= writtenchars;
