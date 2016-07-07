@@ -2,7 +2,7 @@
 
 #    XPIR-hash
 #    simple_test.sh
-#    Purpose: Run a simple batch of tests (multiple runs)
+#    Purpose: Run a simple batch of Constants (multiple runs)
 #
 #    @author Joao Sa
 #    @version 1.0 01/07/16
@@ -22,7 +22,7 @@ rm -rf logs/log_1000.txt
 rm -rf output.txt
 
 cd ..
-cd Tests
+cd Constants
 ./changeParamsSHA 10
 
 # ///////////////////--------PACKING (30)---------////////////////////////////////
@@ -37,7 +37,7 @@ cd PIRClient
 
 # ///////////////////--------PACKING & DIM (15,9x8)---------////////////////////////////////
 cd ..
-cd Tests
+cd Constants
 ./changeParamsPIR 2 15 9 8 0 0 LWE:97:1024:60
 
 cd ..
@@ -57,7 +57,7 @@ cd PIRClient
 rm -rf logs/log_10000.txt
 
 cd ..
-cd Tests
+cd Constants
 ./changeParamsSHA 13
 
 # ///////////////////--------PACKING (217)---------////////////////////////////////
@@ -72,7 +72,7 @@ cd PIRClient
 
 # ///////////////////--------PACKING & DIM (15,24x23)---------////////////////////////////////
 cd ..
-cd Tests
+cd Constants
 ./changeParamsPIR 2 15 24 23 0 0 LWE:97:1024:60
 
 cd ..
@@ -92,7 +92,7 @@ cd PIRClient
 rm -rf logs/log_100000.txt
 
 cd ..
-cd Tests
+cd Constants
 ./changeParamsSHA 16
 
 # ///////////////////--------PACKING (1643)---------////////////////////////////////
@@ -107,7 +107,7 @@ cd PIRClient
 
 # ///////////////////--------PACKING & DIM (28,48x49)---------////////////////////////////////
 cd ..
-cd Tests
+cd Constants
 ./changeParamsPIR 2 28 49 48 0 0 LWE:97:1024:60
 
 cd ..
