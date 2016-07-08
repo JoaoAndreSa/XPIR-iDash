@@ -7,12 +7,10 @@
 #    @author Joao Sa
 #    @version 1.0 01/07/16
 
-
 #####-------- SIMPLE TEST BASH --------#####
 #START SERVER
 lxterminal --working-directory=Desktop/XPIR/_build/apps/XPIR-hash/PIRServer/ -e "./server"
 sleep 1
-
 
 #START CLIENT
 #####-------- 1,000 ENTRIES --------#####
