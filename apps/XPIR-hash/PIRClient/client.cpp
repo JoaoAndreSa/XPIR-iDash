@@ -84,6 +84,7 @@ int main(int argc, char* argv[]){
 		c=new PIRClientSequential(socket);
 	}
 
+    c->initAES256();
 	c->initSHA256();
 	uint64_t num_entries=c->uploadData(entry['f']);
 

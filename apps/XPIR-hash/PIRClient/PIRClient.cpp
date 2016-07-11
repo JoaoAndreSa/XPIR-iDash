@@ -53,7 +53,7 @@ int PIRClient::symmetricEncrypt(unsigned char* ciphertext, std::string line){
     unsigned char *plaintext = new unsigned char[line.length()+1];
     memcpy((char*)plaintext,line.c_str(),line.length()+1);
 
-    int ciphertexlen=m_cbc.encrypt(plaintext,strlen((char *)plaintext),ciphertext,ciphertext_noIV);
+    int ciphertexlen=m_aes_256->encrypt(plaintext,strlen((char *)plaintext),ciphertext,ciphertext_noIV);
 
     delete[] plaintext;
     return ciphertexlen;
@@ -71,7 +71,7 @@ int PIRClient::symmetricDecrypt(unsigned char* decryptedtext, char* line){
     unsigned char ciphertext[1024];
     memcpy((char *)ciphertext,line,1024);
 
-    int decryptedtextlen = m_cbc.decrypt(ciphertext,decryptedtext);
+    int decryptedtextlen = m_aes_256->decrypt(ciphertext,decryptedtext);
     decryptedtext[decryptedtextlen] = '\0';
 
     return decryptedtextlen;
@@ -211,6 +211,10 @@ uint64_t PIRClient::uploadData(std::string filename){
 
 void PIRClient::initSHA256(){
     m_SHA_256= new SHA_256(Tools::readParamsSHA());
+}
+
+void PIRClient::initAES256(){
+    m_aes_256= new AES_256(1);                      //=0 CBC mode, =1 CTR mode
 }
 
 void PIRClient::setRTTStart(){

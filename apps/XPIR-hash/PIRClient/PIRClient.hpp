@@ -21,7 +21,7 @@
 
 #include <netdb.h>
 
-#include "AES/AES_cbc_256.hpp"
+#include "AES/AES_256.hpp"
 #include "SHA256/SHA_256.hpp"
 
 #include "../XPIR/Pipeline/XPIRcPipeline.hpp"
@@ -37,7 +37,7 @@ protected:
 	Socket m_socket;
 
 	//Encryption and hashing variables
-	AES_cbc_256 m_cbc;
+	AES_256* m_aes_256;
 	SHA_256* m_SHA_256;
 
 	//Time variables
@@ -57,6 +57,7 @@ public:
 	}
 
 	uint64_t uploadData(std::string);				//prepares and uploads the DB data to send to the server
+	void initAES256();
 	void initSHA256();
 
 	uint64_t considerPacking(uint64_t,uint64_t);	//returns the position relative to the aggregation/packing value
