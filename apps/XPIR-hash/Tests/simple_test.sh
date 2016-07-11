@@ -2,17 +2,15 @@
 
 #    XPIR-hash
 #    simple_test.sh
-#    Purpose: Run a simple batch of tests (multiple runs)
+#    Purpose: Run a simple batch of Constants (multiple runs)
 #
 #    @author Joao Sa
 #    @version 1.0 01/07/16
 
-
 #####-------- SIMPLE TEST BASH --------#####
 #START SERVER
-lxterminal --working-directory=Desktop/XPIR/apps/XPIR-hash/PIRServer/ -e "./server"
+lxterminal --working-directory=Desktop/XPIR/_build/apps/XPIR-hash/PIRServer/ -e "./server"
 sleep 1
-
 
 #START CLIENT
 #####-------- 1,000 ENTRIES --------#####
