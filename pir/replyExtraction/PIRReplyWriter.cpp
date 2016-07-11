@@ -205,7 +205,7 @@ char* PIRReplyWriter::extractResponse(uint64_t chosenElement, uint64_t maxFileSi
   char* tmp;
   char* response = new char[chunkSize+1];
 
-  cout << chosenElement << " " << chosenElement % alpha << endl; 
+  //cout << chosenElement << " " << chosenElement % alpha << endl; 
 
   for (uint64_t i=firstElement; i<=lastElement; i++){
     

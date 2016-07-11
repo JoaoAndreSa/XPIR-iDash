@@ -40,7 +40,6 @@ int main(int argc, char* argv[]){
 
         if(Constants::pipeline){	//if PIPELINE execution
         	PIRServerPipeline s(socket);
-
         	//This will assign tasks to the thread pool.
       		ioService.post(boost::bind(&PIRServerPipeline::job,s));	//bind thread to object s (sequential)c
 		}
