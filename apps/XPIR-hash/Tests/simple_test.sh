@@ -64,7 +64,7 @@ cd Constants
 cd ..
 cd PIRClient
 ./client -c 1 -p 161617087 -r T -a . -f RCV000015246_10000.vcf 			>> logs/log_10000.txt 	#in db
-./client -c 1 -p 164781110 -r ATATAAG -a . -f RCV000015246_10000.vcf 	>> logs/log_10000.txt  	#in db
+./client -c 1 -p 164781110 -r . -a ATATAAG -f RCV000015246_10000.vcf 	>> logs/log_10000.txt  	#in db
 ./client -c 2 -p 161617087 -r T -a . -f RCV000015246_10000.vcf 			>> logs/log_10000.txt  	#not in db
 ./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_10000.vcf 		>> logs/log_10000.txt  	#not in db
 
@@ -76,7 +76,7 @@ cd Constants
 cd ..
 cd PIRClient
 ./client -c 1 -p 161617087 -r T -a . -f RCV000015246_10000.vcf 			>> logs/log_10000.txt 	#in db
-./client -c 1 -p 164781110 -r ATATAAG -a . -f RCV000015246_10000.vcf 	>> logs/log_10000.txt  	#in db
+./client -c 1 -p 164781110 -r . -a ATATAAG -f RCV000015246_10000.vcf 	>> logs/log_10000.txt  	#in db
 ./client -c 2 -p 161617087 -r T -a . -f RCV000015246_10000.vcf 			>> logs/log_10000.txt  	#not in db
 ./client -c 2 -p 160955085 -r CTA -a TTG -f RCV000015246_10000.vcf 		>> logs/log_10000.txt  	#not in db
 

@@ -29,6 +29,7 @@ int main(){
 	vector<string> data(sha256.getSizeBits());
 
 	vector<string> entries;
+
 	entries=readFile("RCV000015246_100000.vcf",sha256);
 
 	for(int i=0;i<entries.size();i++){
@@ -40,9 +41,12 @@ int main(){
 	}
 	//sha256.printVector(data);
 
-	string query="1	73931850	rs11210256	G	A	.	.	SVTYPE=SNP;END=73931851"; //is in file
-	//string query="1	118737704	rs3085974	 	ACTCTGT	.	.	SVTYPE=INS;END=118737704"; //is in file
-	//string query="2	73931850	rs11210256	G	A	.	.	SVTYPE=SNP;END=73931851"; //is not in file
+	//string query="1	161617087	.	T	 "; 	//is in file
+	string query="1	164781110	.	 	ATATAAG"; 	//is in file
+	//string query="1	161617087	.	T	 "; 	//is in file
+	//string query="1	73934717	.	 	T	.	.	SVTYPE=INS;END=73934717"; 				//is in file
+	//string query="1	118737704	rs3085974	 	ACTCTGT	.	.	SVTYPE=INS;END=118737704"; 	//is in file
+	//string query="2	73931850	rs11210256	G	A	.	.	SVTYPE=SNP;END=73931851"; 		//is not in file
 
 	int pos=sha256.hash(query);
 	cout << sha256.search(data[pos],query) << endl;

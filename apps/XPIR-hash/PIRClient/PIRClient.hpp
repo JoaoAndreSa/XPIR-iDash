@@ -21,7 +21,7 @@
 
 #include <netdb.h>
 
-#include "AES/AES_256.hpp"
+#include "AES256/AES_ctr_256.hpp"
 #include "SHA256/SHA_256.hpp"
 
 #include "../XPIR/Pipeline/XPIRcPipeline.hpp"
@@ -37,7 +37,7 @@ protected:
 	Socket m_socket;
 
 	//Encryption and hashing variables
-	AES_256* m_aes_256;
+	AES_ctr_256* m_aes_256;
 	SHA_256* m_SHA_256;
 
 	//Time variables
@@ -70,10 +70,8 @@ public:
 	double getRTTStop();
 
 protected:
-	int compareSNPs(std::string, std::map<char,std::string>);		//compares two SNPs and returns 1 if they are equal or 0 otherwise
-
-	int symmetricEncrypt(unsigned char*,std::string);				//symmetric encrypt plaintext and return the result
-	int symmetricDecrypt(unsigned char*,char*);						//symmetric decrypt ciphertext and return the result
+	int symmetricEncrypt(unsigned char*,std::string,uint64_t);		//symmetric encrypt plaintext and return the result
+	int symmetricDecrypt(unsigned char*,char*,uint64_t);			//symmetric decrypt ciphertext and return the result
 	void sendCiphertext(int,unsigned char*);						//send ciphertext through socket (length+data)
 	void sendPlaintext(int,std::string);							//send plaintext through socket (length+data)
 	uint64_t sendData(std::vector<std::string>);					//encrypt and send every variant in vcf file to server

@@ -1,12 +1,23 @@
-#include "AES_256.hpp"
+#include "AES_ctr_256.hpp"
 
 //***PRIVATE METHODS***//
-void AES_256::handleErrors(void){
+void AES_ctr_256::handleErrors(void){
   	ERR_print_errors_fp(stderr);
   	abort();
 }
 
-void AES_256::pack32(uint32_t val,unsigned char *dest){
+void AES_ctr_256::pack64(uint64_t val,unsigned char *dest){
+	dest[0] = (val & 0xff00000000000000) >> 56;
+	dest[1] = (val & 0x00ff000000000000) >> 48;
+    dest[2] = (val & 0x0000ff0000000000) >> 40;
+    dest[3] = (val & 0x000000ff00000000) >> 32;
+    dest[4] = (val & 0x00000000ff000000) >> 24;
+    dest[5] = (val & 0x0000000000ff0000) >> 16;
+    dest[6] = (val & 0x000000000000ff00) >>  8;
+    dest[7] = (val & 0x00000000000000ff)      ;
+}
+
+void AES_ctr_256::pack32(uint32_t val,unsigned char *dest){
     dest[0] = (val & 0xff000000) >> 24;
     dest[1] = (val & 0x00ff0000) >> 16;
     dest[2] = (val & 0x0000ff00) >>  8;
@@ -14,7 +25,7 @@ void AES_256::pack32(uint32_t val,unsigned char *dest){
 }
 
 
-uint32_t AES_256::unpack32(unsigned char *src){
+uint32_t AES_ctr_256::unpack32(unsigned char *src){
     uint32_t val;
 
     val  = src[0] << 24;
@@ -26,8 +37,8 @@ uint32_t AES_256::unpack32(unsigned char *src){
 }
 
 //***PUBLIC METHODS***//
-int AES_256::encrypt(unsigned char *plaintext, int plaintexlen, unsigned char *ciphertext, unsigned char *ciphertext_noIV){
-	if(!RAND_bytes(m_iv,sizeof m_iv)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
+int AES_ctr_256::encrypt(unsigned char *plaintext, int plaintexlen, unsigned char *ciphertext, unsigned char *ciphertext_noIV, uint64_t pos){
+	pack64(pos,m_iv+8);
 
 	EVP_CIPHER_CTX *ctx;
 
@@ -43,11 +54,7 @@ int AES_256::encrypt(unsigned char *plaintext, int plaintexlen, unsigned char *c
 	* In this example we are using 256 bit AES (i.e. a 256 bit key). The
 	* IV size for *most* modes is the same as the block size. For AES this
 	* is 128 bits */
-	if(m_type==0){
-		if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, m_key, m_iv)) handleErrors();
-	}else{
-		if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_ctr(), NULL, m_key, m_iv)) handleErrors();
-	}
+	if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_ctr(), NULL, m_key, m_iv)) handleErrors();
 
 	/* Provide the message to be encrypted, and obtain the encrypted output.
 	* EVP_EncryptUpdate can be called multiple times if necessary
@@ -65,13 +72,12 @@ int AES_256::encrypt(unsigned char *plaintext, int plaintexlen, unsigned char *c
 	EVP_CIPHER_CTX_free(ctx);
 
 	pack32(ciphertexlen,ciphertext);
-	memcpy(ciphertext+4,m_iv,16*sizeof(unsigned char));
-	memcpy(ciphertext+4+16,ciphertext_noIV,ciphertexlen*sizeof(unsigned char));
 
-	return ciphertexlen+4+16;
+	memcpy(ciphertext+4,ciphertext_noIV,ciphertexlen*sizeof(unsigned char));
+	return ciphertexlen+4;
 }
 
-int AES_256::decrypt(unsigned char *ciphertext, unsigned char *plaintext){
+int AES_ctr_256::decrypt(unsigned char *ciphertext, unsigned char *plaintext, uint64_t pos){
 	EVP_CIPHER_CTX *ctx;
 
 	int len;
@@ -86,20 +92,14 @@ int AES_256::decrypt(unsigned char *ciphertext, unsigned char *plaintext){
 	* In this example we are using 256 bit AES (i.e. a 256 bit key). The
 	* IV size for *most* modes is the same as the block size. For AES this
 	* is 128 bits */
-	unsigned char iv[16];
-	memcpy(iv,ciphertext+4,16*sizeof(unsigned char));
+	pack64(pos,m_iv+8);
 
-	if(m_type==0){
-		if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, m_key, iv)) handleErrors();
-	}else{
-		if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_ctr(), NULL, m_key, iv)) handleErrors();
-	}
+	if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_ctr(), NULL, m_key, m_iv)) handleErrors();
 
 	/* Provide the message to be decrypted, and obtain the plaintext output.
 	* EVP_DecryptUpdate can be called multiple times if necessary
 	*/
-
-	if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext+4+16, unpack32(ciphertext))) handleErrors();
+	if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext+4, unpack32(ciphertext))) handleErrors();
 	plaintexlen = len;
 
 	/* Finalise the decryption. Further plaintext bytes may be written at
@@ -114,12 +114,12 @@ int AES_256::decrypt(unsigned char *ciphertext, unsigned char *plaintext){
 	return plaintexlen;
 }
 
-void AES_256::test(unsigned char * plaintext, int plaintexlen, unsigned char *ciphertext, unsigned char *ciphertext_noIV, unsigned char *decryptedtext){
+void AES_ctr_256::test(unsigned char * plaintext, int plaintexlen, unsigned char *ciphertext, unsigned char *ciphertext_noIV, unsigned char *decryptedtext){
 	/* Encrypt the plaintext */
-	int ciphertexlen = encrypt(plaintext, strlen((char *)plaintext),ciphertext, ciphertext_noIV);
+	int ciphertexlen = encrypt(plaintext, strlen((char *)plaintext),ciphertext, ciphertext_noIV,1);
 
 	/* Decrypt the ciphertext */
-	int decryptedtexlen = decrypt(ciphertext, decryptedtext);
+	int decryptedtexlen = decrypt(ciphertext, decryptedtext,1);
 
 	/* Add a NULL terminator. We are expecting printable text */
 	decryptedtext[decryptedtexlen] = '\0';

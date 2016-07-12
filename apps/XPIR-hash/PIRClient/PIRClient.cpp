@@ -21,25 +21,6 @@
 
 //***PRIVATE METHODS***//
 /**
-    Compares two SNPs/variants and returns 1 if they are equal or 0 otherwise.
-
-    @param t_curr a string that contains variant information (e.g. 1    160929435   rs7520618   G   A   .   .   SVTYPE=SNP;END=160929436)
-    @param entry a map/dictionary the stores que variant(s) beeing queried in a key-value way
-
-    @return int 1 if equal; 0 otherwise
-*/
-int PIRClient::compareSNPs(std::string t_curr, std::map<char,std::string> entry){
-    istringstream curr(t_curr);
-    std::vector<std::string> tokens_curr{istream_iterator<std::string>{curr},istream_iterator<std::string>{}};
-
-    if( (atoi(tokens_curr[0].c_str()) == atoi(entry['c'].c_str())) && (atoi(tokens_curr[1].c_str()) == atoi(entry['p'].c_str())) && (tokens_curr[3]==entry['r'])  && (tokens_curr[4]==entry['a']) ){
-        return 1;
-    }else{
-        return 0;
-    }
-}
-
-/**
     Symmetric encrypt plaintext (AES_CBS256) and return the result.
 
     @param ciphertext variable that stores the ciphertext
@@ -47,13 +28,13 @@ int PIRClient::compareSNPs(std::string t_curr, std::map<char,std::string> entry)
 
     @return ciphertexlen length of the ciphertext (needed for write())
 */
-int PIRClient::symmetricEncrypt(unsigned char* ciphertext, std::string line){
+int PIRClient::symmetricEncrypt(unsigned char* ciphertext, std::string line, uint64_t pos){
     unsigned char ciphertext_noIV[1024]; //ciphertext with noIV (for memcpy purposes - C stuff)
 
     unsigned char *plaintext = new unsigned char[line.length()+1];
     memcpy((char*)plaintext,line.c_str(),line.length()+1);
 
-    int ciphertexlen=m_aes_256->encrypt(plaintext,strlen((char *)plaintext),ciphertext,ciphertext_noIV);
+    int ciphertexlen=m_aes_256->encrypt(plaintext,strlen((char *)plaintext),ciphertext,ciphertext_noIV,pos);
 
     delete[] plaintext;
     return ciphertexlen;
@@ -67,11 +48,11 @@ int PIRClient::symmetricEncrypt(unsigned char* ciphertext, std::string line){
 
     @return decryptedtextlen length of the decrypted text (not needed for anything really, but just in case...)
 */
-int PIRClient::symmetricDecrypt(unsigned char* decryptedtext, char* line){
+int PIRClient::symmetricDecrypt(unsigned char* decryptedtext, char* line, uint64_t pos){
     unsigned char ciphertext[1024];
     memcpy((char *)ciphertext,line,1024);
 
-    int decryptedtextlen = m_aes_256->decrypt(ciphertext,decryptedtext);
+    int decryptedtextlen = m_aes_256->decrypt(ciphertext,decryptedtext,pos);
     decryptedtext[decryptedtextlen] = '\0';
 
     return decryptedtextlen;
@@ -127,7 +108,7 @@ uint64_t PIRClient::sendData(std::vector<std::string> catalog){
                 sendPlaintext(catalog[i].length()+1,catalog[i]);
             }else{                        //if CIPHERTEXT
                 unsigned char ciphertext[1024];
-                int ciphertexlen = symmetricEncrypt(ciphertext,catalog[i]);
+                int ciphertexlen = symmetricEncrypt(ciphertext,catalog[i],i);
                 sendCiphertext(ciphertexlen,ciphertext);
             }
         }else{
@@ -214,7 +195,7 @@ void PIRClient::initSHA256(){
 }
 
 void PIRClient::initAES256(){
-    m_aes_256= new AES_256(1);                      //=0 CBC mode, =1 CTR mode
+    m_aes_256= new AES_ctr_256();                      //=0 CBC mode, =1 CTR mode
 }
 
 void PIRClient::setRTTStart(){

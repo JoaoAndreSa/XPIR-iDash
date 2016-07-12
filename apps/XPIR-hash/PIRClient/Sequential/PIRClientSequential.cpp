@@ -110,7 +110,7 @@ std::string PIRClientSequential::extractCiphertext(char* response, uint64_t aggr
     }
 
     unsigned char decryptedtext[1024];
-    int decryptedtextlen = symmetricDecrypt(decryptedtext,response+aggregated_entrySize*(pos%m_xpir->getAlpha()));
+    int decryptedtextlen = symmetricDecrypt(decryptedtext,response+aggregated_entrySize*(pos%m_xpir->getAlpha()),pos);
 
     std::string response_s(reinterpret_cast<char*>(decryptedtext));
     cout << "Reply: " << response_s << endl << endl;
@@ -150,9 +150,9 @@ std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,
     m_xpir= new XPIRcSequential(Tools::readParamsPIR(num_entries),1,nullptr);
 
     //#-------SETUP PHASE--------#
-    string query_str=entry['c']+" "+entry['p']+" # "+entry['r']+" "+entry['a'];
+    string query_str=entry['c']+"\t"+entry['p']+"\t.\t"+entry['r']+"\t"+entry['a']; //the . is to represent the missing id field
     uint64_t pos=m_SHA_256->hash(query_str);
-    uint64_t pack_pos=considerPacking(m_SHA_256->hash(query_str),m_xpir->getAlpha());
+    uint64_t pack_pos=considerPacking(pos,m_xpir->getAlpha());
 
     //#-------QUERY PHASE--------#
     std::vector<char*> query=queryGeneration(pack_pos);
@@ -171,6 +171,8 @@ std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,
         response_s=extractCiphertext(response,reply.maxFileSize,pos);
     }
 
+    cout << query_str << endl;
+    cout << response_s << endl;
     if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
 
     //#-------CLEANUP PHASE--------#

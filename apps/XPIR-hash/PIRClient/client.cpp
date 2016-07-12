@@ -34,6 +34,11 @@ std::map<char,std::string> parseEntry(int argc,char* argv[]){
 		if(element=="-f"){
 			elemenmatch="vcf/"+elemenmatch;
 		}
+
+		if(elemenmatch=="."){
+			elemenmatch=" ";
+		}
+
 		entry.insert(std::make_pair(element.at(1),elemenmatch));
 	}
 	return entry;

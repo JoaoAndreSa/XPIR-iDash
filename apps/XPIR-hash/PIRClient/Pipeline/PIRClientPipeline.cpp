@@ -122,7 +122,7 @@ std::string PIRClientPipeline::searchQuery(uint64_t num_entries,std::map<char,st
 
     string query_str=entry['c']+" "+entry['p']+" # "+entry['r']+" "+entry['a'];
     uint64_t pos=m_SHA_256->hash(query_str);
-    uint64_t pack_pos=considerPacking(m_SHA_256->hash(query_str),m_xpir->getAlpha());
+    uint64_t pack_pos=considerPacking(pos,m_xpir->getAlpha());
 
     //#-------QUERY PHASE--------#
     startProcessQuery(pack_pos);
