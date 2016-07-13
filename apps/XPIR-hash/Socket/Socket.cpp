@@ -128,7 +128,10 @@ void Socket::readXBytes(uint64_t x, void* buffer){
     while (bytesRead < x){
         unsigned int result = read(m_connFd, ((uint8_t*)buffer)+bytesRead, x - bytesRead); errorReadSocket(result<0);
         bytesRead += result;
+
+        if(Constants::bandwith_limit!=0) sleepForBytes(result); //enforce bandwith
     }
+
 }
 
 /**

@@ -24,6 +24,8 @@
 //***PRIVATE METHODS***//
 //QUERY GENERATION & SEND QUERY
 void PIRClientSequential::sendQuery(std::vector<char*> query){
+    double start = omp_get_wtime();
+
     uint64_t pos=0;
     m_socket.senduInt64(m_xpir->getD());                //number of dimensions
 
@@ -37,6 +39,9 @@ void PIRClientSequential::sendQuery(std::vector<char*> query){
             pos++;
         }
     }
+
+    double end = omp_get_wtime();
+    cout << "PIRClient: Send query took " << end-start << " seconds" << endl;
 }
 
 /**
@@ -60,14 +65,11 @@ std::vector<char*> PIRClientSequential::readReplyData(){
     uint64_t size=m_socket.readuInt64();            //number of reply elements
     uint32_t message_length=m_socket.readuInt32();  //size (bytes) of each element
 
-    double start = omp_get_wtime();
     for(uint64_t i=0; i<size;i++){
         char* buffer = new char[message_length];
         m_socket.readXBytes(message_length,(void*)buffer);
         replyData.push_back(buffer);
     }
-    double end = omp_get_wtime();
-    cout << "PIRClient: Send reply took " << end-start << " seconds" << endl;
     return replyData;
 }
 
@@ -171,8 +173,6 @@ std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,
         response_s=extractCiphertext(response,reply.maxFileSize,pos);
     }
 
-    cout << query_str << endl;
-    cout << response_s << endl;
     if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
 
     //#-------CLEANUP PHASE--------#

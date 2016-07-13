@@ -67,7 +67,9 @@ void PIRClientPipeline::startProcessResult(){
     @return
 */
 void PIRClientPipeline::uploadWorker(){
-	unsigned int length=0;
+	double start = omp_get_wtime();
+
+  unsigned int length=0;
 	char *tmp;
 
 	for (unsigned int j=1; j<=m_xpir->getD(); j++){
@@ -78,6 +80,9 @@ void PIRClientPipeline::uploadWorker(){
 			free(tmp);
     }
   }
+
+  double end = omp_get_wtime();
+  cout << "PIRClient: Send query took " << end-start << " seconds" << endl;
   std::cout << "PIRClient: Query sent" << "\n";
 }
 

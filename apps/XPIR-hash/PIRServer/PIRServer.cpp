@@ -48,7 +48,6 @@ void PIRServer::downloadData(){
     int buflen=1;
     uint64_t entry=0;
 
-    double start = omp_get_wtime();
     while(buflen!=0){ 
         buflen=m_socket.readInt(); if(buflen==0){break;}
         char* recvBuff;
@@ -80,8 +79,6 @@ void PIRServer::downloadData(){
         delete[] recvBuff;
         entry++;
     }
-    double end = omp_get_wtime();
-    std::cout << "Received file from client. It took " << end-start << " (s)\n";
 
     m_num_entries=entry;
 }

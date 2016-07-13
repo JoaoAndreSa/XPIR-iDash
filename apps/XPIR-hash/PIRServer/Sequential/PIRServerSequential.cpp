@@ -33,7 +33,6 @@ vector<char*> PIRServerSequential::readVector_s(){
 
     uint64_t size=m_socket.readuInt64();
 
-    double start = omp_get_wtime();
     for(uint64_t j=1; j<=size; j++){
         uint32_t message_length=m_socket.readuInt32();
 
@@ -44,8 +43,6 @@ vector<char*> PIRServerSequential::readVector_s(){
             vector_s.push_back(buffer);
         }
     }
-    double end = omp_get_wtime();
-    cout << "PIRServer: Send query took " << end-start << " seconds" << endl;
     return vector_s;
 }
 
@@ -74,9 +71,14 @@ void PIRServerSequential::sendVector_s(vector<char*> vector_c){
     @return
 */
 void PIRServerSequential::sendReply(XPIRcSequential::REPLY reply){
+    double start = omp_get_wtime();
+
     m_socket.senduInt64(reply.nbRepliesGenerated);
     m_socket.senduInt64(reply.maxFileSize);
     sendVector_s(reply.reply);
+
+    double end = omp_get_wtime();
+    cout << "PIRServer: Send reply took " << end-start << " seconds" << endl;
     std::cout << "PIRServer: Reply sent" << "\n";
 }
 

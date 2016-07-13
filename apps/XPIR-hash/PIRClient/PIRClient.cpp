@@ -104,7 +104,7 @@ uint64_t PIRClient::sendData(std::vector<std::string> catalog){
     double start = omp_get_wtime();
     for(uint64_t i=0; i<catalog.size();i++){
         if(catalog[i]!=""){
-            if(!Constants::encrypted){   //if PLAINTEXT
+            if(!Constants::encrypted){    //if PLAINTEXT
                 sendPlaintext(catalog[i].length()+1,catalog[i]);
             }else{                        //if CIPHERTEXT
                 unsigned char ciphertext[1024];

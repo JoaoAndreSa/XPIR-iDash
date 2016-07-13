@@ -28,8 +28,6 @@
     @return
 */
 void PIRServerPipeline::downloadWorker(){
-    double start = omp_get_wtime();
-
     //Allocate an array with d dimensions with pointers to arrays of n[i] lwe_query elements 
     m_xpir->getRGenerator()->initQueriesBuffer();
 
@@ -56,9 +54,6 @@ void PIRServerPipeline::downloadWorker(){
     // All the query elements received, unlock reply generation
     m_xpir->getRGenerator()->mutex.unlock();
     cout << "PIRServer: Finish query element reception" << endl;
-
-    double end = omp_get_wtime();
-    cout << "PIRServer: " << num_queries << " query elements received in " << end-start << endl;
 }
 
 /**
@@ -68,6 +63,8 @@ void PIRServerPipeline::downloadWorker(){
     @return
 */
 void PIRServerPipeline::uploadWorker(){
+    double start = omp_get_wtime();
+
     GenericPIRReplyGenerator* generator=m_xpir->getRGenerator();
 
     // Ciphertext byte size
@@ -95,6 +92,9 @@ void PIRServerPipeline::uploadWorker(){
         free(ptr);
         generator->repliesArray[i]=NULL;
     }
+
+    double end = omp_get_wtime();
+    cout << "PIRServer: " << reply_nbr << " reply elements sent in " << end-start << endl;
     std::cout << "PIRServer: Reply sent" << "\n";
 }
 
