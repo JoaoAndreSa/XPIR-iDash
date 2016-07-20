@@ -9,41 +9,27 @@ void SHA_256::printElem(unsigned char* conv, int size){
 	printf("\n");
 }
 
-std::string SHA_256::decimal_to_binary(unsigned n){
-    const int size=sizeof(n)*8;
-    std::string res;
-    bool s=0;
-    for (int a=0;a<size;a++){
-        bool bit=n>>(size-1);
-        if (bit)
-            s=1;
-        if (s)
-            res.push_back(bit+'0');
-        n<<=1;
-    }
-    if (!res.size())
-        res.push_back('0');
-    return res;
+std::string SHA_256::data_to_binary(std::string op,int len, std::string alt){
+	std::string binary="";
+	if(op=="01"){							//if DEL
+		return decimal_to_binary(len);
+	}else if(op=="11"){						//if SUB
+		binary+=decimal_to_binary(len);
+		binary+=base_to_binary(alt);
+		return binary;
+	}else{									//if INS or SNP
+		return base_to_binary(alt);
+	}
 }
 
-std::string SHA_256::type_to_binary(int len, std::string ref, std::string alt){
-	std::string  binary="";
-
-	if(alt==" "){							//if DEL
-		binary+="01";
-		binary+=decimal_to_binary(len);
-	}else if(ref==" "){						//if INS
-		binary+="11";
-		binary+=decimal_to_binary(len);
-		binary+=base_to_binary(alt);
-	}else if(len>1 || alt.length()>1){		//if SUB
-		binary+="10";
-		binary+=base_to_binary(alt);
-	}else{  								//if SNP
-		binary+="00";
-		binary+=base_to_binary(alt);
+std::string SHA_256::op_to_binary(std::string ref, std::string alt){
+	if(alt==" "){														//if DEL
+		return "01";
+	}else if(ref.length()>1 || alt.length()>1 && ref!=" " && alt!=" "){	//if SUB
+		return "11";
+	}else{																//if INS or SNP
+		return "10";
 	}
-	return binary;
 }
 
 std::string SHA_256::chr_to_binary(std::string number){
@@ -70,6 +56,30 @@ std::string SHA_256::base_to_binary(std::string base){
 	return binary;
 }
 
+std::string SHA_256::decimal_to_binary(unsigned n){
+    const int size=sizeof(n)*8;
+    std::string res;
+    bool s=0;
+    for (int a=0;a<size;a++){
+        bool bit=n>>(size-1);
+        if (bit)
+            s=1;
+        if (s)
+            res.push_back(bit+'0');
+        n<<=1;
+    }
+    if (!res.size())
+        res.push_back('0');
+    return res;
+}
+
+/*void SHA_256::sha256(std::string str, unsigned char* hash){
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, str.c_str(), str.length());
+    SHA256_Final(hash, &sha256);
+}*/
+
 std::string SHA_256::hex_to_binary(std::string hex){
     std::string  binary="";
 
@@ -84,31 +94,6 @@ std::string SHA_256::hex_to_binary(std::string hex){
     }
     return binary;
 }
-
-//ASCII  to hexadecimal
-std::string SHA_256::reduceSHA(unsigned char* str, int size){
-	std::string final_hash="";
-
-	int curr_bits=HASH_SIZE;
-	for (int i=0; i<size && curr_bits>0; i++) {
-		char buff[4];
-		snprintf(buff, sizeof(buff), "%02x",str[i]);
-
-		std::string buffAsStdStr=buff;
-		std::string bin=hex_to_binary(buffAsStdStr);
-
-		final_hash+=bin.substr(0,std::min(curr_bits,static_cast<int>(bin.length())));
-		curr_bits-=std::min(curr_bits,static_cast<int>(bin.length()));
-	}
-	return final_hash;
-}
-
-/*void SHA_256::sha256(std::string str, unsigned char* hash){
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, str.c_str(), str.length());
-    SHA256_Final(hash, &sha256);
-}*/
 
 void SHA_256::mac256(std::string str,unsigned char* hash){
 	const char* key= reinterpret_cast<char*>(m_key);
@@ -126,10 +111,42 @@ void SHA_256::mac256(std::string str,unsigned char* hash){
     HMAC_CTX_cleanup(&ctx);
 }
 
+//***PUBLIC METHODS***//
+//ASCII  to hexadecimal
+std::string SHA_256::uchar_to_binary(unsigned char* str, int size, int curr_bits){
+	std::string final_hash="";
+
+	for (int i=0; i<size && curr_bits>0; i++) {
+		char buff[4];
+		snprintf(buff, sizeof(buff), "%02x",str[i]);
+
+		std::string buffAsStdStr=buff;
+		std::string bin=hex_to_binary(buffAsStdStr);
+
+		final_hash+=bin.substr(0,std::min(curr_bits,static_cast<int>(bin.length())));
+		curr_bits-=std::min(curr_bits,static_cast<int>(bin.length()));
+	}
+	return final_hash;
+}
+
+unsigned char* SHA_256::binary_to_uchar(std::string line){
+	int size=ceil(line.length()/8);
+	unsigned char* result = new unsigned char[size];
+	memset(result,0,size);
+
+	for(int j=0;j<size;j++){
+		for (int i=0;i<8;i++){
+    		result[j] |= (line[i+j*8]=='1') << (7-i);
+		}
+	}
+    return result;
+}
+
 std::string SHA_256::encoding(std::string line){
 	std::vector<std::string> tokens = tokenize(line,"\t");
+	std::string op = op_to_binary(tokens[3],tokens[4]);
 
-	return chr_to_binary(tokens[0])+pos_to_binary(tokens[1])+type_to_binary(tokens[3].length(),tokens[3],tokens[4]);
+	return op+chr_to_binary(tokens[0])+pos_to_binary(tokens[1])+data_to_binary(op,tokens[3].length(),tokens[4]);
 }
 
 std::vector<std::string> SHA_256::tokenize(std::string entry,std::string delimiter){
@@ -145,31 +162,22 @@ std::vector<std::string> SHA_256::tokenize(std::string entry,std::string delimit
 	return tokens;
 }
 
-
-//***PUBLIC METHODS***//
-
 uint64_t SHA_256::hash(std::string str){
 	unsigned char* sha_hash = new unsigned char[SHA256_DIGEST_LENGTH];
-	mac256(encoding(str),sha_hash);
+	mac256(str,sha_hash);
 
-	std::string final_hash=reduceSHA(sha_hash,SHA256_DIGEST_LENGTH);
+	std::string final_hash=uchar_to_binary(sha_hash,SHA256_DIGEST_LENGTH,HASH_SIZE);
 	delete[] sha_hash;
 
 	return stol(final_hash, nullptr,2);
 }
 
-std::string SHA_256::search(std::string entry,std::string query){
-	if(entry=="") return 0;
-
-	std::vector<std::string> tokens = tokenize(entry,"->");
-
-	for(uint64_t i=0; i<tokens.size();i++){
-		if(compareSNPs(tokens[i],query)==1){
-			return tokens[i];
-		}
+bool SHA_256::search(unsigned char* data,unsigned char* query,int size){
+	if(memcmp(data,query,size)==0){
+		return true;
+	}else{
+		return false;
 	}
-
-	return "";
 }
 
 uint64_t SHA_256::getSizeBits(){
@@ -181,16 +189,3 @@ void SHA_256::printVector(std::vector<std::string> v){
 		std::cout << v[i] << std::endl;
 	}
 }
-
-//return num_entries if SNPs are equal 
-int SHA_256::compareSNPs(std::string t_curr,std::string t_entry){
-    std::vector<std::string> tokens_curr = tokenize(t_curr,"\t");
-    std::vector<std::string> tokens_entry = tokenize(t_entry,"\t");
-
-    if( (atoi(tokens_curr[0].c_str()) == atoi(tokens_entry[0].c_str())) && (atoi(tokens_curr[1].c_str()) == atoi(tokens_entry[1].c_str())) && (tokens_curr[3]==tokens_entry[3])  && (tokens_curr[4]==tokens_entry[4]) ){
-        return 1;
-    }else{
-        return 0;   
-    }
-}
-

@@ -45,22 +45,15 @@ void PIRServer::downloadData(){
     removeDB();
 
     /* Receive data in chunks of 256 bytes */
-    int buflen=1;
-    uint64_t entry=0;
+    m_max_bytesize=m_socket.readInt();
+    m_num_entries=m_socket.readuInt64();
 
-    while(buflen!=0){ 
-        buflen=m_socket.readInt(); if(buflen==0){break;}
-        char* recvBuff;
-
-        if(!Constants::encrypted){   //if PLAINTEXT
-            recvBuff=m_socket.readChar_s(buflen);
-        }else{                       //if CIPHERTEXT
-            recvBuff=m_socket.readChar(buflen);
-        }
-
+    for(uint64_t i=0;i<m_num_entries;i++){
+        char* recvBuff=m_socket.readChar(m_max_bytesize);
+     
         //Create file where entry will be stored 
         ostringstream oss;
-        oss << entry;
+        oss << i;
 
         try{
 
@@ -68,7 +61,7 @@ void PIRServer::downloadData(){
 
             Tools::error(f==nullptr || f.is_open()==0,"Error writing DB file");
             if(f.is_open()){
-                f.write(recvBuff,buflen);
+                f.write(recvBuff,m_max_bytesize);
             }
             f.close();
 
@@ -77,8 +70,5 @@ void PIRServer::downloadData(){
         }
 
         delete[] recvBuff;
-        entry++;
     }
-
-    m_num_entries=entry;
 }

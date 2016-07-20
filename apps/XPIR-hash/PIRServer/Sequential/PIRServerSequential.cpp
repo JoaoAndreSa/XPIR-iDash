@@ -55,7 +55,7 @@ vector<char*> PIRServerSequential::readVector_s(){
 */
 void PIRServerSequential::sendVector_s(vector<char*> vector_c){
     m_socket.senduInt64(static_cast<uint64_t>(vector_c.size()));
-    uint32_t length=m_xpir->getQsize(m_xpir->getD());
+    uint32_t length=m_xpir->getRsize(m_xpir->getD());
     m_socket.senduInt32(length);
 
     for (uint64_t i=0; i<vector_c.size(); i++) {

@@ -94,16 +94,16 @@ int main(int argc, char* argv[]){
 	uint64_t num_entries=c->uploadData(entry['f']);
 
 	c->setRTTStart();
-	std::string resp=c->searchQuery(num_entries,entry);
+	bool resp=c->searchQuery(num_entries,entry);
 	c->setRTTStop();
+
 	string output="";
-	if(resp==""){
+	if(resp==false){
 		output+="Query variation not in file.\n";
         std::cout << output;
     }else{
-    	output+="Query variation in file:\n";
+    	output+="Query variation in file.\n";
         std::cout << output;
-        std::cout << resp << "\n\n"; 
     }
 
     std::ostringstream strs;

@@ -76,11 +76,11 @@ int main(int argc, char* argv[]){
 
 					for(int k=0;k<VARIANT_SETUPS;k++){
 						//for each varint setup we run 4 different queries (you can check simple_test.sh for more information)
-						getline (f,line); printCheck(line,0,"Query variation in file:");
+						getline (f,line); printCheck(line,0,"Query variation in file.");
 						getline(f,line); getTime(line);
 						getline(f,line);
 
-						getline (f,line); printCheck(line,1,"Query variation in file:");
+						getline (f,line); printCheck(line,1,"Query variation in file.");
 						getline(f,line); getTime(line);
 						getline(f,line);
 

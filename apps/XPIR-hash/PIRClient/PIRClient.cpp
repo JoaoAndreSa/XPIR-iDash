@@ -28,15 +28,8 @@
 
     @return ciphertexlen length of the ciphertext (needed for write())
 */
-int PIRClient::symmetricEncrypt(unsigned char* ciphertext, std::string line, uint64_t pos){
-    unsigned char ciphertext_noIV[1024]; //ciphertext with noIV (for memcpy purposes - C stuff)
-
-    unsigned char *plaintext = new unsigned char[line.length()+1];
-    memcpy((char*)plaintext,line.c_str(),line.length()+1);
-
-    int ciphertexlen=m_aes_256->encrypt(plaintext,strlen((char *)plaintext),ciphertext,ciphertext_noIV,pos);
-
-    delete[] plaintext;
+int PIRClient::symmetricEncrypt(unsigned char* ciphertext, unsigned char* plaintext, uint64_t pos){
+    int ciphertexlen=m_aes_256->encrypt(plaintext,m_max_bytesize,ciphertext,pos);
     return ciphertexlen;
 }
 
@@ -48,45 +41,17 @@ int PIRClient::symmetricEncrypt(unsigned char* ciphertext, std::string line, uin
 
     @return decryptedtextlen length of the decrypted text (not needed for anything really, but just in case...)
 */
-int PIRClient::symmetricDecrypt(unsigned char* decryptedtext, char* line, uint64_t pos){
-    unsigned char ciphertext[1024];
-    memcpy((char *)ciphertext,line,1024);
-
-    int decryptedtextlen = m_aes_256->decrypt(ciphertext,decryptedtext,pos);
-    decryptedtext[decryptedtextlen] = '\0';
-
-    return decryptedtextlen;
+int PIRClient::symmetricDecrypt(unsigned char* plaintext, unsigned char* ciphertext, uint64_t pos){
+    int plaintexlen = m_aes_256->decrypt(ciphertext,m_max_bytesize,plaintext,pos);
+    return plaintexlen;
 }
 
-/**
-    Send ciphertext through socket (length+data).
-
-    @param ciphertexlen length of the ciphertext
-    @param ciphertext variable that stores the ciphertext
-
-    @return
-*/
-void PIRClient::sendCiphertext(int ciphertexlen,unsigned char* ciphertext){
-    m_socket.sendInt(ciphertexlen);
-    m_socket.senduChar_s(ciphertext,ciphertexlen);
-}
-
-/**
-    Send plaintext through socket (length+data). In this case there is no symmetric encryption
-
-    @param plaintexlen length of the plaintext
-    @param str variant(s) to be sent (as a string)
-
-    @return
-*/
-void PIRClient::sendPlaintext(int plaintexlen,string str){
-    unsigned char *plaintext = new unsigned char[plaintexlen];
-    memcpy((char*)plaintext,str.c_str(),plaintexlen);
-
-
-    m_socket.sendInt(plaintexlen);
-    m_socket.senduChar_s(plaintext,plaintexlen);
-    delete[] plaintext;
+std::string PIRClient::padData(string input, int max_bits){
+    int len=input.length();
+    for(int i=0;i<max_bits-len;i++){
+        input="0"+input;
+    }
+    return input;
 }
 
 /**
@@ -98,32 +63,41 @@ void PIRClient::sendPlaintext(int plaintexlen,string str){
 
     @return
 */
-uint64_t PIRClient::sendData(std::vector<std::string> catalog){
-    uint64_t num_entries=0;
+void PIRClient::sendData(std::vector<std::vector<std::string>> catalog){
+    double start = omp_get_wtime(),total = 0;
 
-    double start = omp_get_wtime();
+    m_socket.sendInt(m_max_bytesize);
+    m_socket.senduInt64(catalog.size());
+
     for(uint64_t i=0; i<catalog.size();i++){
-        if(catalog[i]!=""){
-            if(!Constants::encrypted){    //if PLAINTEXT
-                sendPlaintext(catalog[i].length()+1,catalog[i]);
-            }else{                        //if CIPHERTEXT
-                unsigned char ciphertext[1024];
-                int ciphertexlen = symmetricEncrypt(ciphertext,catalog[i],i);
-                sendCiphertext(ciphertexlen,ciphertext);
-            }
+        unsigned char* entry;
+
+        if(catalog[i].size()>0){
+            entry=m_SHA_256->binary_to_uchar(padData(catalog[i][0],m_max_bytesize*8));
         }else{
-            std::string blank("0");
-            sendPlaintext(blank.length(),blank);
+            entry=m_SHA_256->binary_to_uchar(padData("",m_max_bytesize*8));
         }
 
-        num_entries++;
+        if(!Constants::encrypted){    //if PLAINTEXT
+            m_socket.senduChar_s(entry,m_max_bytesize);
+        }else{                        //if CIPHERTEXT
+            unsigned char* ciphertext = new unsigned char[m_max_bytesize];
+            int ciphertexlen = symmetricEncrypt(ciphertext,entry,i);
+
+            double start_t = omp_get_wtime();
+            m_socket.senduChar_s(ciphertext,ciphertexlen);
+            double end_t = omp_get_wtime();
+            //m_socket.sleepForBytes(ciphertexlen,stop-start);
+
+            total+=end_t-start_t;
+            delete[] ciphertext;
+        }
+        delete[] entry;
     }
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(m_max_bytesize*catalog.size(),total);
     double end = omp_get_wtime();
-    std::cout << "PIRClient: Send file took " << end-start << " (s)\n";
-    m_socket.sendInt(0);    //signal EOF (no more things to write)
 
-
-    return num_entries;
+    std::cout << "PIRClient: Encrypting and sending file took " << end-start << " (s)\n";
 }
 
 /**
@@ -163,28 +137,50 @@ uint64_t PIRClient::uploadData(std::string filename){
         Socket::errorExit(f==NULL || f.is_open()==0,"Error reading file");
 
         //send the size of the vector to be stored
-        std::vector<std::string>catalog(m_SHA_256->getSizeBits());
+        std::vector<std::vector<std::string>>catalog(m_SHA_256->getSizeBits());
 
         double start = omp_get_wtime();
+
+        int snp_bitsize=0;
         if (f.is_open()){
             while(getline(f,line)){
                 if(line[0]!='#'){
-                    int pos=m_SHA_256->hash(line); //hash variant and get its position in the 'catalog'
-                    if(catalog[pos]!=""){
-                        catalog[pos]+="->";        //delimiter (for appending)
-                    }
-                    catalog[pos]+=line;
+                    std::string encoded=m_SHA_256->encoding(line);
+
+                    uint64_t pos=m_SHA_256->hash(encoded); //hash variant and get its position in the 'catalog'
+                    catalog[pos].push_back(encoded);
+
+                    if(encoded.length()>snp_bitsize) snp_bitsize=encoded.length();
                 }
             }
         }
+        m_snp_bitsize=snp_bitsize;
         f.close();
+
+        int max_bitsize=0;
+        for(uint64_t i=0;i<catalog.size();i++){
+            std:string aux("");
+            for(uint64_t j=0;j<catalog[i].size();j++){
+                aux+=padData(catalog[i][j],snp_bitsize);
+            }
+
+            if(aux!=""){
+                if(aux.length()>max_bitsize) max_bitsize=aux.length();
+
+                catalog[i][0]=aux;
+            }
+        }
+        m_bits_pad=(8-max_bitsize%8);
+        m_max_bytesize=(max_bitsize+m_bits_pad)/8;
+
         double end = omp_get_wtime();
         std::cout << "PIRClient: Prepare file took " << end-start << " (s)\n";
 
-        num_entries=sendData(catalog);
+        sendData(catalog);
+        num_entries=catalog.size();
 
     }catch (std::ios_base::failure &fail){
-        Socket::errorExit(1,"Error writing output file");
+        Socket::errorExit(1,"Error reading file");
     }
 
 	return num_entries;

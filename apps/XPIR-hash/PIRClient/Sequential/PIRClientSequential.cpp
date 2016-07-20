@@ -105,19 +105,26 @@ char* PIRClientSequential::replyExtraction(XPIRcSequential::REPLY reply){
 
     @return response_s the specific element we are looking for or if it does not exist return ""
 */
-std::string PIRClientSequential::extractCiphertext(char* response, uint64_t aggregated_entrySize, uint64_t pos){
-    if(response[aggregated_entrySize*(pos%m_xpir->getAlpha())]=='0'){
-        cout << "Reply: " << endl << endl;
-        return "";
+bool PIRClientSequential::extractCiphertext(char* response, uint64_t aggregated_entrySize, uint64_t pos, string query){
+    unsigned char* ciphertext = new unsigned char[m_max_bytesize];
+    memcpy((char *)ciphertext,response+aggregated_entrySize*(pos%m_xpir->getAlpha()),m_max_bytesize);
+
+    unsigned char* plaintext = new unsigned char[m_max_bytesize];
+    int plaintexlen = symmetricDecrypt(plaintext,ciphertext,pos);
+
+    string decoded_pack = m_SHA_256->uchar_to_binary(plaintext,m_max_bytesize,m_max_bytesize*8).substr(m_bits_pad);
+
+    bool check=false;
+    for(int i=0;i<decoded_pack.length();i+=m_snp_bitsize){
+        if(padData(query,m_snp_bitsize).compare(decoded_pack.substr(i,m_snp_bitsize))==0){
+            check=true;
+        }
     }
 
-    unsigned char decryptedtext[1024];
-    int decryptedtextlen = symmetricDecrypt(decryptedtext,response+aggregated_entrySize*(pos%m_xpir->getAlpha()),pos);
+    delete[] ciphertext;
+    delete[] plaintext;
 
-    std::string response_s(reinterpret_cast<char*>(decryptedtext));
-    cout << "Reply: " << response_s << endl << endl;
-
-    return response_s;
+    return check;
 }
 
 /**
@@ -129,7 +136,7 @@ std::string PIRClientSequential::extractCiphertext(char* response, uint64_t aggr
 
     @return response_s the specific element we are looking for or if it does not exist return ""
 */
-std::string PIRClientSequential::extractPlaintext(char* response, uint64_t aggregated_entrySize, uint64_t pos){
+std::string PIRClientSequential::extractPlaintext(char* response, uint64_t aggregated_entrySize, uint64_t pos, string query){
     if(response+aggregated_entrySize*(pos%m_xpir->getAlpha())=='\0'){
         return "";
     }else{
@@ -148,12 +155,13 @@ std::string PIRClientSequential::extractPlaintext(char* response, uint64_t aggre
 
     @return response_s stores the variant(s) we are looking for or "" otherwise
 */
-std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::string> entry){
+bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::string> entry){
     m_xpir= new XPIRcSequential(Tools::readParamsPIR(num_entries),1,nullptr);
 
     //#-------SETUP PHASE--------#
     string query_str=entry['c']+"\t"+entry['p']+"\t.\t"+entry['r']+"\t"+entry['a']; //the . is to represent the missing id field
-    uint64_t pos=m_SHA_256->hash(query_str);
+    string encoded=m_SHA_256->encoding(query_str);
+    uint64_t pos=m_SHA_256->hash(encoded);
     uint64_t pack_pos=considerPacking(pos,m_xpir->getAlpha());
 
     //#-------QUERY PHASE--------#
@@ -165,15 +173,15 @@ std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,
     XPIRcSequential::REPLY reply = readReply();
     char* response;
     response=replyExtraction(reply);
-    std::string response_s;
+    bool response_b;
 
     if(!Constants::encrypted){   //if PLAINTEXT
-        response_s=extractPlaintext(response,reply.maxFileSize,pos);
+        extractPlaintext(response,reply.maxFileSize,pos,encoded);
     }else{                       //if CIPHERTEXT
-        response_s=extractCiphertext(response,reply.maxFileSize,pos);
+        response_b = extractCiphertext(response,reply.maxFileSize,pos,encoded);
     }
 
-    if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
+    // //if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
 
     //#-------CLEANUP PHASE--------#
     m_xpir->cleanQueryBuffer();
@@ -182,5 +190,5 @@ std::string PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,
     delete m_SHA_256;
     delete m_xpir;
 
-    return response_s;
+    return response_b;
 }

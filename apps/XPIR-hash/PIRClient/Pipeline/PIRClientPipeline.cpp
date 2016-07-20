@@ -119,7 +119,7 @@ void PIRClientPipeline::joinAllThreads(){
 
     @return response_s stores the variant(s) we are looking for or "" otherwise
 */
-std::string PIRClientPipeline::searchQuery(uint64_t num_entries,std::map<char,std::string> entry){
+bool PIRClientPipeline::searchQuery(uint64_t num_entries,std::map<char,std::string> entry){
     m_xpir= new XPIRcPipeline(Tools::readParamsPIR(num_entries),1,nullptr);
 
     //#-------SETUP PHASE--------#
@@ -140,11 +140,11 @@ std::string PIRClientPipeline::searchQuery(uint64_t num_entries,std::map<char,st
     std::string response_s(reinterpret_cast<char*>(tmp));
     cout << "Reply: " << response_s << endl << endl;
 
-    if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
+    //if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
 
     //#-------CLEANUP PHASE--------#
     delete m_SHA_256;
     delete m_xpir;
     
-    return response_s;
+    return false;
 }

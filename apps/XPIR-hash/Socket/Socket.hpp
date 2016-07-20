@@ -17,6 +17,7 @@
 
 #include <cstring>
 #include <time.h>
+#include "omp.h"
 
 #include "../Constants/constants.hpp"
 
@@ -59,9 +60,12 @@ public:
 	//SERVER
 	void acceptConnection();				//accepts connection betwen server and client and stores socket's file descriptor
 
+	//BANDWIDTH
+	void sleepForBytes(uint64_t,double);//sleep a number o nanoseconds necessary to emulate a given bandwith value
+
 	//READING
 	void readXBytes(uint64_t, void*);   	//read X amount of bytes from the socket (we can then cast it to whatever type we need)
-	char* readChar_s(int);					//reads an char array (string) from the socket and returns it
+	unsigned char* readuChar(int);
 	char* readChar(int);					//reads an char array (binary) from the socket and returns it
 	int readInt();							//reads an integer from the socket and returns it
 	unsigned int readuInt();				//reads an unsigned integer from the socket and returns it
@@ -95,7 +99,5 @@ private:
 	//SERVER
 	void bindServer();						//bind server to a specific server socket
 	void generateServerAddress();			//generate server address
-
-	void sleepForBytes(unsigned int);		//sleep a number o nanoseconds necessary to emulate a given bandwith value
 
 };

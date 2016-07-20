@@ -41,7 +41,7 @@ public:
   		EVP_cleanup();
   		ERR_free_strings();
 	}
-	int encrypt(unsigned char*, int, unsigned char*, unsigned char*, uint64_t);
-	int decrypt(unsigned char*, unsigned char*, uint64_t);
-	void test(unsigned char*, int, unsigned char*, unsigned char*, unsigned char*);
+	int encrypt(unsigned char*, int, unsigned char*, uint64_t);
+	int decrypt(unsigned char*, int, unsigned char*, uint64_t);
+	void test(unsigned char*, int, unsigned char*, unsigned char*);
 };

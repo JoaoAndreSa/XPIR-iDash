@@ -93,6 +93,8 @@ void Socket::acceptConnection(){
     std::cout << "Connection successful" << "\n";
 }
 
+
+//***PUBLIC METHODS***//
 /**
     Sleep a number o nanoseconds necessary to emulate a given bandwith value.
 
@@ -101,9 +103,18 @@ void Socket::acceptConnection(){
     @param
     @return
 */
-void Socket::sleepForBytes(unsigned int bytes){
+void Socket::sleepForBytes(uint64_t bytes, double time){
     uint64_t seconds=(bytes*8)/Constants::bandwith_limit;
+
+    uint64_t elapsed_seconds=(uint64_t)time;
+    if(seconds>elapsed_seconds) seconds-=elapsed_seconds;
+    else seconds=0;
+
     uint64_t nanoseconds=((((double)bytes*8.)/(double)Constants::bandwith_limit)-(double)seconds)*1000000000UL;
+
+    uint64_t elapsed_nanoseconds=(time-(double)elapsed_seconds)*1000000000UL;
+    if(nanoseconds>elapsed_nanoseconds) nanoseconds-=elapsed_nanoseconds;
+    else nanoseconds=0;
 
     struct timespec req={0},rem={0};
     req.tv_sec=seconds;
@@ -113,7 +124,6 @@ void Socket::sleepForBytes(unsigned int bytes){
 }
 
 
-//***PUBLIC METHODS***//
 /**
     Read a X amount of bytes from the socket (we can then cast it to whatever type we need).
 
@@ -126,26 +136,20 @@ void Socket::readXBytes(uint64_t x, void* buffer){
     // This assumes buffer is at least x bytes long, and that the socket is blocking.
     int bytesRead = 0;
     while (bytesRead < x){
+        //double start = omp_get_wtime();
         unsigned int result = read(m_connFd, ((uint8_t*)buffer)+bytesRead, x - bytesRead); errorReadSocket(result<0);
+        //double end = omp_get_wtime();
+
         bytesRead += result;
 
-        if(Constants::bandwith_limit!=0) sleepForBytes(result); //enforce bandwith
+        //if(Constants::bandwith_limit!=0) sleepForBytes(result,end-start); //enforce bandwith
     }
 
 }
 
-/**
-    Reads an unsigned char array (string) from the socket and returns it.
-    We need to add '\0' to the end of the stream.
-
-    @param buflen size of the element to be read.
-
-    @return recvBuff buffer where we store the bytes.
-*/
-char* Socket::readChar_s(int buflen){
-    char* recvBuff = new char[buflen+1];
+unsigned char* Socket::readuChar(int buflen){
+    unsigned char* recvBuff = new unsigned char[buflen];
     readXBytes(buflen,(void*)recvBuff);
-    recvBuff[buflen]='\0';
     return recvBuff;
 }
 
@@ -231,10 +235,13 @@ void Socket::sendXBytes(uint64_t x, void* buffer){
     //This assumes buffer is at least x bytes long, and that the socket is blocking.
     int bytesWrite = 0;
     while (bytesWrite < x){
+        //double start = omp_get_wtime();
         int result = write(m_connFd, ((uint8_t*)buffer)+bytesWrite, x - bytesWrite); errorWriteSocket(result<0);
+        //double end = omp_get_wtime();
+
         bytesWrite += result;
 
-        if(Constants::bandwith_limit!=0) sleepForBytes(result); //enforce bandwith
+        //if(Constants::bandwith_limit!=0) sleepForBytes(result,end-start); //enforce bandwith
     }
 }
 

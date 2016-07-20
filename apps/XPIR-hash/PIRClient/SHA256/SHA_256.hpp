@@ -31,25 +31,25 @@ public:
 private:
 	void printElem(unsigned char*,int);
 
-	std::string decimal_to_binary(unsigned);
-	std::string type_to_binary(int,std::string,std::string);
+	std::string data_to_binary(std::string,int,std::string);
+	std::string op_to_binary(std::string,std::string);
 	std::string chr_to_binary(std::string);
 	std::string pos_to_binary(std::string);
 	std::string base_to_binary(std::string);
+	std::string decimal_to_binary(unsigned);
 	std::string hex_to_binary(std::string);
-	std::string reduceSHA(unsigned char*,int);
 
 	//void sha256(std::string, unsigned char*);
 	void mac256(std::string,unsigned char*);
-	std::string encoding(std::string);
-
 
 public:
+	std::string uchar_to_binary(unsigned char*,int,int);
+	unsigned char* binary_to_uchar(std::string);
+	std::string encoding(std::string);
 	uint64_t hash(std::string str);
-	std::string search(std::string,std::string);
+	bool search(unsigned char*,unsigned char*,int);
 	uint64_t getSizeBits();
 	void printVector(std::vector<std::string>);
-	int compareSNPs(std::string,std::string);
 	std::vector<std::string> tokenize(std::string,std::string);
 
 };
