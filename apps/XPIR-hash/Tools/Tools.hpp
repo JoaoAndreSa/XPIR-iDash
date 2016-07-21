@@ -18,6 +18,8 @@
 
 class Tools{
 public:
+	static void readFromBinFile(string, char*);
+	static void writeToBinFile(string, char*, int);
 	static int readParamsSHA();
 	static PIRParameters readParamsPIR(uint64_t);			//reads PIR params needed to create an XPIRc object
 	static void cleanupVector(vector<char*>);  					//free allocated memory

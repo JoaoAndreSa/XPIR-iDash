@@ -95,7 +95,7 @@ void PIRServerSequential::job (){
     //#-------SETUP PHASE--------#
     //read file from client
 	downloadData();
-    DBDirectoryProcessor db;
+    DBDirectoryProcessor db(m_num_entries);
     m_xpir = new XPIRcSequential(Tools::readParamsPIR(m_num_entries),0,&db);
 
     //#-------QUERY PHASE--------#

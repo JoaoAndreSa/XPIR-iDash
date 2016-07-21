@@ -44,31 +44,19 @@ void PIRServer::downloadData(){
     /* Erase data in db folder */
     removeDB();
 
-    /* Receive data in chunks of 256 bytes */
-    m_max_bytesize=m_socket.readInt();
-    m_num_entries=m_socket.readuInt64();
+    try{
+        /* Receive data in chunks of 256 bytes */
+        m_max_bytesize=m_socket.readInt();
+        m_num_entries=m_socket.readuInt64();
 
-    for(uint64_t i=0;i<m_num_entries;i++){
-        char* recvBuff=m_socket.readChar(m_max_bytesize);
-     
-        //Create file where entry will be stored 
-        ostringstream oss;
-        oss << i;
+        for(uint64_t i=0;i<m_num_entries;i++){
+            char* recvBuff=m_socket.readChar(m_max_bytesize);
 
-        try{
-
-            ofstream f("db/"+oss.str(), ios::out|ios::binary);
-
-            Tools::error(f==nullptr || f.is_open()==0,"Error writing DB file");
-            if(f.is_open()){
-                f.write(recvBuff,m_max_bytesize);
-            }
-            f.close();
-
-        }catch (std::ios_base::failure &fail){
-            Tools::error(1,"Error writing DB file");
+            //Create file where entries will be stored 
+            Tools::writeToBinFile("db/db.bin",recvBuff,m_max_bytesize),
+            delete[] recvBuff;
         }
-
-        delete[] recvBuff;
+    }catch (std::ios_base::failure &fail){
+        Tools::error(1,"Error writing DB file");
     }
 }

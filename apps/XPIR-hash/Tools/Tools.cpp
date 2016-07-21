@@ -10,9 +10,40 @@
 #include "Tools.hpp"
 
 //***PRIVATE METHODS***//
+void Tools::readFromBinFile(string filename, char* recvBuf){
+    try{
+        streampos size;
+        ifstream f(filename,ios::in|ios::binary);
+
+        error(f==nullptr || f.is_open()==0,"Error reading binary file");
+        if(f.is_open()){
+            size = f.tellg();
+            f.seekg(0,ios::beg);
+            f.read(recvBuf,size);
+        }
+        f.close();
+    }catch(std::ios_base::failure &fail){
+        error(1,"Error reading binary file");
+    }
+}
+
+void Tools::writeToBinFile(string filename, char* recvBuf, int size){
+    try{
+        ofstream f(filename,ios::out|ios::binary|std::fstream::app);
+
+        error(f==nullptr || f.is_open()==0,"Error writing binary file");
+        if(f.is_open()){
+            f.write(recvBuf,size);
+        }
+        f.close();
+    }catch(std::ios_base::failure &fail){
+        error(1,"Error writing binary file");
+    }
+}
+
 /**
     Check 3rd error on the next list of errors - see function readParamsPIR().
-    
+
     @param d recursion/dimension value
     @param alpha aggregation value
     @param n recursion array (number of elements in each dimension)
