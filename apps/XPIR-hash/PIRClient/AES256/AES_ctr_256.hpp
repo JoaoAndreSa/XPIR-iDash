@@ -7,6 +7,8 @@
 #include <string.h>
 #include <iostream>
 
+#include "../../Tools/Tools.hpp"
+
 class AES_ctr_256{
 private:
 	unsigned char m_key[32];
@@ -14,21 +16,31 @@ private:
 
 private:
 	void pack64(uint64_t,unsigned char *);
-	void pack32(uint32_t,unsigned char *);
-	uint32_t unpack32(unsigned char *);
 	void handleErrors(void);
 
 public:
 	AES_ctr_256(){
 		if(!RAND_bytes(m_key,sizeof m_key)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
 
+		if(std::ifstream("AES_key.bin")){
+	    	Tools::readFromBinFile("AES_key.bin",reinterpret_cast<char*>(m_key));
+	    }else{
+	    	Tools::writeToBinFile("AES_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
+	    }
+
 		unsigned char iv[8];
 		if(!RAND_bytes(iv,8)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
+
+		if(std::ifstream("AES_nonce.bin")){
+	    	Tools::readFromBinFile("AES_nonce.bin",reinterpret_cast<char*>(iv));
+	    }else{
+	    	Tools::writeToBinFile("AES_nonce.bin",reinterpret_cast<char*>(iv),sizeof iv);
+	    }
 
 		//Initialise counter in 'iv' to 0
 		memset(m_iv+8,0,8);
 
-			//Copy IV into 'iv'
+		//Copy IV into 'iv'
 		memcpy(m_iv,iv,8);
 
 		/* Initialise the library */

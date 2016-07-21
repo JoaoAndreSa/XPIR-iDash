@@ -11,10 +11,11 @@
 #include <bitset>
 #include <cmath>
 #include <tgmath.h>
-#include "../../Tools/Tools.hpp"
 #include "openssl/sha.h"
 #include <openssl/hmac.h>
 #include <openssl/rand.h>
+
+#include "../../Tools/Tools.hpp"
 
 class SHA_256{
 
@@ -28,10 +29,10 @@ public:
 		HASH_SIZE=s;
 	    if(!RAND_bytes(m_key,sizeof m_key)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
 
-	    if(std::ifstream("SHA_key.bin")){
-	    	Tools::readFromBinFile("SHA_key.bin",reinterpret_cast<char*>(m_key));
+	    if(std::ifstream("HMAC_key.bin")){
+	    	Tools::readFromBinFile("HMAC_key.bin",reinterpret_cast<char*>(m_key));
 	    }else{
-	    	Tools::writeToBinFile("SHA_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
+	    	Tools::writeToBinFile("HMAC_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
 	    }
 	};
 
