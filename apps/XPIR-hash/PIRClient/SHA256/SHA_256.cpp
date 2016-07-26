@@ -172,14 +172,6 @@ uint64_t SHA_256::hash(std::string str){
 	return stol(final_hash, nullptr,2);
 }
 
-bool SHA_256::search(unsigned char* data,unsigned char* query,int size){
-	if(memcmp(data,query,size)==0){
-		return true;
-	}else{
-		return false;
-	}
-}
-
 uint64_t SHA_256::getSizeBits(){
 	return pow(2,HASH_SIZE);
 }

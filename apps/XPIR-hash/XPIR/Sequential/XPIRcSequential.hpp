@@ -38,10 +38,6 @@ public:
 		uint64_t maxFileSize;    		//the size of the biggest aggegated file
 	} REPLY;
 
-private:
-	void import_database();									//import database and initialize imported_database object
-
-public:
 	/**
     	Constructor for XPIRcSequential object.
 
@@ -59,7 +55,7 @@ public:
 
 			m_r_generator = new PIRReplyGenerator(m_params,*m_crypto,m_db);
 
-  			import_database();
+  			m_imported_db = import_database(m_params,m_crypto,m_db);
 		}else{ 			//if CLIENT
 			m_r_generator=nullptr;
 			m_imported_db=nullptr;
@@ -69,7 +65,7 @@ public:
 		}
 
 	}
-
+	static imported_database* import_database(PIRParameters, HomomorphicCrypto*, DBHandler*);//import database and initialize imported_database object
 	vector<char*> queryGeneration(uint64_t chosen_element);  //generate query (client)
 	REPLY replyGeneration(vector<char*>);					 //generate reply (server)
 	char* replyExtraction(REPLY);							 //extract reply  (client)

@@ -33,7 +33,6 @@ protected:
 	Socket m_socket;
 	boost::thread::id m_id;
 
-	uint64_t m_num_entries;
 	int m_max_bytesize;
 
 public:

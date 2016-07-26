@@ -22,19 +22,19 @@ public:
 	AES_ctr_256(){
 		if(!RAND_bytes(m_key,sizeof m_key)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
 
-		if(std::ifstream("AES_key.bin")){
-	    	Tools::readFromBinFile("AES_key.bin",reinterpret_cast<char*>(m_key));
+		if(std::ifstream("data/AES_key.bin")){
+	    	Tools::readFromBinFile("data/AES_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
 	    }else{
-	    	Tools::writeToBinFile("AES_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
+	    	Tools::writeToBinFile("data/AES_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
 	    }
 
 		unsigned char iv[8];
 		if(!RAND_bytes(iv,8)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
 
-		if(std::ifstream("AES_nonce.bin")){
-	    	Tools::readFromBinFile("AES_nonce.bin",reinterpret_cast<char*>(iv));
+		if(std::ifstream("data/AES_nonce.bin")){
+	    	Tools::readFromBinFile("data/AES_nonce.bin",reinterpret_cast<char*>(iv),sizeof iv);
 	    }else{
-	    	Tools::writeToBinFile("AES_nonce.bin",reinterpret_cast<char*>(iv),sizeof iv);
+	    	Tools::writeToBinFile("data/AES_nonce.bin",reinterpret_cast<char*>(iv),sizeof iv);
 	    }
 
 		//Initialise counter in 'iv' to 0

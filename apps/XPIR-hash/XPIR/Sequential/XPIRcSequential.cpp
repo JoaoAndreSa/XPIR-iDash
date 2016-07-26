@@ -19,14 +19,14 @@
 
 #include "XPIRcSequential.hpp"
 
-//***PRIVATE METHODS***//
+//***PUBLIC METHODS***//
 /**
 	Imports the database/filesystem (stored on the db/ folder) to be used by the remaining PIR operations.
 
 	@param
 	@return
 */
-void XPIRcSequential::import_database(){
+imported_database* XPIRcSequential::import_database(PIRParameters params, HomomorphicCrypto* crypto, DBHandler* db){
 	/**
 		Import database
 		This can be done on the "Database setup" phase because:
@@ -38,12 +38,16 @@ void XPIRcSequential::import_database(){
 	/**
 		Warning aggregation is dealt with internally, the bytes_per_db_element parameter here is to be given WITHOUT multiplying it by params.alpha
 	*/
-	m_imported_db = m_r_generator->importData(/* uint64_t offset*/ 0, /*uint64_t bytes_per_db_element */ m_db->getmaxFileBytesize());
+
+	PIRReplyGenerator* r_generator = new PIRReplyGenerator(params,*crypto,db);
+
+	imported_database*  imported_db = r_generator->importData(/* uint64_t offset*/ 0, /*uint64_t bytes_per_db_element */ db->getmaxFileBytesize());
 	cout << "PIRServer: Database imported" << endl;
+
+	delete r_generator;
+	return imported_db;
 }
 
-
-//***PUBLIC METHODS***//
 /**
 	Query generation phase (client-side). Stores encrypted query elements in an array to be sent to the server.
 

@@ -56,11 +56,5 @@ int main(){
 
 	unsigned char* bin=sha256.uchar_binary(encoded);
 
-	cout << encoded << endl;
-	cout << data[pos] << endl;
-	cout << bin << endl;
-
-	cout << sha256.search(sha256.uchar_binary(data[pos]),bin,encoded.length()/8) << endl;	//we need to ensure that each entry size is multiple of 8
-
 	return 0;
 }

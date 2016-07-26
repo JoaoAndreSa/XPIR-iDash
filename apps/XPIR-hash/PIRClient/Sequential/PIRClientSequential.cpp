@@ -105,26 +105,34 @@ char* PIRClientSequential::replyExtraction(XPIRcSequential::REPLY reply){
 
     @return response_s the specific element we are looking for or if it does not exist return ""
 */
-bool PIRClientSequential::extractCiphertext(char* response, uint64_t aggregated_entrySize, uint64_t pos, string query){
-    unsigned char* ciphertext = new unsigned char[m_max_bytesize];
-    memcpy((char *)ciphertext,response+aggregated_entrySize*(pos%m_xpir->getAlpha()),m_max_bytesize);
+bool PIRClientSequential::extractCiphertext(char* response, uint64_t aggregated_entrySize, uint64_t pos,std::vector<string> query){
+    unsigned char* ciphertext = new unsigned char[aggregated_entrySize];
+    memcpy((char *)ciphertext,response+aggregated_entrySize*(pos%m_xpir->getAlpha()),aggregated_entrySize);
 
-    unsigned char* plaintext = new unsigned char[m_max_bytesize];
+    unsigned char* plaintext = new unsigned char[aggregated_entrySize];
     int plaintexlen = symmetricDecrypt(plaintext,ciphertext,pos);
 
-    string decoded_pack = m_SHA_256->uchar_to_binary(plaintext,m_max_bytesize,m_max_bytesize*8).substr(m_bits_pad);
+    string decoded_pack = m_SHA_256->uchar_to_binary(plaintext,aggregated_entrySize,aggregated_entrySize*8).substr(3);
 
-    bool check=false;
-    for(int i=0;i<decoded_pack.length();i+=m_snp_bitsize){
-        if(padData(query,m_snp_bitsize).compare(decoded_pack.substr(i,m_snp_bitsize))==0){
-            check=true;
+    std::vector<bool> check(query.size(),false);
+    int snp_bitsize=69;
+    for(int i=0;i<decoded_pack.length();i+=snp_bitsize){
+        for(int j=0;j<query.size();j++){
+            if(padData(query[j],snp_bitsize).compare(decoded_pack.substr(i,snp_bitsize))==0){
+                check[j]=true;
+            }
         }
     }
 
     delete[] ciphertext;
     delete[] plaintext;
 
-    return check;
+    for(int i=0;i<check.size();i++){
+        if(check[i]==false){
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -136,7 +144,7 @@ bool PIRClientSequential::extractCiphertext(char* response, uint64_t aggregated_
 
     @return response_s the specific element we are looking for or if it does not exist return ""
 */
-std::string PIRClientSequential::extractPlaintext(char* response, uint64_t aggregated_entrySize, uint64_t pos, string query){
+std::string PIRClientSequential::extractPlaintext(char* response, uint64_t aggregated_entrySize, uint64_t pos,std::vector<string> query){
     if(response+aggregated_entrySize*(pos%m_xpir->getAlpha())=='\0'){
         return "";
     }else{
@@ -159,10 +167,9 @@ bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::st
     m_xpir= new XPIRcSequential(Tools::readParamsPIR(num_entries),1,nullptr);
 
     //#-------SETUP PHASE--------#
-    string query_str=entry['c']+"\t"+entry['p']+"\t.\t"+entry['r']+"\t"+entry['a']; //the . is to represent the missing id field
-    string encoded=m_SHA_256->encoding(query_str);
-    uint64_t pos=m_SHA_256->hash(encoded);
-    uint64_t pack_pos=considerPacking(pos,m_xpir->getAlpha());
+    std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);
+    //TODO: Search multiple variants at the same time
+    uint64_t pack_pos=considerPacking(pos[0].first,m_xpir->getAlpha());
 
     //#-------QUERY PHASE--------#
     std::vector<char*> query=queryGeneration(pack_pos);
@@ -176,12 +183,10 @@ bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::st
     bool response_b;
 
     if(!Constants::encrypted){   //if PLAINTEXT
-        extractPlaintext(response,reply.maxFileSize,pos,encoded);
+        extractPlaintext(response,reply.maxFileSize,pos[0].first,pos[0].second);
     }else{                       //if CIPHERTEXT
-        response_b = extractCiphertext(response,reply.maxFileSize,pos,encoded);
+        response_b = extractCiphertext(response,reply.maxFileSize,pos[0].first,pos[0].second);
     }
-
-    // //if(response_s!="") response_s = m_SHA_256->search(response_s,query_str);
 
     //#-------CLEANUP PHASE--------#
     m_xpir->cleanQueryBuffer();
@@ -191,4 +196,6 @@ bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::st
     delete m_xpir;
 
     return response_b;
+    
+    return true;
 }

@@ -10,7 +10,7 @@
 #include "Sequential/PIRServerSequential.hpp"
 
 int main(int argc, char* argv[]){
-	Socket::errorExit((Constants::port > 65535) || (Constants::port < 2000),"Please choose a port number between 2000 - 65535");
+	Error::error((Constants::port > 65535) || (Constants::port < 2000),"Please choose a port number between 2000 - 65535");
 
 	Socket socket(0);
 

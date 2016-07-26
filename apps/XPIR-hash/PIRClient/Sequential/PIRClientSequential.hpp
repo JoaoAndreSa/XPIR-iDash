@@ -51,6 +51,6 @@ private:
 
 	//REPLY EXTRACTION
 	char* replyExtraction(XPIRcSequential::REPLY);
-	bool extractCiphertext(char*, uint64_t, uint64_t, string);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
-	std::string extractPlaintext(char*, uint64_t, uint64_t, string );		//extract the exact plaintext (with aggregation the reply contains more than one element)
+	bool extractCiphertext(char*, uint64_t, uint64_t,std::vector<string>);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
+	std::string extractPlaintext(char*, uint64_t, uint64_t,std::vector<string>);		//extract the exact plaintext (with aggregation the reply contains more than one element)
 };

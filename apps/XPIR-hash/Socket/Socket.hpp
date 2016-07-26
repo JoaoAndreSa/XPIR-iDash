@@ -20,6 +20,7 @@
 #include "omp.h"
 
 #include "../Constants/constants.hpp"
+#include "../Error/Error.hpp"
 
 class Socket{
 private:
@@ -28,7 +29,6 @@ private:
 	//Connection variables
 	int m_socketFd, m_portNo;
 	char* m_sname;
-	struct hostent *m_server;
 	struct sockaddr_in m_svrAdd,m_clntAdd;
 	socklen_t m_len;
 
@@ -75,15 +75,15 @@ public:
 	//WRITING
 	void sendXBytes(uint64_t, void*);		//send X amount of bytes through the socket (we convert any type to a bunch of bytes)
 	void senduChar_s(unsigned char*,int);	//sends an unsigned char array through the socket
+	void sendChar_s(char*,int);				//sends an unsigned char array through the socket
 	void sendInt(int);						//sends an integer through the socket
 	void senduInt(unsigned int);			//sends an unsigned integer through the socket
 	void senduInt32(uint32_t);				//sends an unsigned integer (32 bits) through the socket
 	void senduInt64(uint64_t);				//sends an unsigned integer (64 bits) through the socket
 
 	//ERROR HANDLING
-	static void errorExit(int cond, std::string err){if(cond==1){std::cerr << err << "\n"; exit(1);}}		//For errors on main thread
-	static void errorWriteSocket(int cond){if(cond==1){std::cerr << "ERROR writing to socket" << "\n";}}	//For errors while writing in socket
-	static void errorReadSocket(int cond){if(cond==1){std::cerr << "ERROR reading socket"<< "\n";}}			//For errors while reading from socket
+	void errorWriteSocket(int cond){if(cond==1){std::cerr << "ERROR writing to socket" << "\n";}}	//For errors while writing in socket
+	void errorReadSocket(int cond){if(cond==1){std::cerr << "ERROR reading socket"<< "\n";}}			//For errors while reading from socket
 
 	//CLOSE
 	void closeSocket();						//closes socket

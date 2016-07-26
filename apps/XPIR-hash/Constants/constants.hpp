@@ -17,6 +17,7 @@ namespace Constants{
     extern const double bandwith_limit; //=0bps (means no bandwith limit)
     extern const bool pipeline;         //=false (sequential execution);    =true (pipeline execution)
     extern const bool encrypted;        //=true (DB is symmetrically encrypted); =false (DB is in plaintext)
+    extern const uint64_t num_entries;
 
     //server
     extern const int n_threads;

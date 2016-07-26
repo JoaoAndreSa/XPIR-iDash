@@ -46,6 +46,7 @@ private:
 public:
   DBDirectoryProcessor(); // constructor with no splitting
   DBDirectoryProcessor(uint64_t nbStreams); // constructor with filesplitting 1 -> nbStreams
+  DBDirectoryProcessor(uint64_t nbStreams,std::string fname);
 	virtual ~DBDirectoryProcessor();
   
   std::string getCatalog(const bool typeOfCatalog);

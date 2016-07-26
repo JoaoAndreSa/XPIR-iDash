@@ -29,10 +29,10 @@ public:
 		HASH_SIZE=s;
 	    if(!RAND_bytes(m_key,sizeof m_key)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
 
-	    if(std::ifstream("HMAC_key.bin")){
-	    	Tools::readFromBinFile("HMAC_key.bin",reinterpret_cast<char*>(m_key));
+	    if(std::ifstream("data/HMAC_key.bin")){
+	    	Tools::readFromBinFile("data/HMAC_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
 	    }else{
-	    	Tools::writeToBinFile("HMAC_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
+	    	Tools::writeToBinFile("data/HMAC_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
 	    }
 	};
 
@@ -55,7 +55,6 @@ public:
 	unsigned char* binary_to_uchar(std::string);
 	std::string encoding(std::string);
 	uint64_t hash(std::string str);
-	bool search(unsigned char*,unsigned char*,int);
 	uint64_t getSizeBits();
 	void printVector(std::vector<std::string>);
 	std::vector<std::string> tokenize(std::string,std::string);

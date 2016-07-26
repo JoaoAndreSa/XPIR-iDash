@@ -131,6 +131,42 @@ DBDirectoryProcessor::DBDirectoryProcessor(uint64_t nbStreams) : filesSplitting(
 	std::cout << "DBDirectoryProcessor: The number of elements in the catalog is " << file_list.size() << std::endl;
 }
 
+// This constructor is called when we need file-splitting and multiple files
+DBDirectoryProcessor::DBDirectoryProcessor(uint64_t nbStreams,std::string filename) : filesSplitting(true) {
+
+	directory=std::string(DEFAULT_DIR_NAME);
+	maxFileBytesize=0;
+
+	// Create the pool of ifstream
+	for(int i=0;i<NB_FILE_DESCRIPTORS;i++)
+		fdPool.push_back(new std::ifstream());
+
+	// Add File object on the file list
+	std::string fileName=directory + filename;
+	realFileName=fileName;
+	uint64_t realFileSize = getFileSize(realFileName);				
+	maxFileBytesize = realFileSize/nbStreams;
+
+	if(maxFileBytesize==0) {
+		std::cout << "DBDirectoryProcessor: ERROR cannot split a file en less than one byte elements!" << std::endl;
+		std::cout << "DBDirectoryProcessor: file " << realFileName << " is only "<< realFileSize << " long" << std::endl;
+		error = true;
+	}
+
+	for(int i=0;i<nbStreams;i++) {
+		file_list.push_back( std::to_string(i) );
+	}
+
+
+#ifdef DEBUG
+	std::cout << "maxFileBytesize." <<maxFileBytesize<< std::endl;
+	std::cout << "file_list.size()." <<file_list.size()<< std::endl;
+
+#endif
+	std::cout << "DBDirectoryProcessor: The size of the database is " << maxFileBytesize*file_list.size() << " bytes" << std::endl;
+	std::cout << "DBDirectoryProcessor: The number of elements in the catalog is " << file_list.size() << std::endl;
+}
+
 DBDirectoryProcessor::~DBDirectoryProcessor() {
 	for (auto ifs : fdPool) delete ifs; 
 }

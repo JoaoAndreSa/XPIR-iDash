@@ -115,7 +115,7 @@ void PIRServerPipeline::job (){
     //read file from client
   	downloadData();
     DBDirectoryProcessor db;
-    m_xpir = new XPIRcPipeline(Tools::readParamsPIR(m_num_entries),0,&db);
+    m_xpir = new XPIRcPipeline(Tools::readParamsPIR(Constants::num_entries),0,&db);
 
     m_socket.senduInt64(m_xpir->getDB()->getmaxFileBytesize());
 

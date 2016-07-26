@@ -94,23 +94,25 @@ void PIRServerSequential::job (){
 
     //#-------SETUP PHASE--------#
     //read file from client
-	downloadData();
-    DBDirectoryProcessor db(m_num_entries);
-    m_xpir = new XPIRcSequential(Tools::readParamsPIR(m_num_entries),0,&db);
+    if(m_socket.readInt()==1){
+	   downloadData();
+    }else{
+        DBDirectoryProcessor db(Constants::num_entries,"RCV000015246_1000.vcf");
+        m_xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db);
 
-    //#-------QUERY PHASE--------#
-    vector<char*> query=readVector_s();
+        //#-------QUERY PHASE--------#
+        vector<char*> query=readVector_s();
 
-    //#-------REPLY PHASE--------#
-    XPIRcSequential::REPLY reply=m_xpir->replyGeneration(query);
-    sendReply(reply);
+        //#-------REPLY PHASE--------#
+        XPIRcSequential::REPLY reply=m_xpir->replyGeneration(query);
+        sendReply(reply);
 
-    //#-------CLEANUP PHASE--------#
-    m_xpir->cleanReplyBuffer();
-    Tools::cleanupVector(reply.reply);
-    m_xpir->cleanup();
-    delete m_xpir;
-    m_socket.closeSocket();
-
+        //#-------CLEANUP PHASE--------#
+        m_xpir->cleanReplyBuffer();
+        Tools::cleanupVector(reply.reply);
+        m_xpir->cleanup();
+        delete m_xpir;
+        m_socket.closeSocket();
+    }
     std::cout << "THREAD [" << m_id << "] EXITED" << "\n";
 }
