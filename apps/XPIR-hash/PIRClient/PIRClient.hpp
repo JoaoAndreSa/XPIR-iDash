@@ -42,10 +42,6 @@ protected:
 	AES_ctr_256* m_aes_256;
 	SHA_256* m_SHA_256;
 
-	int m_max_bytesize;
-	int m_snp_bitsize;
-	int m_bits_pad;
-
 	//Time variables
 	double m_RTT_start;
 	double m_RTT_stop;
@@ -75,12 +71,14 @@ public:
 	double getRTTStop();
 
 protected:
-	uint64_t considerPacking(uint64_t,uint64_t);	//returns the position relative to the aggregation/packing value
+	vector<int> getInfoVCF(string);
+	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
+	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);	//extract the exact plaintext (with aggregation the reply contains more than one element)
+	uint64_t considerPacking(uint64_t,uint64_t);											//returns the position relative to the aggregation/packing value
 	std::vector<std::pair<uint64_t,std::vector<std::string>>> listQueryPos(std::map<char,std::string>);
 
-	vector<string> listFilesFolder(string);
-	int symmetricEncrypt(unsigned char*,unsigned char*,uint64_t);	//symmetric encrypt plaintext and return the result
-	int symmetricDecrypt(unsigned char*,unsigned char*,uint64_t);			//symmetric decrypt ciphertext and return the result
+	int symmetricEncrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric encrypt plaintext and return the result
+	int symmetricDecrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric decrypt ciphertext and return the result
 	std::string padData(string,int);
-	void sendData(std::vector<std::vector<std::string>>,string);					//encrypt and send every variant in vcf file to server
+	void sendData(std::vector<std::vector<std::string>>,string,int,int,int);			//encrypt and send every variant in vcf file to server
 };

@@ -144,7 +144,7 @@ DBDirectoryProcessor::DBDirectoryProcessor(uint64_t nbStreams,std::string filena
 	// Add File object on the file list
 	std::string fileName=directory + filename;
 	realFileName=fileName;
-	uint64_t realFileSize = getFileSize(realFileName);				
+	uint64_t realFileSize = getFileSize(realFileName);
 	maxFileBytesize = realFileSize/nbStreams;
 
 	if(maxFileBytesize==0) {
@@ -153,10 +153,10 @@ DBDirectoryProcessor::DBDirectoryProcessor(uint64_t nbStreams,std::string filena
 		error = true;
 	}
 
-	for(int i=0;i<nbStreams;i++) {
+	file_list.reserve(nbStreams);
+	for(uint64_t i=0;i<nbStreams;i++) {
 		file_list.push_back( std::to_string(i) );
 	}
-
 
 #ifdef DEBUG
 	std::cout << "maxFileBytesize." <<maxFileBytesize<< std::endl;

@@ -12,18 +12,38 @@
 int main(int argc, char* argv[]){
 	Error::error((Constants::port > 65535) || (Constants::port < 2000),"Please choose a port number between 2000 - 65535");
 
+	std::map<string,imported_database*>* imported_dbs_s = new map<string,imported_database*>;
+	std::map<string,imported_database_t>* imported_dbs_p = new map<string,imported_database_t>;
+
+	if(Constants::pre_import){
+		std::vector<string> files = Tools::listFilesFolder("db/");
+		for(int i=0;i<files.size();i++){
+			if(Constants::pipeline){	//if PIPELINE execution
+				if((*imported_dbs_p).find(files[i]) == (*imported_dbs_p).end()){
+					imported_database_t a = XPIRcPipeline::import_database(files[i]);
+					imported_dbs_p->operator[](files[i]) = a;
+					//cout << "AAAA" << a.beforeImportElementBytesize << endl;
+				}
+			}else{						//if SEQUENTIAL execution
+				if((*imported_dbs_s).find(files[i]) == (*imported_dbs_s).end()){
+					imported_dbs_s->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
+				}
+			}
+		}
+	}else{
+		imported_dbs_s=nullptr;
+		imported_dbs_p=nullptr;
+	}
+
 	Socket socket(0);
 
 	//Create an asio::io_service and a thread_group (through pool in essence)
 	boost::asio::io_service ioService;
-	/**
-		TODO: 	 For threadpool to actually make sense we need to have the database previously stored on the server.
-		WARNING: Multiple threads executing at the same time would lead to concurrency problems due to overwriting files
-	*/
+
 	boost::thread_group threadpool;
 
 	/**
- 		This will start the ioService processing loop. All tasks assigned with ioService.post() will start executing. 
+ 		This will start the ioService processing loop. All tasks assigned with ioService.post() will start executing.
  	*/
 	boost::asio::io_service::work work(ioService);
 
@@ -39,15 +59,15 @@ int main(int argc, char* argv[]){
         socket.acceptConnection();
 
         if(Constants::pipeline){	//if PIPELINE execution
-        	PIRServerPipeline s(socket);
+        	PIRServerPipeline s(socket,imported_dbs_p);
         	//This will assign tasks to the thread pool.
-      		ioService.post(boost::bind(&PIRServerPipeline::job,s));	//bind thread to object s (sequential)c
+      		ioService.post(boost::bind(&PIRServerPipeline::job,s));	//bind thread to object s (pipeline)
 		}
 		else{						//if SEQUENTIAL execution
-			PIRServerSequential s(socket);
+			PIRServerSequential s(socket,imported_dbs_s);
 
 		    //This will assign tasks to the thread pool.
-		    ioService.post(boost::bind(&PIRServerSequential::job,s));	//bind thread to object s (sequential)c
+		    ioService.post(boost::bind(&PIRServerSequential::job,s));	//bind thread to object s (sequential)
 		}
     }
 
@@ -61,6 +81,9 @@ int main(int argc, char* argv[]){
 		Just assume the threads inside the threadpool will be destroyed by this method.
 	*/
 	threadpool.join_all();
+
+	delete imported_dbs_s;
+	delete imported_dbs_p;
 
     return 0;
 }

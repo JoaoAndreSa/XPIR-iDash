@@ -29,6 +29,7 @@
 #include "libpir.hpp"
 #include "pir/dbhandlers/DBDirectoryProcessor.hpp"
 #include "pir/GlobalConstant.hpp"
+#include "../Tools/Tools.hpp"
 
 class XPIRc{
 protected:

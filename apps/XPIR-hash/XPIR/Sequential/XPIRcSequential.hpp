@@ -47,15 +47,19 @@ public:
 
     	@return
 	*/
-	XPIRcSequential(PIRParameters params, int type, DBHandler* db) : XPIRc(params,type,db) {
-		
+	XPIRcSequential(PIRParameters params, int type, DBHandler* db, imported_database*  imported_db=nullptr, string filename="") : XPIRc(params,type,db) {
+
 		if(m_type==0){ 	//if SERVER
 			m_q_generator=nullptr;
 			m_r_extractor=nullptr;
 
 			m_r_generator = new PIRReplyGenerator(m_params,*m_crypto,m_db);
 
-  			m_imported_db = import_database(m_params,m_crypto,m_db);
+			if(Constants::pre_import){
+				m_imported_db = imported_db;
+			}else{
+				m_imported_db = import_database(filename);
+			}
 		}else{ 			//if CLIENT
 			m_r_generator=nullptr;
 			m_imported_db=nullptr;
@@ -65,7 +69,7 @@ public:
 		}
 
 	}
-	static imported_database* import_database(PIRParameters, HomomorphicCrypto*, DBHandler*);//import database and initialize imported_database object
+	static imported_database* import_database(string);//import database and initialize imported_database object
 	vector<char*> queryGeneration(uint64_t chosen_element);  //generate query (client)
 	REPLY replyGeneration(vector<char*>);					 //generate reply (server)
 	char* replyExtraction(REPLY);							 //extract reply  (client)

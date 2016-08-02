@@ -111,7 +111,7 @@ void PIRReplyGeneratorTrivial::generateReply()
 }
 
 
-imported_database_t PIRReplyGeneratorTrivial::generateReplyGeneric(bool keep_imported_data){
+imported_database_t PIRReplyGeneratorTrivial::generateReplyGeneric(bool keep_imported_data, bool import){
   imported_database_t database_wrapper;
   
   if(firstTimeImport)

@@ -41,6 +41,7 @@ void PIRServer::removeDB(){
     @return
 */
 void PIRServer::downloadData(){
+    double start_t,end_t,total;
     /* Erase data in db folder */
     //removeDB();
 
@@ -48,15 +49,16 @@ void PIRServer::downloadData(){
 
     for(uint64_t i=0;i<num_files;i++){
          try{
-            double start = omp_get_wtime(),total = 0;
+            total = 0;
 
             int len=m_socket.readInt();
             char* filename_c=m_socket.readChar(len);
-            filename_c[len]='\0';
+
             string filename(filename_c);
 
             if(ifstream("db/"+filename)){
                 m_socket.sendInt(1);    //if FILE EXISTS
+                delete[] filename_c;
                 continue;
             }else{
                 m_socket.sendInt(0);    //if FILE DOES NOT EXISTS
@@ -64,19 +66,18 @@ void PIRServer::downloadData(){
 
             m_max_bytesize=m_socket.readInt();
             for(uint64_t i=0;i<Constants::num_entries;i++){
-                double start_t = omp_get_wtime();
+                start_t = omp_get_wtime();
                 char* recvBuff=m_socket.readChar(m_max_bytesize);
-                double end_t = omp_get_wtime();
+                end_t = omp_get_wtime();
 
                 total+=end_t-start_t;
 
-                //Create file where entries will be stored 
+                //Create file where entries will be stored
                 Tools::writeToBinFile("db/"+filename,recvBuff,m_max_bytesize),
                 delete[] recvBuff;
             }
+            delete[] filename_c;
             if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+m_max_bytesize*Constants::num_entries,total);
-            double end = omp_get_wtime();
-            std::cout << "PIRServer: Reading encrypted file took " << end-start << " (s)\n";
         }catch (std::ios_base::failure &fail){
             Error::error(1,"Error writing DB file");
         }

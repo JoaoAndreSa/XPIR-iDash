@@ -143,23 +143,10 @@ unsigned char* SHA_256::binary_to_uchar(std::string line){
 }
 
 std::string SHA_256::encoding(std::string line){
-	std::vector<std::string> tokens = tokenize(line,"\t");
+	std::vector<std::string> tokens = Tools::tokenize(line,"\t");
 	std::string op = op_to_binary(tokens[3],tokens[4]);
 
 	return op+chr_to_binary(tokens[0])+pos_to_binary(tokens[1])+data_to_binary(op,tokens[3].length(),tokens[4]);
-}
-
-std::vector<std::string> SHA_256::tokenize(std::string entry,std::string delimiter){
-	std::vector<std::string> tokens;
-
-	size_t pos = 0;
-	while ((pos=entry.find(delimiter)) != std::string::npos) {
-    	tokens.push_back(entry.substr(0,pos));
-    	entry.erase(0,pos+delimiter.length());
-	}
-	tokens.push_back(entry.substr(0,pos));
-
-	return tokens;
 }
 
 uint64_t SHA_256::hash(std::string str){
@@ -170,6 +157,18 @@ uint64_t SHA_256::hash(std::string str){
 	delete[] sha_hash;
 
 	return stol(final_hash, nullptr,2);
+}
+
+
+bool SHA_256::search(std::string query, std::string decoded_pack, int snp_bitsize, int bits_pad){
+    decoded_pack = decoded_pack.substr(bits_pad);
+
+    for(int i=0;i<decoded_pack.length();i+=snp_bitsize){
+        if(query.compare(decoded_pack.substr(i,snp_bitsize))==0){
+            return true;
+        }
+    }
+    return false;
 }
 
 uint64_t SHA_256::getSizeBits(){

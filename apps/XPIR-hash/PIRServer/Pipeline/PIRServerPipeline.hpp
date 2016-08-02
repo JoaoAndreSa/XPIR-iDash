@@ -27,6 +27,7 @@ class PIRServerPipeline: public PIRServer {
 
 private:
 	XPIRcPipeline* m_xpir;
+  std::map<string,imported_database_t>* m_imported_dbs;
 
 public:
 	/**
@@ -36,8 +37,10 @@ public:
 
     	@return
 	*/
-	PIRServerPipeline(Socket socket) : PIRServer(socket) {}
-	
+	PIRServerPipeline(Socket socket, std::map<string,imported_database_t>* imported_dbs) : PIRServer(socket) {
+    m_imported_dbs=imported_dbs;
+  }
+
 	void job();             //what the thread executes
 
 private:

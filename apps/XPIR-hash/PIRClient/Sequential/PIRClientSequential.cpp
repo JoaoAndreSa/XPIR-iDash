@@ -24,21 +24,29 @@
 //***PRIVATE METHODS***//
 //QUERY GENERATION & SEND QUERY
 void PIRClientSequential::sendQuery(std::vector<char*> query){
-    double start = omp_get_wtime();
+    double start = omp_get_wtime(), start_t, end_t, total=0;
 
     uint64_t pos=0;
     m_socket.senduInt64(m_xpir->getD());                //number of dimensions
 
+    uint64_t total_bytes=0;
     for(uint64_t j=1 ; j<=m_xpir->getD(); j++){
         uint32_t length=m_xpir->getQsize(j);            //query size (depends on the dimension)
         m_socket.senduInt32(length);
-
         m_socket.senduInt(m_xpir->getN()[j-1]);         //number of elements in that dimension
+
+        start_t = omp_get_wtime();
         for (uint64_t i=0; i<m_xpir->getN()[j-1]; i++){ //for each element in that dimension
             m_socket.sendXBytes(length,(void*)query[pos]);
             pos++;
+
+            total_bytes+=length;
         }
+        end_t = omp_get_wtime();
+
+        total+=end_t-start_t;
     }
+     if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t) + m_xpir->getD()*(sizeof(uint32_t)+sizeof(int)) + total_bytes,total);
 
     double end = omp_get_wtime();
     cout << "PIRClient: Send query took " << end-start << " seconds" << endl;
@@ -60,16 +68,23 @@ std::vector<char*> PIRClientSequential::queryGeneration(uint64_t chosen_element)
 
 //READ REPLY
 std::vector<char*> PIRClientSequential::readReplyData(){
+    double start_t,end_t,total=0;
+
     std::vector<char*> replyData;
 
     uint64_t size=m_socket.readuInt64();            //number of reply elements
     uint32_t message_length=m_socket.readuInt32();  //size (bytes) of each element
 
+    start_t = omp_get_wtime();
     for(uint64_t i=0; i<size;i++){
         char* buffer = new char[message_length];
         m_socket.readXBytes(message_length,(void*)buffer);
         replyData.push_back(buffer);
     }
+    end_t = omp_get_wtime();
+    total+=end_t-start_t;
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(uint64_t)+sizeof(uint64_t)+sizeof(uint32_t)+size*message_length,total);
+
     return replyData;
 }
 
@@ -96,64 +111,6 @@ char* PIRClientSequential::replyExtraction(XPIRcSequential::REPLY reply){
     return response;
 }
 
-/**
-    Extract the exact ciphertext (with aggregation the reply contains more than one element).
-
-    @param response reply data (ciphertext)
-    @param aggregated_entrySize reply element size
-    @param pos the relative position inside the 'pack' we want to extract
-
-    @return response_s the specific element we are looking for or if it does not exist return ""
-*/
-bool PIRClientSequential::extractCiphertext(char* response, uint64_t aggregated_entrySize, uint64_t pos,std::vector<string> query){
-    unsigned char* ciphertext = new unsigned char[aggregated_entrySize];
-    memcpy((char *)ciphertext,response+aggregated_entrySize*(pos%m_xpir->getAlpha()),aggregated_entrySize);
-
-    unsigned char* plaintext = new unsigned char[aggregated_entrySize];
-    int plaintexlen = symmetricDecrypt(plaintext,ciphertext,pos);
-
-    string decoded_pack = m_SHA_256->uchar_to_binary(plaintext,aggregated_entrySize,aggregated_entrySize*8).substr(3);
-
-    std::vector<bool> check(query.size(),false);
-    int snp_bitsize=69;
-    for(int i=0;i<decoded_pack.length();i+=snp_bitsize){
-        for(int j=0;j<query.size();j++){
-            if(padData(query[j],snp_bitsize).compare(decoded_pack.substr(i,snp_bitsize))==0){
-                check[j]=true;
-            }
-        }
-    }
-
-    delete[] ciphertext;
-    delete[] plaintext;
-
-    for(int i=0;i<check.size();i++){
-        if(check[i]==false){
-            return false;
-        }
-    }
-    return true;
-}
-
-/**
-    Extract the exact plaintext (with aggregation the reply contains more than one element).
-
-    @param response reply data (plaintext)
-    @param aggregated_entrySize reply element size
-    @param pos the relative position inside the 'pack' we want to extract
-
-    @return response_s the specific element we are looking for or if it does not exist return ""
-*/
-std::string PIRClientSequential::extractPlaintext(char* response, uint64_t aggregated_entrySize, uint64_t pos,std::vector<string> query){
-    if(response+aggregated_entrySize*(pos%m_xpir->getAlpha())=='\0'){
-        return "";
-    }else{
-        std::string response_s(response+aggregated_entrySize*(pos%m_xpir->getAlpha()));
-        cout << "Reply: " << response_s << endl << endl;
-        return response_s;
-    }
-}
-
 //***PUBLIC METHODS***//
 /**
     Main function of PIRClientSequential class. Queries server!
@@ -169,9 +126,13 @@ bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::st
     //#-------SETUP PHASE--------#
     std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);
     //TODO: Search multiple variants at the same time
+    std::vector<int> data = getInfoVCF(Tools::tokenize(entry['f'],",")[0]);
     uint64_t pack_pos=considerPacking(pos[0].first,m_xpir->getAlpha());
 
     //#-------QUERY PHASE--------#
+    m_socket.sendInt(entry['f'].length()+1);
+    m_socket.sendChar_s(const_cast<char*>(entry['f'].c_str()),entry['f'].length()+1);
+
     std::vector<char*> query=queryGeneration(pack_pos);
     sendQuery(query);
     std::cout << "PIRClient: Query sent" << "\n";
@@ -180,12 +141,19 @@ bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::st
     XPIRcSequential::REPLY reply = readReply();
     char* response;
     response=replyExtraction(reply);
-    bool response_b;
 
+    string response_s;
     if(!Constants::encrypted){   //if PLAINTEXT
-        extractPlaintext(response,reply.maxFileSize,pos[0].first,pos[0].second);
+        response_s = extractPlaintext(response,m_xpir->getAlpha(),reply.maxFileSize,pos[0].first,pos[0].second);
     }else{                       //if CIPHERTEXT
-        response_b = extractCiphertext(response,reply.maxFileSize,pos[0].first,pos[0].second);
+        response_s = extractCiphertext(response,m_xpir->getAlpha(),reply.maxFileSize,pos[0].first,pos[0].second);
+    }
+
+    bool check=true;
+    for(int i=0;i<pos[0].second.size();i++){
+        if(m_SHA_256->search(padData(pos[0].second[i],data[0]),response_s,data[0],data[1])==false){
+            check=false;
+        }
     }
 
     //#-------CLEANUP PHASE--------#
@@ -195,7 +163,5 @@ bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::st
     delete m_SHA_256;
     delete m_xpir;
 
-    return response_b;
-    
-    return true;
+    return check;
 }

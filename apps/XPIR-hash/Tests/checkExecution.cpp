@@ -15,9 +15,7 @@
 #include <vector>
 #include <math.h>
 
-#define NUM_TESTS 3 		//number of different entries tested (1,000 - 10,000 - 100,000)
-#define TEST_TYPES 2		//number of different combinations of PIR parameters (with/without recursion)
-#define VARIANT_SETUPS 1	//number of different crypto parameters (LWE:97:1024:60)
+#define NUM_TESTS 4 		//number of different entries tested (1,000 - 10,000 - 100,000)
 
 /**
     Print test correctness depending on the results in ../PIRClient/output.txt.
@@ -57,44 +55,25 @@ int main(int argc, char* argv[]){
 
 		if (f.is_open()){
 			for(int i=0;i<NUM_TESTS;i++){
-				std::cout << "NUM ENTRIES: " << pow(10,i+3) << std::endl;
+				std::cout << "#######-----NUM ENTRIES: " << pow(10,i+3) << "-----#######" << std::endl;
+				//for each varint setup we run 4 different queries (you can check simple_test.sh for more information)
+				getline (f,line); printCheck(line,0,"All query variation(s) found in file(s).");
+				getline(f,line); getTime(line);
+				getline(f,line);
 
-				for(int j=0;j<TEST_TYPES;j++){
+				getline (f,line); printCheck(line,1,"All query variation(s) found in file(s).");
+				getline(f,line); getTime(line);
+				getline(f,line);
 
-					switch(j){
-						//std::cout << "###---NO PACKING---###" << std::endl;
-	  					case 0:
-	  						std::cout << "###---PACKING---###" << std::endl;
-	  						break;
-	  					case 1:
-	  						std::cout << "###---PACKING & DIM---###" << std::endl;
-	  						break;
-	  					 default:
-	    					std::cout << "An error that does not make any sense!" << std::endl;
-	    					return 1;
-					}
+				getline (f,line); printCheck(line,2,"At least one query variation not in file(s).");
+				getline(f,line); getTime(line);
+				getline(f,line);
 
-					for(int k=0;k<VARIANT_SETUPS;k++){
-						//for each varint setup we run 4 different queries (you can check simple_test.sh for more information)
-						getline (f,line); printCheck(line,0,"Query variation in file.");
-						getline(f,line); getTime(line);
-						getline(f,line);
+				getline (f,line); printCheck(line,3,"At least one query variation not in file(s).");
+				getline(f,line); getTime(line);
+				getline(f,line);
 
-						getline (f,line); printCheck(line,1,"Query variation in file.");
-						getline(f,line); getTime(line);
-						getline(f,line);
-
-						getline (f,line); printCheck(line,2,"Query variation not in file.");
-						getline(f,line); getTime(line);
-						getline(f,line);
-
-						getline (f,line); printCheck(line,3,"Query variation not in file.");
-						getline(f,line); getTime(line);
-						getline(f,line);
-						std::cout << std::endl;
-					}
-				}
-				std::cout << std::endl << std::endl;
+				std::cout << std::endl;
 			}
 		}
 	  	else{

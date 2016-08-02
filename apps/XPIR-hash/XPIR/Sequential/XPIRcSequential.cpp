@@ -20,13 +20,22 @@
 #include "XPIRcSequential.hpp"
 
 //***PUBLIC METHODS***//
+void import_all_databases(){
+
+}
+
 /**
 	Imports the database/filesystem (stored on the db/ folder) to be used by the remaining PIR operations.
 
 	@param
 	@return
 */
-imported_database* XPIRcSequential::import_database(PIRParameters params, HomomorphicCrypto* crypto, DBHandler* db){
+imported_database* XPIRcSequential::import_database(string filename){
+	DBDirectoryProcessor db(Constants::num_entries,filename);
+	PIRParameters params = Tools::readParamsPIR(Constants::num_entries);
+	HomomorphicCrypto* crypto=HomomorphicCryptoFactory::getCryptoMethod(params.crypto_params);
+	crypto->setandgetAbsBitPerCiphertext(params.n[0]);
+
 	/**
 		Import database
 		This can be done on the "Database setup" phase because:
@@ -39,12 +48,13 @@ imported_database* XPIRcSequential::import_database(PIRParameters params, Homomo
 		Warning aggregation is dealt with internally, the bytes_per_db_element parameter here is to be given WITHOUT multiplying it by params.alpha
 	*/
 
-	PIRReplyGenerator* r_generator = new PIRReplyGenerator(params,*crypto,db);
+	PIRReplyGenerator* r_generator = new PIRReplyGenerator(params,*crypto,&db);
 
-	imported_database*  imported_db = r_generator->importData(/* uint64_t offset*/ 0, /*uint64_t bytes_per_db_element */ db->getmaxFileBytesize());
+	imported_database*  imported_db = r_generator->importData(/* uint64_t offset*/ 0, /*uint64_t bytes_per_db_element */ (&db)->getmaxFileBytesize());
 	cout << "PIRServer: Database imported" << endl;
 
 	delete r_generator;
+	delete crypto;
 	return imported_db;
 }
 
@@ -177,6 +187,6 @@ void XPIRcSequential::cleanup(){
 	if(m_q_generator!=nullptr){delete m_q_generator;}
 	if(m_r_generator!=nullptr){delete m_r_generator;}
 	if(m_r_extractor!=nullptr){delete m_r_extractor;}
-	if(m_imported_db!=nullptr){delete m_imported_db;}
+	//if(m_imported_db!=nullptr){delete m_imported_db;}
 	upperCleanup();
 }

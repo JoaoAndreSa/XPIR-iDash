@@ -53,7 +53,7 @@ public:
     ~PIRReplyGeneratorTrivial();
     void importData();
     void initQueriesBuffer();
-    imported_database_t generateReplyGeneric(bool keep_imported_data = false);
+    imported_database_t generateReplyGeneric(bool keep_imported_data = false, bool import = false);
     void generateReplyGenericFromData(const imported_database_t database);
     double generateReplySimulation(const PIRParameters& pir_params, uint64_t plaintext_nbr);
     unsigned long computeReplySizeInChunks(unsigned long int);

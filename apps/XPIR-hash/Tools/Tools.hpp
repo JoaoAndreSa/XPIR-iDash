@@ -18,6 +18,7 @@
 
 class Tools{
 public:
+	static vector<string> listFilesFolder(string);
 	static string readFromTextFile(string);
 	static void writeToTextFile(string, string);
 	static void readFromBinFile(string, char*, int);
@@ -25,6 +26,8 @@ public:
 
 	static int readParamsSHA();
 	static PIRParameters readParamsPIR(uint64_t);			//reads PIR params needed to create an XPIRc object
+
+	static std::vector<std::string> tokenize(std::string,std::string);
 
 	static void cleanupVector(vector<char*>);  					//free allocated memory
 private:

@@ -29,20 +29,30 @@
     @return vector_s query
 */
 vector<char*> PIRServerSequential::readVector_s(){
-    vector<char*> vector_s;
+    double start_t,end_t,total=0;
 
+    vector<char*> vector_s;
     uint64_t size=m_socket.readuInt64();
 
+    uint64_t total_bytes=0;
     for(uint64_t j=1; j<=size; j++){
         uint32_t message_length=m_socket.readuInt32();
 
         unsigned int n_size=m_socket.readuInt();
+
+        start_t = omp_get_wtime();
         for(uint64_t i=0; i<n_size;i++){
             char* buffer = new char[message_length];
             m_socket.readXBytes(message_length,(void*)buffer);
+
             vector_s.push_back(buffer);
         }
+        end_t = omp_get_wtime();
+
+        total+=end_t-start_t;
+        total_bytes+=message_length*n_size;
     }
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(uint64_t)+sizeof(uint64_t)+((sizeof(uint32_t)+sizeof(int))*size)+total_bytes,total);
     return vector_s;
 }
 
@@ -54,13 +64,19 @@ vector<char*> PIRServerSequential::readVector_s(){
     @return
 */
 void PIRServerSequential::sendVector_s(vector<char*> vector_c){
+    double start_t,end_t,total=0;
+
     m_socket.senduInt64(static_cast<uint64_t>(vector_c.size()));
     uint32_t length=m_xpir->getRsize(m_xpir->getD());
     m_socket.senduInt32(length);
 
-    for (uint64_t i=0; i<vector_c.size(); i++) {
+    start_t = omp_get_wtime();
+    for(uint64_t i=0; i<vector_c.size(); i++){
         m_socket.sendXBytes(length,(void*)vector_c[i]);
     }
+    end_t = omp_get_wtime();
+    total+=end_t-start_t;
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(uint64_t)+sizeof(uint64_t)+sizeof(uint32_t)+length*vector_c.size(),total);
 }
 
 /**
@@ -96,9 +112,26 @@ void PIRServerSequential::job (){
     //read file from client
     if(m_socket.readInt()==1){
 	   downloadData();
+       if(Constants::pre_import){
+            std::vector<string> files = Tools::listFilesFolder("db/");
+            for(int i=0;i<files.size();i++){
+                if((*m_imported_dbs).find(files[i]) == (*m_imported_dbs).end()){
+                    m_imported_dbs->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
+                }
+            }
+       }
     }else{
-        DBDirectoryProcessor db(Constants::num_entries,"RCV000015246_1000.vcf");
-        m_xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db);
+        char* list = m_socket.readChar(m_socket.readInt());
+        vector<string> list_clients =  Tools::tokenize(string(list),",");
+
+        DBDirectoryProcessor db(Constants::num_entries,list_clients[0]);
+
+        if(Constants::pre_import && m_imported_dbs->operator[](list_clients[0])!=nullptr){
+            m_xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db,m_imported_dbs->operator[](list_clients[0]),list_clients[0]);
+        }
+        else{
+            m_xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db,nullptr,list_clients[0]);
+        }
 
         //#-------QUERY PHASE--------#
         vector<char*> query=readVector_s();
@@ -112,7 +145,7 @@ void PIRServerSequential::job (){
         Tools::cleanupVector(reply.reply);
         m_xpir->cleanup();
         delete m_xpir;
-        m_socket.closeSocket();
     }
+    m_socket.closeSocket();
     std::cout << "THREAD [" << m_id << "] EXITED" << "\n";
 }

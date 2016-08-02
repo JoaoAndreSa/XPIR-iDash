@@ -40,8 +40,8 @@ public:
 	bool searchQuery(uint64_t,std::map<char,std::string>);	//main function for the class -> query variant(s)
 
 private:
-	void downloadWorker();                                        //donwload thread handler (reads reply)
-	void startProcessResult();                                    //initiate reply extraction (reading and exctraction are do)
+	void downloadWorker(int);                                        //donwload thread handler (reads reply)
+	void startProcessResult(int);                                    //initiate reply extraction (reading and exctraction are do)
 	void uploadWorker();
 	void startProcessQuery(uint64_t);
 

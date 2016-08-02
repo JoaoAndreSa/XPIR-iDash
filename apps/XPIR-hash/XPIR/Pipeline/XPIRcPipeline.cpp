@@ -20,6 +20,28 @@
 #include "XPIRcPipeline.hpp"
 
 //***PUBLIC METHODS***//
+imported_database_t XPIRcPipeline::import_database(string filename){
+	DBDirectoryProcessor db(Constants::num_entries,filename);
+	PIRParameters params = Tools::readParamsPIR(Constants::num_entries);
+	HomomorphicCrypto* crypto=HomomorphicCryptoFactory::getCryptoMethod(params.crypto_params);
+	crypto->setandgetAbsBitPerCiphertext(params.n[0]);
+
+	std::vector<std::string> fields;
+    boost::split(fields,params.crypto_params,boost::is_any_of(":"));
+
+	GenericPIRReplyGenerator* r_generator = PIRReplyGeneratorFactory::getPIRReplyGenerator(fields.at(0),params,&db);
+    r_generator->setCryptoMethod(crypto);
+    r_generator->setPirParams(params);
+
+    imported_database_t imported_db = r_generator->generateReplyGeneric(true,true);
+
+    delete r_generator;
+    delete crypto;
+
+    return imported_db;
+}
+
+
 PIRReplyWriter* XPIRcPipeline::getReplyWriter(){
 	return m_replyWriter;
 }
@@ -42,22 +64,6 @@ imported_database_t XPIRcPipeline::getImportedDB(){
 
 void XPIRcPipeline::setImportedDB(imported_database_t db){
 	m_imported_db=db;
-}
-
-uint64_t XPIRcPipeline::getMaxFileSize(){
-	return m_maxFileSize;
-}
-
-void XPIRcPipeline::setMaxFileSize(uint64_t maxFileSize){
-	m_maxFileSize=maxFileSize;
-}
-
-bool XPIRcPipeline::isImported(){
-	return m_imported;
-}
-
-void XPIRcPipeline::setImported(bool imported){
-	m_imported=imported;
 }
 
 /**

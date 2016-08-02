@@ -55,8 +55,7 @@ public:
 	unsigned char* binary_to_uchar(std::string);
 	std::string encoding(std::string);
 	uint64_t hash(std::string str);
+	bool search(std::string,std::string,int,int);
 	uint64_t getSizeBits();
 	void printVector(std::vector<std::string>);
-	std::vector<std::string> tokenize(std::string,std::string);
-
 };

@@ -63,7 +63,7 @@ class PIRReplyGeneratorGMP : public GenericPIRReplyGenerator
 		PIRReplyGeneratorGMP(PIRParameters& param, DBHandler *db);
 		~PIRReplyGeneratorGMP();
 
-    imported_database_t generateReplyGeneric(bool keep_imported_data);
+    imported_database_t generateReplyGeneric(bool keep_imported_data = false, bool import = false);
     void generateReplyGenericFromData(const imported_database_t database);
     double generateReplySimulation(const PIRParameters& pir_params, uint64_t plaintext_nbr);
 

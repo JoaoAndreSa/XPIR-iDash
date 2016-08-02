@@ -32,6 +32,27 @@ int Tools::verifyParams(uint64_t d, uint64_t alpha, unsigned int* n, uint64_t nu
 }
 
 //***PUBLIC METHODS***//
+std::vector<string> Tools::listFilesFolder(string foldername){
+    std::vector<string> listFiles;
+
+    DIR* dir;
+    struct dirent* file;
+    dir = opendir(foldername.c_str());
+
+    if(dir==NULL) Error::error(1,"Error reading file");
+
+    while ((file = readdir(dir)) != NULL){
+        string filename(file->d_name);
+        if (filename.find(".vcf") != std::string::npos){
+            listFiles.push_back(filename);
+        }
+    }
+    (void)closedir(dir);
+
+    return listFiles;
+}
+
+
 void Tools::readFromBinFile(string filename, char* recvBuf, int size){
     try{
         ifstream f(filename,ios::in|ios::binary);
@@ -69,7 +90,7 @@ string Tools::readFromTextFile(string filename){
         if (f.is_open()){
             string line;
             while(getline(f,line)){
-              content+=line;
+              content+=line+"\n";
             }
         }
         f.close();
@@ -165,6 +186,19 @@ PIRParameters Tools::readParamsPIR(uint64_t num_entries){
     }
 
     return params;
+}
+
+std::vector<std::string> Tools::tokenize(std::string entry,std::string delimiter){
+    std::vector<std::string> tokens;
+
+    size_t pos = 0;
+    while ((pos=entry.find(delimiter)) != std::string::npos) {
+        tokens.push_back(entry.substr(0,pos));
+        entry.erase(0,pos+delimiter.length());
+    }
+    tokens.push_back(entry.substr(0,pos));
+
+    return tokens;
 }
 
 /**
