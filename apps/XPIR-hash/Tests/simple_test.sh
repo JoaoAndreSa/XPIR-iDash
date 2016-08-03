@@ -21,7 +21,7 @@ rm -rf data/*
 rm -rf output.txt
 
 #START SERVER
-lxterminal --working-directory=../PIRServer/ -e "./server"&
+lxterminal --working-directory=../PIRServer/ -e "./server"
 sleep 1
 
 #START CLIENT
