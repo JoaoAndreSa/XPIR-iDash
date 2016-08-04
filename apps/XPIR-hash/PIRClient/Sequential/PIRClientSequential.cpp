@@ -126,7 +126,7 @@ bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::st
     //#-------SETUP PHASE--------#
     std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);
     //TODO: Search multiple variants at the same time
-    std::vector<int> data = getInfoVCF(Tools::tokenize(entry['f'],",")[0]);
+    int max_bytesize = getInfoVCF(Tools::tokenize(entry['f'],",")[0]);
     uint64_t pack_pos=considerPacking(pos[0].first,m_xpir->getAlpha());
 
     //#-------QUERY PHASE--------#
@@ -151,7 +151,7 @@ bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::st
 
     bool check=true;
     for(int i=0;i<pos[0].second.size();i++){
-        if(m_SHA_256->search(padData(pos[0].second[i],data[0]),response_s,data[0],data[1])==false){
+        if(m_SHA_256->search(pos[0].second[i],response_s)==false){
             check=false;
         }
     }

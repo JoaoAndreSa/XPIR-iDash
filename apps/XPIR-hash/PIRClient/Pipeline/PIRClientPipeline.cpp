@@ -138,9 +138,9 @@ bool PIRClientPipeline::searchQuery(uint64_t num_entries,std::map<char,std::stri
 
     //#-------SETUP PHASE--------#
     std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);
-    //TODO: Search multiple variants at the same time
-    std::vector<int> data = getInfoVCF(Tools::tokenize(entry['f'],",")[0]);
 
+    //TODO: Search multiple variants at the same time
+    int max_bytesize = getInfoVCF(Tools::tokenize(entry['f'],",")[0]);
     uint64_t pack_pos=considerPacking(pos[0].first,m_xpir->getAlpha());
 
     //#-------QUERY PHASE--------#
@@ -150,21 +150,21 @@ bool PIRClientPipeline::searchQuery(uint64_t num_entries,std::map<char,std::stri
     startProcessQuery(pack_pos);
 
     //#-------REPLY PHASE--------#
-    startProcessResult(data[2]);
+    startProcessResult(max_bytesize);
     joinAllThreads();
 
-    char* response = m_xpir->getReplyWriter()->extractResponse(pos[0].first,data[2],m_xpir->getAlpha(),m_xpir->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte);
+    char* response = m_xpir->getReplyWriter()->extractResponse(pos[0].first,max_bytesize,m_xpir->getAlpha(),m_xpir->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte);
 
     string response_s;
     if(!Constants::encrypted){   //if PLAINTEXT
-        response_s = extractPlaintext(response,1,data[2],pos[0].first,pos[0].second);
+        response_s = extractPlaintext(response,1,max_bytesize,pos[0].first,pos[0].second);
     }else{                       //if CIPHERTEXT
-        response_s = extractCiphertext(response,1,data[2],pos[0].first,pos[0].second);
+        response_s = extractCiphertext(response,1,max_bytesize,pos[0].first,pos[0].second);
     }
 
     bool check=true;
     for(int i=0;i<pos[0].second.size();i++){
-        if(m_SHA_256->search(padData(pos[0].second[i],data[0]),response_s,data[0],data[1])==false){
+        if(m_SHA_256->search(pos[0].second[i],response_s)==false){
             check=false;
         }
     }

@@ -71,7 +71,8 @@ public:
 	double getRTTStop();
 
 protected:
-	vector<int> getInfoVCF(string);
+	void removeInfoVCF();
+	int getInfoVCF(string);
 	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
 	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);	//extract the exact plaintext (with aggregation the reply contains more than one element)
 	uint64_t considerPacking(uint64_t,uint64_t);											//returns the position relative to the aggregation/packing value
@@ -80,5 +81,5 @@ protected:
 	int symmetricEncrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric encrypt plaintext and return the result
 	int symmetricDecrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric decrypt ciphertext and return the result
 	std::string padData(string,int);
-	void sendData(std::vector<std::vector<std::string>>,string,int,int,int);			//encrypt and send every variant in vcf file to server
+	void sendData(std::vector<std::string>,string,int);			//encrypt and send every variant in vcf file to server
 };

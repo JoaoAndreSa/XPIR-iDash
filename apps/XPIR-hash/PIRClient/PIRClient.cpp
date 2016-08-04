@@ -20,20 +20,24 @@
 #include "PIRClient.hpp"
 
 //***PRIVATE METHODS***//
-vector<int> PIRClient::getInfoVCF(string filename){
-    std::vector<int> data;
+void PIRClient::removeInfoVCF(){
+    int ret_val=std::system("exec rm -rf data/catalog.txt");
+
+    if (ret_val==1){
+        cout << "Error performing system call" << endl;
+    }
+}
+
+int PIRClient::getInfoVCF(string filename){
     string f = Tools::readFromTextFile("data/catalog.txt");
 
     std::vector<string> vcf = Tools::tokenize(f,"\n");
     for(uint64_t i=0;i<vcf.size();i++){
         std::vector<string> line = Tools::tokenize(vcf[i]," ");
         if(line[0]==filename){
-            data.push_back(atoi(line[1].c_str()));
-            data.push_back(atoi(line[2].c_str()));
-            data.push_back(atoi(line[3].c_str()));
+            return atoi(line[1].c_str());
         }
     }
-    return data;
 }
 /**
     Extract the exact ciphertext (with aggregation the reply contains more than one element).
@@ -101,10 +105,10 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
     std::vector<std::pair<uint64_t,std::vector<std::string>>> all_pos;
 
     for(int i=0;i<chr.size();i++){
-        string query_str=chr[i]+"\t"+pos[i]+"\t.\t"+ref[i]+"\t"+alt[i]; //the . is to represent the missing id field
-
-        string encoded=m_SHA_256->encoding(query_str);
-        uint64_t pos=m_SHA_256->hash(encoded);
+        //string query_str=chr[i]+"\t"+pos[i]+"\t.\t"+ref[i]+"\t"+alt[i]; //the . is to represent the missing id field
+        string query_str=chr[i]+pos[i]+ref[i]+alt[i]; //the . is to represent the missing id field
+        string data_hash=m_SHA_256->hash(query_str);
+        uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);
 
         bool exists=false;
         int j;
@@ -116,10 +120,10 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
         }
 
         if(exists){
-            all_pos[j].second.push_back(encoded);
+            all_pos[j].second.push_back(data_hash);
         }else{
             std::vector<string> container;
-            container.push_back(encoded);
+            container.push_back(data_hash);
             all_pos.push_back(std::make_pair(pos,container));
         }
     }
@@ -170,28 +174,13 @@ std::string PIRClient::padData(string input, int max_bits){
 
     @return
 */
-void PIRClient::sendData(std::vector<std::vector<std::string>> catalog, string filename, int snp_bitsize, int max_bytesize, int bits_pad){
+void PIRClient::sendData(std::vector<std::string> catalog, string filename, int max_bytesize){
     double start = omp_get_wtime(),total = 0;
-
-    m_socket.sendInt(filename.length()+1);
-    m_socket.sendChar_s((char*)filename.c_str(),filename.length()+1);
-
-    if(m_socket.readInt()==1){ //if FILE EXISTS
-        std::cout << "PIRClient: File " << filename << " already uploaded\n";
-        return;
-    }
-
-    Tools::writeToTextFile("data/catalog.txt",filename+" "+to_string(snp_bitsize)+" "+to_string(bits_pad)+" "+to_string(max_bytesize));
 
     m_socket.sendInt(max_bytesize);
     for(uint64_t i=0; i<catalog.size();i++){
         unsigned char* entry;
-
-        if(catalog[i].size()>0){
-            entry=m_SHA_256->binary_to_uchar(padData(catalog[i][0],max_bytesize*8));
-        }else{
-            entry=m_SHA_256->binary_to_uchar(padData("",max_bytesize*8));
-        }
+        entry=m_SHA_256->binary_to_uchar(padData(catalog[i],max_bytesize*8));
 
         double start_t,end_t;
         if(!Constants::encrypted){    //if PLAINTEXT
@@ -212,10 +201,11 @@ void PIRClient::sendData(std::vector<std::vector<std::string>> catalog, string f
 
         total+=end_t-start_t;
     }
-    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
 
+    Tools::writeToTextFile("data/catalog.txt",filename+" "+to_string(max_bytesize));
     double end = omp_get_wtime();
-    std::cout << "PIRClient: Sending encrypted file took " << end-start << " (s)\n";
+    std::cout << "PIRClient: Sending encrypted file took " << end-start << " (s)\n\n";
 }
 
 //***PUBLIC METHODS***//
@@ -229,56 +219,50 @@ void PIRClient::sendData(std::vector<std::vector<std::string>> catalog, string f
     @return num_entries number of entries written (number of variants in 'catalog')
 */
 void PIRClient::uploadData(string foldername){
-	std::vector<string> listFiles=Tools::listFilesFolder(foldername);
+    removeInfoVCF();
+    std::vector<string> listFiles = Tools::listFilesFolder(foldername);
+
     m_socket.senduInt64(listFiles.size());
-
     for(uint64_t i=0;i<listFiles.size();i++){
-
         try{
             double start = omp_get_wtime();
+
+            m_socket.sendInt(listFiles[i].length()+1);
+            m_socket.sendChar_s((char*)listFiles[i].c_str(),listFiles[i].length()+1);
 
             std::string line;
             ifstream f(foldername+listFiles[i]);
             Error::error(f==NULL || f.is_open()==0,"Error opening vcf file");
 
-            std::vector<std::vector<std::string>>catalog(Constants::num_entries);
+            std::vector<std::string>catalog(Constants::num_entries,"");
 
-            int snp_bitsize=0;
+            int max_bitsize=0;
             if (f.is_open()){
                 while(getline(f,line)){
                     if(line[0]!='#'){
-                        std::string encoded=m_SHA_256->encoding(line);
+                        std::vector<std::string> tokens = Tools::tokenize(line,"\t");
+                        string data_hash=m_SHA_256->hash(tokens[0]+tokens[1]+tokens[3]+tokens[4]);
+                        uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);  //hash variant and get its position in the 'catalog'
+                        catalog[pos]+=data_hash;
 
-                        uint64_t pos=m_SHA_256->hash(encoded); //hash variant and get its position in the 'catalog'
-                        catalog[pos].push_back(encoded);
-
-                        if(encoded.length()>snp_bitsize) snp_bitsize=encoded.length();
+                        if(catalog[pos].length()>max_bitsize) max_bitsize=catalog[pos].length();
                     }
                 }
             }
             f.close();
-
-            int max_bitsize=0;
-            for(uint64_t i=0;i<catalog.size();i++){
-                std:string aux("");
-                for(uint64_t j=0;j<catalog[i].size();j++){
-                    aux+=padData(catalog[i][j],snp_bitsize);
-                }
-
-                if(aux!=""){
-                    if(aux.length()>max_bitsize) max_bitsize=aux.length();
-
-                    catalog[i][0]=aux;
-                }
-            }
-
             double end = omp_get_wtime();
             std::cout << "PIRClient: Preparing file " << listFiles[i] << " took " << end-start << " (s)\n";
-            sendData(catalog,listFiles[i],snp_bitsize,(max_bitsize+(8-max_bitsize%8))/8,(8-max_bitsize%8));
+
+            cout << "PIRClient: Sending file " << listFiles[i] << " to the server..." << endl;
+            sendData(catalog,listFiles[i],max_bitsize/8);
         }catch (std::ios_base::failure &fail){
             Error::error(1,"Error reading vcf file");
         }
     }
+
+    cout << "PIRClient: Waiting for server to load files..." << endl;
+    if(m_socket.readInt()==1) cout << "PIRClient: All files loaded" << endl;
+    else cout << "PIRClient: Error importing files at the server side" << endl;
 }
 
 void PIRClient::initSHA256(){

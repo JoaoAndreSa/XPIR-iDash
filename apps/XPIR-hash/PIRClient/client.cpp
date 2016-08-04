@@ -134,6 +134,7 @@ int main(int argc, char* argv[]){
 	   	output+=time;
 	   	Tools::writeToTextFile("output.txt",output);
 	}
+	cout << endl << endl << endl;
 
 	return 0;
 }

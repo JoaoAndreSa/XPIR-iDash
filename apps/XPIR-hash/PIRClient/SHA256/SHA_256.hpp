@@ -9,6 +9,7 @@
 #include <iterator>
 #include <algorithm>
 #include <bitset>
+#include <limits>
 #include <cmath>
 #include <tgmath.h>
 #include "openssl/sha.h"
@@ -16,22 +17,25 @@
 #include <openssl/rand.h>
 
 #include "../../Tools/Tools.hpp"
+#include "../../Constants/constants.hpp"
 
 class SHA_256{
 
 private:
 	//in hex pairs
 	int HASH_SIZE;
+	int DATA_SIZE;
 	unsigned char m_key[32];
 
 public:
 	SHA_256(int s){
 		HASH_SIZE=s;
-	    if(!RAND_bytes(m_key,sizeof m_key)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
+		DATA_SIZE=Constants::data_hash_size;
 
 	    if(std::ifstream("data/HMAC_key.bin")){
 	    	Tools::readFromBinFile("data/HMAC_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
 	    }else{
+	    	if(!RAND_bytes(m_key,sizeof m_key)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
 	    	Tools::writeToBinFile("data/HMAC_key.bin",reinterpret_cast<char*>(m_key),sizeof m_key);
 	    }
 	};
@@ -54,8 +58,8 @@ public:
 	std::string uchar_to_binary(unsigned char*,int,int);
 	unsigned char* binary_to_uchar(std::string);
 	std::string encoding(std::string);
-	uint64_t hash(std::string str);
-	bool search(std::string,std::string,int,int);
-	uint64_t getSizeBits();
+	string hash(std::string str);
+	bool search(std::string,std::string);
+	int getHashSize();
 	void printVector(std::vector<std::string>);
 };

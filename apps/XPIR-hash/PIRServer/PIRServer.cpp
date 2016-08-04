@@ -43,10 +43,9 @@ void PIRServer::removeDB(){
 void PIRServer::downloadData(){
     double start_t,end_t,total;
     /* Erase data in db folder */
-    //removeDB();
+    removeDB();
 
     uint64_t num_files=m_socket.readuInt64();
-
     for(uint64_t i=0;i<num_files;i++){
          try{
             total = 0;
@@ -55,14 +54,6 @@ void PIRServer::downloadData(){
             char* filename_c=m_socket.readChar(len);
 
             string filename(filename_c);
-
-            if(ifstream("db/"+filename)){
-                m_socket.sendInt(1);    //if FILE EXISTS
-                delete[] filename_c;
-                continue;
-            }else{
-                m_socket.sendInt(0);    //if FILE DOES NOT EXISTS
-            }
 
             m_max_bytesize=m_socket.readInt();
             for(uint64_t i=0;i<Constants::num_entries;i++){

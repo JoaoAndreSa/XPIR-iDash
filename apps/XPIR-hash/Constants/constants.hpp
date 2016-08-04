@@ -19,6 +19,7 @@ namespace Constants{
     extern const bool encrypted;        //=true (DB is symmetrically encrypted); =false (DB is in plaintext)
     extern const bool pre_import;
     extern const uint64_t num_entries;
+    extern const int data_hash_size;
 
     //server
     extern const int n_threads;
