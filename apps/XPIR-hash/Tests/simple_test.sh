@@ -21,8 +21,7 @@ rm -rf data/*
 rm -rf output.txt
 
 #START SERVER
-lxterminal --working-directory=Desktop/XPIR/_build/apps/XPIR-hash/PIRServer/ -e "./server"
-sleep 1
+lxterminal --working-directory=../PIRServer/ -e "./server"
 
 #START CLIENT
 ./client -f vcf/
