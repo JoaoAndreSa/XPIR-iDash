@@ -86,7 +86,6 @@ void PIRServerPipeline::uploadWorker(){
     char *ptr;
 
     // For each ciphertext in the reply_nbr
-    
     for(unsigned i=0; i<reply_nbr; i++){
         while(generator->repliesArray == NULL || generator->repliesArray[i] == NULL){
             boost::this_thread::sleep(boost::posix_time::milliseconds(10));
