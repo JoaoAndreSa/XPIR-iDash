@@ -55,7 +55,7 @@ protected:
     void freeQueries();
     void freeQueriesBuffer();
     void generateReply();
-    imported_database_t generateReplyGeneric(bool keep_imported_data = false);
+    imported_database_t generateReplyGeneric(bool keep_imported_data = false, bool import = false);
     void generateReplyGenericFromData(const imported_database_t database);
     size_t getTotalSystemMemory();
     lwe_in_data* input_data;

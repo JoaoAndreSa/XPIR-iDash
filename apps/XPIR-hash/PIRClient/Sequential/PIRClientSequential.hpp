@@ -37,7 +37,7 @@ public:
 	*/
 	PIRClientSequential(Socket socket) : PIRClient(socket){}
 
-	std::string searchQuery(uint64_t,std::map<char,std::string>);	//main function for the class -> query variant(s)
+	bool searchQuery(uint64_t,std::map<char,std::string>);	//main function for the class -> query variant(s)
 
 private:
 	//QUERY GENERATION & SEND QUERY
@@ -51,6 +51,4 @@ private:
 
 	//REPLY EXTRACTION
 	char* replyExtraction(XPIRcSequential::REPLY);
-	std::string extractCiphertext(char*, uint64_t, uint64_t);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
-	std::string extractPlaintext(char*, uint64_t, uint64_t);		//extract the exact plaintext (with aggregation the reply contains more than one element)
 };

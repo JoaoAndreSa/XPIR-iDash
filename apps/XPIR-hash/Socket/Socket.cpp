@@ -18,7 +18,7 @@
 */
 void Socket::createSocket(){
 	m_socketFd = socket(AF_INET, SOCK_STREAM, 0);
-	errorExit(m_socketFd<0,"Cannot open socket");
+	Error::error(m_socketFd<0,"Cannot open socket");
 }
 
 /**
@@ -29,7 +29,7 @@ void Socket::createSocket(){
 */
 void Socket::connectToServer(){
 	int check = connect(m_socketFd,(struct sockaddr *) &m_svrAdd, sizeof(m_svrAdd));
-    errorExit(check<0,"Cannot connect!");
+    Error::error(check<0,"Cannot connect!");
     m_connFd = m_socketFd;
 }
 
@@ -40,13 +40,9 @@ void Socket::connectToServer(){
     @return
 */
 void Socket::getServerAddress(){
-	m_server = gethostbyname(Constants::hostname);
-	errorExit(m_server==NULL,"Host does not exist");
-
 	bzero((char *)&m_svrAdd, sizeof(m_svrAdd));
     m_svrAdd.sin_family = AF_INET;
-
-    bcopy((char *)m_server->h_addr, (char *)&m_svrAdd.sin_addr.s_addr, m_server->h_length);
+    m_svrAdd.sin_addr.s_addr = inet_addr(Constants::hostname);
     m_svrAdd.sin_port = htons(Constants::port);
 }
 
@@ -72,10 +68,10 @@ void Socket::generateServerAddress(){
 void Socket::bindServer(){
 	int n;
 	n=::bind(m_socketFd, (struct sockaddr *)&m_svrAdd, sizeof(m_svrAdd));
-	errorExit(n<0,"Cannot bind");
+	Error::error(n<0,"Cannot bind");
 
 	n=listen(m_socketFd,Constants::max_connects);
-	errorExit(n<0,"Error listening");
+	Error::error(n<0,"Error listening");
 
 	m_len = sizeof(m_clntAdd);
 }
@@ -89,10 +85,12 @@ void Socket::bindServer(){
 void Socket::acceptConnection(){
 	//This is where client connects. svr will hang in this mode until client connects
     m_connFd = accept(m_socketFd, (struct sockaddr *)&m_clntAdd, &m_len);
-   	errorExit(m_connFd<0,"Cannot accept connection");
+   	Error::error(m_connFd<0,"Cannot accept connection");
     std::cout << "Connection successful" << "\n";
 }
 
+
+//***PUBLIC METHODS***//
 /**
     Sleep a number o nanoseconds necessary to emulate a given bandwith value.
 
@@ -101,19 +99,17 @@ void Socket::acceptConnection(){
     @param
     @return
 */
-void Socket::sleepForBytes(unsigned int bytes){
-    uint64_t seconds=(bytes*8)/Constants::bandwith_limit;
-    uint64_t nanoseconds=((((double)bytes*8.)/(double)Constants::bandwith_limit)-(double)seconds)*1000000000UL;
+void Socket::sleepForBytes(uint64_t bytes, double time){
+    uint64_t useconds=(((double)bytes*8)/(double)Constants::bandwith_limit)*1000000UL;
+    uint64_t elapsed_useconds=time*1000000UL;
 
-    struct timespec req={0},rem={0};
-    req.tv_sec=seconds;
-    req.tv_nsec=nanoseconds;
+    if(useconds>elapsed_useconds) useconds-=elapsed_useconds;
+    else useconds=0;
 
-    nanosleep(&req,&rem);
+    usleep(useconds);
 }
 
 
-//***PUBLIC METHODS***//
 /**
     Read a X amount of bytes from the socket (we can then cast it to whatever type we need).
 
@@ -129,20 +125,12 @@ void Socket::readXBytes(uint64_t x, void* buffer){
         unsigned int result = read(m_connFd, ((uint8_t*)buffer)+bytesRead, x - bytesRead); errorReadSocket(result<0);
         bytesRead += result;
     }
+
 }
 
-/**
-    Reads an unsigned char array (string) from the socket and returns it.
-    We need to add '\0' to the end of the stream.
-
-    @param buflen size of the element to be read.
-
-    @return recvBuff buffer where we store the bytes.
-*/
-char* Socket::readChar_s(int buflen){
-    char* recvBuff = new char[buflen+1];
+unsigned char* Socket::readuChar(int buflen){
+    unsigned char* recvBuff = new unsigned char[buflen];
     readXBytes(buflen,(void*)recvBuff);
-    recvBuff[buflen]='\0';
     return recvBuff;
 }
 
@@ -230,8 +218,6 @@ void Socket::sendXBytes(uint64_t x, void* buffer){
     while (bytesWrite < x){
         int result = write(m_connFd, ((uint8_t*)buffer)+bytesWrite, x - bytesWrite); errorWriteSocket(result<0);
         bytesWrite += result;
-
-        if(Constants::bandwith_limit!=0) sleepForBytes(result); //enforce bandwith
     }
 }
 
@@ -244,6 +230,10 @@ void Socket::sendXBytes(uint64_t x, void* buffer){
     @return
 */
 void Socket::senduChar_s(unsigned char* c_str,int len){
+    sendXBytes(len,(void*)c_str);
+}
+
+void Socket::sendChar_s(char* c_str,int len){
     sendXBytes(len,(void*)c_str);
 }
 

@@ -158,7 +158,7 @@ double PIRReplyGeneratorGMP::generateReplySimulation(const PIRParameters& pir_pa
   return stop;
 }
 
-imported_database_t PIRReplyGeneratorGMP::generateReplyGeneric(bool keep_imported_data = false)
+imported_database_t PIRReplyGeneratorGMP::generateReplyGeneric(bool keep_imported_data, bool import)
 {
   imported_database_t database_wrapper;
 	importData();

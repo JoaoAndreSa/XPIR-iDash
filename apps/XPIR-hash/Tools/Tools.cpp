@@ -12,7 +12,7 @@
 //***PRIVATE METHODS***//
 /**
     Check 3rd error on the next list of errors - see function readParamsPIR().
-    
+
     @param d recursion/dimension value
     @param alpha aggregation value
     @param n recursion array (number of elements in each dimension)
@@ -32,6 +32,88 @@ int Tools::verifyParams(uint64_t d, uint64_t alpha, unsigned int* n, uint64_t nu
 }
 
 //***PUBLIC METHODS***//
+std::vector<string> Tools::listFilesFolder(string foldername){
+    std::vector<string> listFiles;
+
+    DIR* dir;
+    struct dirent* file;
+    dir = opendir(foldername.c_str());
+
+    if(dir==NULL) Error::error(1,"Error reading file");
+
+    while ((file = readdir(dir)) != NULL){
+        string filename(file->d_name);
+        if (filename.find(".vcf") != std::string::npos){
+            listFiles.push_back(filename);
+        }
+    }
+    (void)closedir(dir);
+
+    return listFiles;
+}
+
+
+void Tools::readFromBinFile(string filename, char* recvBuf, int size){
+    try{
+        ifstream f(filename,ios::in|ios::binary);
+
+        Error::error(f==nullptr || f.is_open()==0,"Error opening binary file");
+        if(f.is_open()){
+            f.read(recvBuf,size);
+            f.close();
+        }
+    }catch(std::ios_base::failure &fail){
+        Error::error(1,"Error reading binary file");
+    }
+}
+
+void Tools::writeToBinFile(string filename, char* recvBuf, int size){
+    try{
+        ofstream f(filename,ios::out|ios::binary|std::fstream::app);
+
+        Error::error(f==nullptr || f.is_open()==0,"Error opening binary file");
+        if(f.is_open()){
+            f.write(recvBuf,size);
+            f.close();
+        }
+    }catch(std::ios_base::failure &fail){
+        Error::error(1,"Error writing binary file");
+    }
+}
+
+string Tools::readFromTextFile(string filename){
+    try{
+        string content="";
+        ifstream f(filename);
+
+        Error::error(f==nullptr || f.is_open()==0,"Error opening text file");
+        if (f.is_open()){
+            string line;
+            while(getline(f,line)){
+              content+=line+"\n";
+            }
+        }
+        f.close();
+        return content;
+    }catch (std::ios_base::failure &fail){
+        Error::error(1,"Error writing text file");
+    }
+}
+
+void Tools::writeToTextFile(string filename, string output){
+    try{
+        ofstream f(filename, std::ios_base::app);
+
+        Error::error(f==nullptr || f.is_open()==0,"Error opening text file");
+        if (f.is_open()){
+            f << output << "\n";
+            f.close();
+        }
+    }catch (std::ios_base::failure &fail){
+        Error::error(1,"Error writing text file");
+    }
+}
+
 /**
     Read SHA params and check for errors on paramsSHA.txt file (e.g. num_bits<0).
     The SHA params are simply the number of bits that are going to be extracted from the HMAC (SHA256) to generate an id for each 
@@ -47,17 +129,16 @@ int Tools::readParamsSHA(){
 
     try{
         ifstream f("../Constants/paramsSHA.txt");
-        error(f==NULL || f.is_open()==0,"Error reading file");
+        Error::error(f==NULL || f.is_open()==0,"Error opening file");
         if (f.is_open()){
             getline(f,line);
             int num_bits = atoi(line.c_str());
 
-            error(num_bits<=0,"Wrong SHA parameters");
+            Error::error(num_bits<=0,"Wrong SHA parameters");
             return num_bits;
         }
     }catch (std::ios_base::failure &fail){
-        std::cout << "Error opening file" << std::endl;
-        return 1;
+        Error::error(1,"Error reading paramsSHA.txt file");
     }
 }
 
@@ -81,7 +162,7 @@ PIRParameters Tools::readParamsPIR(uint64_t num_entries){
 
         ifstream f("../Constants/paramsPIR.txt");
 
-        error(f==NULL || f.is_open()==0,"Error reading paramsPIR.txt file");
+        Error::error(f==NULL || f.is_open()==0,"Error reading paramsPIR.txt file");
         if (f.is_open()){
             getline(f,line);
             params.d=atoi(line.c_str());
@@ -93,7 +174,7 @@ PIRParameters Tools::readParamsPIR(uint64_t num_entries){
                 getline(f,line);
                 params.n[i]=atoi(line.c_str());
             }
-            error(params.d<1 || params.d>4 || params.alpha<1 || params.alpha>num_entries || verifyParams(params.d,params.alpha,params.n,num_entries)==0,"Wrong PIR parameters");
+            Error::error(params.d<1 || params.d>4 || params.alpha<1 || params.alpha>num_entries || verifyParams(params.d,params.alpha,params.n,num_entries)==0,"Wrong PIR parameters");
 
             getline(f,line);
             params.crypto_params=line;
@@ -101,10 +182,23 @@ PIRParameters Tools::readParamsPIR(uint64_t num_entries){
         f.close();
 
     }catch (std::ios_base::failure &fail){
-        error(1,"Error reading paramsPIR.txt file");
+        Error::error(1,"Error reading paramsPIR.txt file");
     }
 
     return params;
+}
+
+std::vector<std::string> Tools::tokenize(std::string entry,std::string delimiter){
+    std::vector<std::string> tokens;
+
+    size_t pos = 0;
+    while ((pos=entry.find(delimiter)) != std::string::npos) {
+        tokens.push_back(entry.substr(0,pos));
+        entry.erase(0,pos+delimiter.length());
+    }
+    tokens.push_back(entry.substr(0,pos));
+
+    return tokens;
 }
 
 /**

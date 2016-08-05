@@ -38,9 +38,7 @@ private:
 	GenericPIRReplyGenerator* m_r_generator;
 	PIRReplyExtraction_internal* m_r_extractor;
 
-	bool m_imported;								//whether the data has been imported before or not (if m_imported_db has been instanciated)
 	imported_database_t m_imported_db;				//it seems the same object as in XPIRcSequential but it's not
-	uint64_t m_maxFileSize;
 
 	PIRReplyWriter* m_replyWriter;					//needed for the reply extraction
 	messageListener m_messageListeners; 
@@ -56,7 +54,7 @@ public:
 
     	@return
 	*/
-	XPIRcPipeline(PIRParameters params, int type, DBHandler* db) : XPIRc(params,type,db) {
+	XPIRcPipeline(PIRParameters params, int type, DBHandler* db, imported_database_t imported_db) : XPIRc(params,type,db) {
 		if(type==0){ //if SERVER
 			m_q_generator=nullptr;
 			m_r_extractor=nullptr;
@@ -68,7 +66,7 @@ public:
     		m_r_generator->setCryptoMethod(m_crypto);
     		m_r_generator->setPirParams(m_params);
 
-    		m_imported=0; //database has not been imported yet
+    		if(Constants::pre_import) m_imported_db=imported_db;
 		}else{		//if CLIENT
 			m_r_generator=nullptr;
 
@@ -77,6 +75,8 @@ public:
 			m_replyWriter=new PIRReplyWriter(m_params,m_writeListeners,m_messageListeners);
 		}
 	}
+
+	static imported_database_t import_database(string);
 
 	PIRReplyWriter* getReplyWriter();				//m_replyWriter getter (needed to proceed with the reply extraction)
 	PIRQueryGenerator_internal* getQGenerator();	/*m_q_generator getter (opposite to what happens in the sequential execution
@@ -87,7 +87,5 @@ public:
 	void setImportedDB(imported_database_t db);		//m_imported_db setter
 	uint64_t getMaxFileSize();						//m_maxFileSize getter (only makes sense for client since he does not have access to db object);
 	void setMaxFileSize(uint64_t);					//m_maxFileSize setter
-	bool isImported();								//m_imported getter
-	void setImported(bool);							//m_importedsetter
 	void cleanup();									//clean 'tools'
 };

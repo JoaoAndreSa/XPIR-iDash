@@ -12,18 +12,24 @@
 #include <stdint.h>
 #include <fstream>
 
-#include <boost/thread.hpp>
 #include "pir/PIRParameters.hpp"
 #include "../PIRServer/PIRServer.hpp"
+#include "../Error/Error.hpp"
 
 class Tools{
 public:
+	static vector<string> listFilesFolder(string);
+	static string readFromTextFile(string);
+	static void writeToTextFile(string, string);
+	static void readFromBinFile(string, char*, int);
+	static void writeToBinFile(string, char*, int);
+
 	static int readParamsSHA();
 	static PIRParameters readParamsPIR(uint64_t);			//reads PIR params needed to create an XPIRc object
+
+	static std::vector<std::string> tokenize(std::string,std::string);
+
 	static void cleanupVector(vector<char*>);  					//free allocated memory
-	static void error(int cond, std::string err){
-		if(cond==1){std::cerr << err << "\n" << "THREAD [" << boost::this_thread::get_id() << "] EXITED" << "\n"; pthread_exit(nullptr);} //For errors on server threads
-	}
 private:
 	static int verifyParams(uint64_t, uint64_t, unsigned int*, uint64_t);		//validate PIR params
 

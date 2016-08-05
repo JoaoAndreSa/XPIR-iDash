@@ -26,26 +26,35 @@ vector<string> readFile(string filename,SHA_256 sha256){
 //SHA256 example
 int main(){
 	SHA_256 sha256(16);
-	vector<string> data(sha256.getSizeBits());
 
+	vector<string> data(sha256.getSizeBits());
 	vector<string> entries;
+
 	entries=readFile("RCV000015246_100000.vcf",sha256);
 
+	int max_bit_size=0;
 	for(int i=0;i<entries.size();i++){
-		int pos=sha256.hash(entries[i]);
-		if(data[pos]!=""){
-			data[pos]+="->";
+		string encoded=sha256.encoding(entries[i]);
+		int pos=sha256.hash(encoded);
+		data[pos]+=encoded;
+
+		if(data[pos].length()>max_bit_size){
+			max_bit_size=data[pos].length();
 		}
-		data[pos]+=entries[i];
 	}
+	cout << max_bit_size << endl;
 	//sha256.printVector(data);
 
-	string query="1	73931850	rs11210256	G	A	.	.	SVTYPE=SNP;END=73931851"; //is in file
-	//string query="1	118737704	rs3085974	 	ACTCTGT	.	.	SVTYPE=INS;END=118737704"; //is in file
-	//string query="2	73931850	rs11210256	G	A	.	.	SVTYPE=SNP;END=73931851"; //is not in file
+	//string query="1	161617087	.	T	 "; 		//is in file
+	//string query="1	164781110	.	 	ATATAAG"; 	//is in file
+	//string query="1	161617087	.	T	 "; 		//is in file
+	//string query="1	73934717	.	 	T	.	.	SVTYPE=INS;END=73934717"; 			//is in file
+	string query="1	118737704	rs3085974	 	ACTCTGT	.	.	SVTYPE=INS;END=118737704"; 	//is in file
+	//string query="2	73931850	rs11210256	G	A	.	.	SVTYPE=SNP;END=73931851"; 	//is not in file
+	string encoded=sha256.encoding(query);
+	int pos=sha256.hash(encoded);
 
-	int pos=sha256.hash(query);
-	cout << sha256.search(data[pos],query) << endl;
+	unsigned char* bin=sha256.uchar_binary(encoded);
 
 	return 0;
 }

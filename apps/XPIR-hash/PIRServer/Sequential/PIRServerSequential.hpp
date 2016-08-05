@@ -25,6 +25,7 @@
 
 class PIRServerSequential: public PIRServer {
 	XPIRcSequential* m_xpir;
+  std::map<string,imported_database*>* m_imported_dbs;
 
 public:
 	/**
@@ -34,7 +35,9 @@ public:
 
     	@return
 	*/
-	PIRServerSequential(Socket socket) : PIRServer(socket) {}
+	PIRServerSequential(Socket socket, std::map<string,imported_database*>* imported_dbs) : PIRServer(socket) {
+    m_imported_dbs=imported_dbs;
+  }
 
 	void job();								                //what the thread executes
 

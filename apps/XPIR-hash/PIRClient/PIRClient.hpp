@@ -20,8 +20,10 @@
 #pragma once
 
 #include <netdb.h>
+#include <dirent.h>
+#include <ctype.h>
 
-#include "AES/AES_cbc_256.hpp"
+#include "AES256/AES_ctr_256.hpp"
 #include "SHA256/SHA_256.hpp"
 
 #include "../XPIR/Pipeline/XPIRcPipeline.hpp"
@@ -37,7 +39,7 @@ protected:
 	Socket m_socket;
 
 	//Encryption and hashing variables
-	AES_cbc_256 m_cbc;
+	AES_ctr_256* m_aes_256;
 	SHA_256* m_SHA_256;
 
 	//Time variables
@@ -56,11 +58,11 @@ public:
 		m_socket=socket;
 	}
 
-	uint64_t uploadData(std::string);				//prepares and uploads the DB data to send to the server
+	void uploadData(string);						//prepares and uploads the DB data to send to the server
+	void initAES256();
 	void initSHA256();
 
-	uint64_t considerPacking(uint64_t,uint64_t);	//returns the position relative to the aggregation/packing value
-	virtual std::string searchQuery(uint64_t,std::map<char,std::string>)=0;	//kind of the main function of all PIRClient classes (children)
+	virtual bool searchQuery(uint64_t,std::map<char,std::string>)=0;	//kind of the main function of all PIRClient classes (children)
 
 	//Getters and Setters
 	void setRTTStart();
@@ -69,11 +71,15 @@ public:
 	double getRTTStop();
 
 protected:
-	int compareSNPs(std::string, std::map<char,std::string>);		//compares two SNPs and returns 1 if they are equal or 0 otherwise
+	void removeInfoVCF();
+	int getInfoVCF(string);
+	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
+	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);	//extract the exact plaintext (with aggregation the reply contains more than one element)
+	uint64_t considerPacking(uint64_t,uint64_t);											//returns the position relative to the aggregation/packing value
+	std::vector<std::pair<uint64_t,std::vector<std::string>>> listQueryPos(std::map<char,std::string>);
 
-	int symmetricEncrypt(unsigned char*,std::string);				//symmetric encrypt plaintext and return the result
-	int symmetricDecrypt(unsigned char*,char*);						//symmetric decrypt ciphertext and return the result
-	void sendCiphertext(int,unsigned char*);						//send ciphertext through socket (length+data)
-	void sendPlaintext(int,std::string);							//send plaintext through socket (length+data)
-	uint64_t sendData(std::vector<std::string>);					//encrypt and send every variant in vcf file to server
+	int symmetricEncrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric encrypt plaintext and return the result
+	int symmetricDecrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric decrypt ciphertext and return the result
+	std::string padData(string,int);
+	void sendData(std::vector<std::string>,string,int);			//encrypt and send every variant in vcf file to server
 };

@@ -20,129 +20,60 @@
 #include "PIRClient.hpp"
 
 //***PRIVATE METHODS***//
-/**
-    Compares two SNPs/variants and returns 1 if they are equal or 0 otherwise.
+void PIRClient::removeInfoVCF(){
+    int ret_val=std::system("exec rm -rf data/catalog.txt");
 
-    @param t_curr a string that contains variant information (e.g. 1    160929435   rs7520618   G   A   .   .   SVTYPE=SNP;END=160929436)
-    @param entry a map/dictionary the stores que variant(s) beeing queried in a key-value way
-
-    @return int 1 if equal; 0 otherwise
-*/
-int PIRClient::compareSNPs(std::string t_curr, std::map<char,std::string> entry){
-    istringstream curr(t_curr);
-    std::vector<std::string> tokens_curr{istream_iterator<std::string>{curr},istream_iterator<std::string>{}};
-
-    if( (atoi(tokens_curr[0].c_str()) == atoi(entry['c'].c_str())) && (atoi(tokens_curr[1].c_str()) == atoi(entry['p'].c_str())) && (tokens_curr[3]==entry['r'])  && (tokens_curr[4]==entry['a']) ){
-        return 1;
-    }else{
-        return 0;
+    if (ret_val==1){
+        cout << "Error performing system call" << endl;
     }
 }
 
-/**
-    Symmetric encrypt plaintext (AES_CBS256) and return the result.
+int PIRClient::getInfoVCF(string filename){
+    string f = Tools::readFromTextFile("data/catalog.txt");
 
-    @param ciphertext variable that stores the ciphertext
-    @param line variant(s) to be encrypted
-
-    @return ciphertexlen length of the ciphertext (needed for write())
-*/
-int PIRClient::symmetricEncrypt(unsigned char* ciphertext, std::string line){
-    unsigned char ciphertext_noIV[1024]; //ciphertext with noIV (for memcpy purposes - C stuff)
-
-    unsigned char *plaintext = new unsigned char[line.length()+1];
-    memcpy((char*)plaintext,line.c_str(),line.length()+1);
-
-    int ciphertexlen=m_cbc.encrypt(plaintext,strlen((char *)plaintext),ciphertext,ciphertext_noIV);
-
-    delete[] plaintext;
-    return ciphertexlen;
-}
-
-/**
-    Symmetric decrypt ciphertext (AES_CBS256) and return the result.
-
-    @param decryptedtext variable that stores the decrypted plaintext
-    @param line ciphertext to be decrypted
-
-    @return decryptedtextlen length of the decrypted text (not needed for anything really, but just in case...)
-*/
-int PIRClient::symmetricDecrypt(unsigned char* decryptedtext, char* line){
-    unsigned char ciphertext[1024];
-    memcpy((char *)ciphertext,line,1024);
-
-    int decryptedtextlen = m_cbc.decrypt(ciphertext,decryptedtext);
-    decryptedtext[decryptedtextlen] = '\0';
-
-    return decryptedtextlen;
-}
-
-/**
-    Send ciphertext through socket (length+data).
-
-    @param ciphertexlen length of the ciphertext
-    @param ciphertext variable that stores the ciphertext
-
-    @return
-*/
-void PIRClient::sendCiphertext(int ciphertexlen,unsigned char* ciphertext){
-    m_socket.sendInt(ciphertexlen);
-    m_socket.senduChar_s(ciphertext,ciphertexlen);
-}
-
-/**
-    Send plaintext through socket (length+data). In this case there is no symmetric encryption
-
-    @param plaintexlen length of the plaintext
-    @param str variant(s) to be sent (as a string)
-
-    @return
-*/
-void PIRClient::sendPlaintext(int plaintexlen,string str){
-    unsigned char *plaintext = new unsigned char[plaintexlen];
-    memcpy((char*)plaintext,str.c_str(),plaintexlen);
-
-
-    m_socket.sendInt(plaintexlen);
-    m_socket.senduChar_s(plaintext,plaintexlen);
-    delete[] plaintext;
-}
-
-/**
-    Encrypt (we can trigger this off) and send every variant in vcf file, or better still the catalog, to server.
-    WARNING: Remember that for a given index we can potentially have more than one variant or even none.
-    If there is nothing to send simply send byte 0.
-
-    @param catalog where all the data (SNPs) is stored
-
-    @return
-*/
-uint64_t PIRClient::sendData(std::vector<std::string> catalog){
-    uint64_t num_entries=0;
-
-    double start = omp_get_wtime();
-    for(uint64_t i=0; i<catalog.size();i++){
-        if(catalog[i]!=""){
-            if(!Constants::encrypted){   //if PLAINTEXT
-                sendPlaintext(catalog[i].length()+1,catalog[i]);
-            }else{                        //if CIPHERTEXT
-                unsigned char ciphertext[1024];
-                int ciphertexlen = symmetricEncrypt(ciphertext,catalog[i]);
-                sendCiphertext(ciphertexlen,ciphertext);
-            }
-        }else{
-            std::string blank("0");
-            sendPlaintext(blank.length(),blank);
+    std::vector<string> vcf = Tools::tokenize(f,"\n");
+    for(uint64_t i=0;i<vcf.size();i++){
+        std::vector<string> line = Tools::tokenize(vcf[i]," ");
+        if(line[0]==filename){
+            return atoi(line[1].c_str());
         }
-
-        num_entries++;
     }
-    double end = omp_get_wtime();
-    std::cout << "PIRClient: Send file took " << end-start << " (s)\n";
-    m_socket.sendInt(0);    //signal EOF (no more things to write)
+}
+/**
+    Extract the exact ciphertext (with aggregation the reply contains more than one element).
 
+    @param response reply data (ciphertext)
+    @param aggregated_entrySize reply element size
+    @param pos the relative position inside the 'pack' we want to extract
 
-    return num_entries;
+    @return response_s the specific element we are looking for or if it does not exist return ""
+*/
+std::string PIRClient::extractCiphertext(char* response, uint64_t alpha, uint64_t aggregated_entrySize, uint64_t pos, std::vector<string> query){
+    unsigned char* ciphertext = new unsigned char[aggregated_entrySize];
+    memcpy((char *)ciphertext,response+aggregated_entrySize*(pos%alpha),aggregated_entrySize);
+
+    unsigned char* plaintext = new unsigned char[aggregated_entrySize];
+    int plaintexlen = symmetricDecrypt(plaintext,ciphertext,pos,aggregated_entrySize);
+
+    string decoded_pack = m_SHA_256->uchar_to_binary(plaintext,aggregated_entrySize,aggregated_entrySize*8);
+
+    delete[] ciphertext;
+    delete[] plaintext;
+
+    return decoded_pack;
+}
+
+/**
+    Extract the exact plaintext (with aggregation the reply contains more than one element).
+
+    @param response reply data (plaintext)
+    @param aggregated_entrySize reply element size
+    @param pos the relative position inside the 'pack' we want to extract
+
+    @return response_s the specific element we are looking for or if it does not exist return ""
+*/
+std::string PIRClient::extractPlaintext(char* response, uint64_t alpha, uint64_t aggregated_entrySize, uint64_t pos,std::vector<string> query){
+    return m_SHA_256->uchar_to_binary(reinterpret_cast<unsigned char*>(response+aggregated_entrySize*(pos%alpha)),aggregated_entrySize,aggregated_entrySize*8);
 }
 
 /**
@@ -161,6 +92,122 @@ uint64_t PIRClient::considerPacking(uint64_t pos, uint64_t alpha){
     }
 }
 
+std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPos(std::map<char,std::string> entry){
+    std::vector<std::string> chr = Tools::tokenize(entry['c'],",");
+    std::vector<std::string> pos = Tools::tokenize(entry['p'],",");
+    std::vector<std::string> ref = Tools::tokenize(entry['r'],",");
+    std::vector<std::string> alt = Tools::tokenize(entry['a'],",");
+
+    if(chr.size()!=pos.size() || chr.size()!=ref.size() || chr.size()!=alt.size()){
+        Error::error(1,"Input Error\nUploading: ./client [-f folderPath]\nQuerying: ./client [-c chromosome1,2,...] [-p startPosition1,2,...] [-r refAllele1,2,...] [-a altAllele1,2,...] [-f vcfFile1,2,...]\n");
+    }
+
+    std::vector<std::pair<uint64_t,std::vector<std::string>>> all_pos;
+
+    for(int i=0;i<chr.size();i++){
+        //string query_str=chr[i]+"\t"+pos[i]+"\t.\t"+ref[i]+"\t"+alt[i]; //the . is to represent the missing id field
+        string query_str=chr[i]+pos[i]+ref[i]+alt[i]; //the . is to represent the missing id field
+        string data_hash=m_SHA_256->hash(query_str);
+        uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);
+
+        bool exists=false;
+        int j;
+        for(j=0;j<all_pos.size();j++){
+            if(all_pos[j].first==pos){
+                exists=true;
+                break;
+            }
+        }
+
+        if(exists){
+            all_pos[j].second.push_back(data_hash);
+        }else{
+            std::vector<string> container;
+            container.push_back(data_hash);
+            all_pos.push_back(std::make_pair(pos,container));
+        }
+    }
+    return all_pos;
+}
+
+/**
+    Symmetric encrypt plaintext (AES_CBS256) and return the result.
+
+    @param ciphertext variable that stores the ciphertext
+    @param line variant(s) to be encrypted
+
+    @return ciphertexlen length of the ciphertext (needed for write())
+*/
+int PIRClient::symmetricEncrypt(unsigned char* ciphertext, unsigned char* plaintext, uint64_t pos, int size){
+    int ciphertexlen=m_aes_256->encrypt(plaintext,size,ciphertext,pos);
+    return ciphertexlen;
+}
+
+/**
+    Symmetric decrypt ciphertext (AES_CBS256) and return the result.
+
+    @param decryptedtext variable that stores the decrypted plaintext
+    @param line ciphertext to be decrypted
+
+    @return decryptedtextlen length of the decrypted text (not needed for anything really, but just in case...)
+*/
+int PIRClient::symmetricDecrypt(unsigned char* plaintext, unsigned char* ciphertext, uint64_t pos, int size){
+    int plaintexlen = m_aes_256->decrypt(ciphertext,size,plaintext,pos);
+    return plaintexlen;
+}
+
+std::string PIRClient::padData(string input, int max_bits){
+    int len=input.length();
+
+    std::vector<char> v(max_bits-len,'0');
+    std::string str(v.begin(),v.end());
+
+    return str+input;
+}
+
+/**
+    Encrypt (we can trigger this off) and send every variant in vcf file, or better still the catalog, to server.
+    WARNING: Remember that for a given index we can potentially have more than one variant or even none.
+    If there is nothing to send simply send byte 0.
+
+    @param catalog where all the data (SNPs) is stored
+
+    @return
+*/
+void PIRClient::sendData(std::vector<std::string> catalog, string filename, int max_bytesize){
+    double start = omp_get_wtime(),total = 0;
+
+    m_socket.sendInt(max_bytesize);
+    for(uint64_t i=0; i<catalog.size();i++){
+        unsigned char* entry;
+        entry=m_SHA_256->binary_to_uchar(padData(catalog[i],max_bytesize*8));
+
+        double start_t,end_t;
+        if(!Constants::encrypted){    //if PLAINTEXT
+            start_t = omp_get_wtime();
+            m_socket.senduChar_s(entry,max_bytesize);
+            end_t = omp_get_wtime();
+        }else{                        //if CIPHERTEXT
+            unsigned char* ciphertext = new unsigned char[max_bytesize];
+            int ciphertexlen = symmetricEncrypt(ciphertext,entry,i,max_bytesize);
+
+            start_t = omp_get_wtime();
+            m_socket.senduChar_s(ciphertext,ciphertexlen);
+            end_t = omp_get_wtime();
+
+            delete[] ciphertext;
+        }
+        delete[] entry;
+
+        total+=end_t-start_t;
+    }
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
+
+    Tools::writeToTextFile("data/catalog.txt",filename+" "+to_string(max_bytesize));
+    double end = omp_get_wtime();
+    std::cout << "PIRClient: Sending encrypted file took " << end-start << " (s)\n\n";
+}
+
 //***PUBLIC METHODS***//
 /**
     Prepares and uploads the DB data to send to the server. 'Prepare' means initializing 'catalog' with size
@@ -171,46 +218,59 @@ uint64_t PIRClient::considerPacking(uint64_t pos, uint64_t alpha){
 
     @return num_entries number of entries written (number of variants in 'catalog')
 */
-uint64_t PIRClient::uploadData(std::string filename){
-	std::string line;
-    uint64_t num_entries=0;
+void PIRClient::uploadData(string foldername){
+    removeInfoVCF();
+    std::vector<string> listFiles = Tools::listFilesFolder(foldername);
 
-    try{
+    m_socket.senduInt64(listFiles.size());
+    for(uint64_t i=0;i<listFiles.size();i++){
+        try{
+            double start = omp_get_wtime();
 
-        ifstream f(filename);
+            m_socket.sendInt(listFiles[i].length()+1);
+            m_socket.sendChar_s((char*)listFiles[i].c_str(),listFiles[i].length()+1);
 
-        Socket::errorExit(f==NULL || f.is_open()==0,"Error reading file");
+            std::string line;
+            ifstream f(foldername+listFiles[i]);
+            Error::error(f==NULL || f.is_open()==0,"Error opening vcf file");
 
-        //send the size of the vector to be stored
-        std::vector<std::string>catalog(m_SHA_256->getSizeBits());
+            std::vector<std::string>catalog(Constants::num_entries,"");
 
-        double start = omp_get_wtime();
-        if (f.is_open()){
-            while(getline(f,line)){
-                if(line[0]!='#'){
-                    int pos=m_SHA_256->hash(line); //hash variant and get its position in the 'catalog'
-                    if(catalog[pos]!=""){
-                        catalog[pos]+="->";        //delimiter (for appending)
+            int max_bitsize=0;
+            if (f.is_open()){
+                while(getline(f,line)){
+                    if(line[0]!='#'){
+                        std::vector<std::string> tokens = Tools::tokenize(line,"\t");
+                        string data_hash=m_SHA_256->hash(tokens[0]+tokens[1]+tokens[3]+tokens[4]);
+                        uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);  //hash variant and get its position in the 'catalog'
+                        catalog[pos]+=data_hash;
+
+                        if(catalog[pos].length()>max_bitsize) max_bitsize=catalog[pos].length();
                     }
-                    catalog[pos]+=line;
                 }
             }
+            f.close();
+            double end = omp_get_wtime();
+            std::cout << "PIRClient: Preparing file " << listFiles[i] << " took " << end-start << " (s)\n";
+
+            cout << "PIRClient: Sending file " << listFiles[i] << " to the server..." << endl;
+            sendData(catalog,listFiles[i],max_bitsize/8);
+        }catch (std::ios_base::failure &fail){
+            Error::error(1,"Error reading vcf file");
         }
-        f.close();
-        double end = omp_get_wtime();
-        std::cout << "PIRClient: Prepare file took " << end-start << " (s)\n";
-
-        num_entries=sendData(catalog);
-
-    }catch (std::ios_base::failure &fail){
-        Socket::errorExit(1,"Error writing output file");
     }
 
-	return num_entries;
+    cout << "PIRClient: Waiting for server to load files..." << endl;
+    if(m_socket.readInt()==1) cout << "PIRClient: All files loaded" << endl;
+    else cout << "PIRClient: Error importing files at the server side" << endl;
 }
 
 void PIRClient::initSHA256(){
     m_SHA_256= new SHA_256(Tools::readParamsSHA());
+}
+
+void PIRClient::initAES256(){
+    m_aes_256= new AES_ctr_256();                      //=0 CBC mode, =1 CTR mode
 }
 
 void PIRClient::setRTTStart(){

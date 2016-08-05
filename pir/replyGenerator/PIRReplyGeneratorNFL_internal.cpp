@@ -158,7 +158,7 @@ void PIRReplyGeneratorNFL_internal::importDataNFL(uint64_t offset, uint64_t byte
 }
 
 #ifdef SNIFFER
-imported_database_t PIRReplyGeneratorNFL_internal::generateReplyGeneric(bool keep_imported_data)
+imported_database_t PIRReplyGeneratorNFL_internal::generateReplyGeneric(bool keep_imported_data, bool import)
 {
   imported_database_t database_wrapper;
   boost::mutex::scoped_lock l(mutex);
@@ -197,11 +197,11 @@ imported_database_t PIRReplyGeneratorNFL_internal::generateReplyGeneric(bool kee
   double end = omp_get_wtime();
 	std::cout<<"PIRReplyGeneratorNFL_internal: Finished processing the sniffed data in " << end - start << " seconds" << std::endl;
 	std::cout<<"PIRReplyGeneratorNFL_internal: Processing throughput " << (double)chunkBytesize*8*iterations / ((end - start)*1000000000ULL) << " Gbps" << std::endl;
-  return database_wrapper;   
+  return database_wrapper;
 }
 
 #else
-imported_database_t PIRReplyGeneratorNFL_internal::generateReplyGeneric(bool keep_imported_data)
+imported_database_t PIRReplyGeneratorNFL_internal::generateReplyGeneric(bool keep_imported_data, bool import)
 {
   imported_database_t database_wrapper;
   uint64_t usable_memory, database_size, max_memory_per_file, max_readable_size, nbr_of_iterations;
@@ -253,14 +253,13 @@ imported_database_t PIRReplyGeneratorNFL_internal::generateReplyGeneric(bool kee
     std::cout << "PIRReplyGeneratorNFL_internal: Database is considered too large, processing it in " 
       << nbr_of_iterations << " iterations" << std::endl; 
   }
-
   start = omp_get_wtime();
 // #pragma omp parallel for
   for (unsigned iteration = 0; iteration < nbr_of_iterations; iteration++)
   {
     if (nbr_of_iterations > 1) cout << "PIRReplyGeneratorNFL_internal: Iteration " << iteration << endl; 
 
-    repliesIndex = computeReplySizeInChunks(iteration*max_readable_size);
+    if(!import) repliesIndex = computeReplySizeInChunks(iteration*max_readable_size);
     // Import a chunk of max_readable_size bytes per file with an adapted offset
     importDataNFL(iteration*max_readable_size, max_readable_size);
     if(keep_imported_data && iteration == nbr_of_iterations - 1)  // && added for Perf test but is no harmful
@@ -268,9 +267,11 @@ imported_database_t PIRReplyGeneratorNFL_internal::generateReplyGeneric(bool kee
       database_wrapper.polysPerElement = currentMaxNbPolys;
     } 
 
-    boost::mutex::scoped_lock l(mutex);
-    repliesAmount = computeReplySizeInChunks(dbhandler->getmaxFileBytesize());
-    generateReply();
+    if(!import){
+      boost::mutex::scoped_lock l(mutex);
+      repliesAmount = computeReplySizeInChunks(dbhandler->getmaxFileBytesize());
+      generateReply();
+    }
     end = omp_get_wtime();
 
     if(keep_imported_data && iteration == nbr_of_iterations - 1)  // && added for Perf test but is no harmful

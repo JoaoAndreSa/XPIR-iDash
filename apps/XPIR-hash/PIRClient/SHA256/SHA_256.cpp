@@ -9,12 +9,35 @@ void SHA_256::printElem(unsigned char* conv, int size){
 	printf("\n");
 }
 
-std::string SHA_256::decimal_to_binary(std::string number){
-	return std::bitset<6>(atoi(number.c_str())).to_string();
+std::string SHA_256::data_to_binary(std::string op,int len, std::string alt){
+	std::string binary="";
+	if(op=="01"){							//if DEL
+		return decimal_to_binary(len);
+	}else if(op=="11"){						//if SUB
+		binary+=decimal_to_binary(len);
+		binary+=base_to_binary(alt);
+		return binary;
+	}else{									//if INS or SNP
+		return base_to_binary(alt);
+	}
 }
 
-std::string SHA_256::long_to_binary(std::string number){
-	return std::bitset<32>(atol(number.c_str())).to_string();
+std::string SHA_256::op_to_binary(std::string ref, std::string alt){
+	if(alt==" "){														//if DEL
+		return "01";
+	}else if(ref.length()>1 || alt.length()>1 && ref!=" " && alt!=" "){	//if SUB
+		return "11";
+	}else{																//if INS or SNP
+		return "10";
+	}
+}
+
+std::string SHA_256::chr_to_binary(std::string number){
+	return std::bitset<5>(atoi(number.c_str())).to_string();
+}
+
+std::string SHA_256::pos_to_binary(std::string number){
+	return std::bitset<28>(atol(number.c_str())).to_string();
 }
 
 std::string SHA_256::base_to_binary(std::string base){
@@ -33,6 +56,30 @@ std::string SHA_256::base_to_binary(std::string base){
 	return binary;
 }
 
+std::string SHA_256::decimal_to_binary(unsigned n){
+    const int size=sizeof(n)*8;
+    std::string res;
+    bool s=0;
+    for (int a=0;a<size;a++){
+        bool bit=n>>(size-1);
+        if (bit)
+            s=1;
+        if (s)
+            res.push_back(bit+'0');
+        n<<=1;
+    }
+    if (!res.size())
+        res.push_back('0');
+    return res;
+}
+
+/*void SHA_256::sha256(std::string str, unsigned char* hash){
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, str.c_str(), str.length());
+    SHA256_Final(hash, &sha256);
+}*/
+
 std::string SHA_256::hex_to_binary(std::string hex){
     std::string  binary="";
 
@@ -48,31 +95,6 @@ std::string SHA_256::hex_to_binary(std::string hex){
     return binary;
 }
 
-//ASCII  to hexadecimal
-std::string SHA_256::reduceSHA(unsigned char* str, int size){
-	std::string final_hash="";
-
-	int curr_bits=HASH_SIZE;
-	for (int i=0; i<size && curr_bits>0; i++) {
-		char buff[4];
-		snprintf(buff, sizeof(buff), "%02x",str[i]);
-
-		std::string buffAsStdStr=buff;
-		std::string bin=hex_to_binary(buffAsStdStr);
-
-		final_hash+=bin.substr(0,std::min(curr_bits,static_cast<int>(bin.length())));
-		curr_bits-=std::min(curr_bits,static_cast<int>(bin.length()));
-	}
-	return final_hash;
-}
-
-/*void SHA_256::sha256(std::string str, unsigned char* hash){
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, str.c_str(), str.length());
-    SHA256_Final(hash, &sha256);
-}*/
-
 void SHA_256::mac256(std::string str,unsigned char* hash){
 	const char* key= reinterpret_cast<char*>(m_key);
 
@@ -81,7 +103,7 @@ void SHA_256::mac256(std::string str,unsigned char* hash){
 
     // Using sha1 hash engine here.
     // You may use other hash engines. e.g EVP_md5(), EVP_sha224, EVP_sha512, etc
-    HMAC_Init_ex(&ctx, key, strlen(key), EVP_sha256(), NULL);
+    HMAC_Init_ex(&ctx, key, sizeof(key), EVP_sha256(), NULL);
     HMAC_Update(&ctx, (unsigned char*)str.c_str(),str.length()+1);
 
     unsigned int len=static_cast<unsigned int>(SHA256_DIGEST_LENGTH);
@@ -89,57 +111,57 @@ void SHA_256::mac256(std::string str,unsigned char* hash){
     HMAC_CTX_cleanup(&ctx);
 }
 
-std::string SHA_256::convertEntry(std::string line){
-	using namespace std;
-	istringstream iss(line);
-	vector<string> tokens{istream_iterator<string>{iss},istream_iterator<string>{}};
-
-	return decimal_to_binary(tokens[0])+long_to_binary(tokens[1])+base_to_binary(tokens[3])+base_to_binary(tokens[4]);
-}
-
-std::vector<std::string> SHA_256::parseEntry(std::string entry){
-	std::string delimiter = "->";
-	std::vector<std::string> tokens;
-
-	size_t pos = 0;
-	while ((pos=entry.find(delimiter)) != std::string::npos) {
-    	tokens.push_back(entry.substr(0,pos));
-    	entry.erase(0,pos+delimiter.length());
-	}
-	tokens.push_back(entry.substr(0,pos));
-
-	return tokens;
-}
-
-
 //***PUBLIC METHODS***//
-
-uint64_t SHA_256::hash(std::string str){
-	unsigned char* sha_hash = new unsigned char[SHA256_DIGEST_LENGTH];
-	mac256(convertEntry(str),sha_hash);
-
-	std::string final_hash=reduceSHA(sha_hash,SHA256_DIGEST_LENGTH);
-	delete[] sha_hash;
-
-	return stol(final_hash, nullptr,2);
+//ASCII  to hexadecimal
+std::string SHA_256::uchar_to_binary(unsigned char* str, int size, int curr_bits){
+	string final_hash="";
+	for(int i=0;i<(curr_bits/8);i++){
+		final_hash+=std::bitset<std::numeric_limits<unsigned char>::digits>(str[i]).to_string();
+	}
+	return final_hash;
 }
 
-std::string SHA_256::search(std::string entry,std::string query){
-	if(entry=="") return 0;
+unsigned char* SHA_256::binary_to_uchar(std::string line){
+	int size=ceil(line.length()/8);
+	unsigned char* result = new unsigned char[size];
+	memset(result,0,size);
 
-	std::vector<std::string> tokens = parseEntry(entry);
-
-	for(uint64_t i=0; i<tokens.size();i++){
-		if(compareSNPs(tokens[i],query)==1){
-			return tokens[i];
+	for(int j=0;j<size;j++){
+		for (int i=0;i<8;i++){
+    		result[j] |= (line[i+j*8]=='1') << (7-i);
 		}
 	}
-
-	return "";
+    return result;
 }
 
-uint64_t SHA_256::getSizeBits(){
-	return pow(2,HASH_SIZE);
+std::string SHA_256::encoding(std::string line){
+	std::vector<std::string> tokens = Tools::tokenize(line,"\t");
+	std::string op = op_to_binary(tokens[3],tokens[4]);
+
+	return op+chr_to_binary(tokens[0])+pos_to_binary(tokens[1])+data_to_binary(op,tokens[3].length(),tokens[4]);
+}
+
+string SHA_256::hash(std::string str){
+	unsigned char* sha_hash = new unsigned char[SHA256_DIGEST_LENGTH];
+	mac256(str,sha_hash);
+	std::string final_hash=uchar_to_binary(sha_hash,SHA256_DIGEST_LENGTH,DATA_SIZE);
+	delete[] sha_hash;
+
+	return final_hash;
+}
+
+
+bool SHA_256::search(std::string query, std::string decoded_pack){
+    for(int i=0;i<decoded_pack.length();i+=DATA_SIZE){
+        if(query.compare(decoded_pack.substr(i,DATA_SIZE))==0){
+            return true;
+        }
+    }
+    return false;
+}
+
+int SHA_256::getHashSize(){
+	return HASH_SIZE;
 }
 
 void SHA_256::printVector(std::vector<std::string> v){
@@ -147,20 +169,3 @@ void SHA_256::printVector(std::vector<std::string> v){
 		std::cout << v[i] << std::endl;
 	}
 }
-
-//return num_entries if SNPs are equal 
-int SHA_256::compareSNPs(std::string t_curr,std::string t_entry){
-	using namespace std;
-    istringstream curr(t_curr);
-    vector<string> tokens_curr{istream_iterator<string>{curr},istream_iterator<string>{}};
-
-    istringstream entry(t_entry);
-    vector<string> tokens_entry{istream_iterator<string>{entry},istream_iterator<string>{}};
-
-    if( (atoi(tokens_curr[0].c_str()) == atoi(tokens_entry[0].c_str())) && (atoi(tokens_curr[1].c_str()) == atoi(tokens_entry[1].c_str())) && (tokens_curr[3]==tokens_entry[3])  && (tokens_curr[4]==tokens_entry[4]) ){
-        return 1;
-    }else{
-        return 0;   
-    }
-}
-
