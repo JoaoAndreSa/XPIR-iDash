@@ -174,10 +174,12 @@ std::string PIRClient::padData(string input, int max_bits){
 
     @return
 */
-void PIRClient::sendData(std::vector<std::string> catalog, string filename, int max_bytesize){
+void PIRClient::sendData(std::vector<std::string> catalog, string filename){
     double start = omp_get_wtime(),total = 0;
 
+    int max_bytesize=Constants::padding_size*Constants::data_hash_size/8;
     m_socket.sendInt(max_bytesize);
+    m_socket.sendInt(catalog.size());
     for(uint64_t i=0; i<catalog.size();i++){
         unsigned char* entry;
         entry=m_SHA_256->binary_to_uchar(padData(catalog[i],max_bytesize*8));
@@ -201,7 +203,7 @@ void PIRClient::sendData(std::vector<std::string> catalog, string filename, int 
 
         total+=end_t-start_t;
     }
-    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(int)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
 
     Tools::writeToTextFile("data/catalog.txt",filename+" "+to_string(max_bytesize));
     double end = omp_get_wtime();
@@ -234,9 +236,8 @@ void PIRClient::uploadData(string foldername){
             ifstream f(foldername+listFiles[i]);
             Error::error(f==NULL || f.is_open()==0,"Error opening vcf file");
 
-            std::vector<std::string>catalog(Constants::num_entries,"");
+            std::vector<std::string>catalog(pow(2,m_SHA_256->getHashSize()),"");
 
-            int max_bitsize=0;
             if (f.is_open()){
                 while(getline(f,line)){
                     if(line[0]!='#'){
@@ -245,16 +246,17 @@ void PIRClient::uploadData(string foldername){
                         uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);  //hash variant and get its position in the 'catalog'
                         catalog[pos]+=data_hash;
 
-                        if(catalog[pos].length()>max_bitsize) max_bitsize=catalog[pos].length();
+                        if(catalog[pos].length()>(Constants::padding_size*Constants::data_hash_size)) cout << "[IMPORTANT] We must increase the padding_size" << endl;
                     }
                 }
             }
+
             f.close();
             double end = omp_get_wtime();
             std::cout << "PIRClient: Preparing file " << listFiles[i] << " took " << end-start << " (s)\n";
 
             cout << "PIRClient: Sending file " << listFiles[i] << " to the server..." << endl;
-            sendData(catalog,listFiles[i],max_bitsize/8);
+            sendData(catalog,listFiles[i]);
         }catch (std::ios_base::failure &fail){
             Error::error(1,"Error reading vcf file");
         }

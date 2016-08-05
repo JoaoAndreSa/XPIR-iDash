@@ -29,7 +29,7 @@ void Socket::createSocket(){
 */
 void Socket::connectToServer(){
 	int check = connect(m_socketFd,(struct sockaddr *) &m_svrAdd, sizeof(m_svrAdd));
-    Error::error(check<0,"Cannot connect!");
+    Error::error(check<0,"Cannot connect! You probably forgot to start the server.");
     m_connFd = m_socketFd;
 }
 

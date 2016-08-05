@@ -20,6 +20,7 @@ namespace Constants{
     extern const bool pre_import;
     extern const uint64_t num_entries;
     extern const int data_hash_size;
+    extern const int padding_size;
 
     //server
     extern const int n_threads;

@@ -81,5 +81,5 @@ protected:
 	int symmetricEncrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric encrypt plaintext and return the result
 	int symmetricDecrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric decrypt ciphertext and return the result
 	std::string padData(string,int);
-	void sendData(std::vector<std::string>,string,int);			//encrypt and send every variant in vcf file to server
+	void sendData(std::vector<std::string>,string);										//encrypt and send every variant in vcf file to server
 };

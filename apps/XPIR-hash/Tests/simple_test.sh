@@ -11,8 +11,8 @@
 #####-------- SETUP --------#####
 cd ..
 cd Constants
-./changeParamsSHA 22
-./changeParamsPIR 3 256 27 27 27 0 LWE:97:1024:60
+./changeParamsSHA 13
+./changeParamsPIR 2 3 53 52 0 0 LWE:97:1024:60
 
 cd ..
 cd PIRClient
@@ -21,7 +21,8 @@ rm -rf data/*
 rm -rf output.txt
 
 #START SERVER
-lxterminal --working-directory=../PIRServer/ -e "./server"
+#lxterminal --working-directory=../PIRServer/ -e "./server"
+#sleep 2
 
 #START CLIENT
 ./client -f vcf/

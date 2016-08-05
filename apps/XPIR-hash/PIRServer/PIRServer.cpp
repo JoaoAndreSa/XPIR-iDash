@@ -56,7 +56,9 @@ void PIRServer::downloadData(){
             string filename(filename_c);
 
             m_max_bytesize=m_socket.readInt();
-            for(uint64_t i=0;i<Constants::num_entries;i++){
+
+            int num_entries=m_socket.readInt();
+            for(int i=0;i<num_entries;i++){
                 start_t = omp_get_wtime();
                 char* recvBuff=m_socket.readChar(m_max_bytesize);
                 end_t = omp_get_wtime();
@@ -68,7 +70,7 @@ void PIRServer::downloadData(){
                 delete[] recvBuff;
             }
             delete[] filename_c;
-            if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+m_max_bytesize*Constants::num_entries,total);
+            if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+m_max_bytesize*num_entries,total);
         }catch (std::ios_base::failure &fail){
             Error::error(1,"Error writing DB file");
         }
