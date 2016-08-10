@@ -16,6 +16,8 @@
 #include <math.h>
 
 #define NUM_TESTS 4 		//number of different entries tested (1,000 - 10,000 - 100,000)
+#define NUM_YES 6
+#define NUM_NO 2
 
 /**
     Print test correctness depending on the results in ../PIRClient/output.txt.
@@ -56,22 +58,20 @@ int main(int argc, char* argv[]){
 		if (f.is_open()){
 			for(int i=0;i<NUM_TESTS;i++){
 				std::cout << "#######-----NUM ENTRIES: " << pow(10,i+3) << "-----#######" << std::endl;
-				//for each varint setup we run 4 different queries (you can check simple_test.sh for more information)
-				getline (f,line); printCheck(line,0,"All query variation(s) found in file(s).");
-				getline(f,line); getTime(line);
-				getline(f,line);
 
-				getline (f,line); printCheck(line,1,"All query variation(s) found in file(s).");
-				getline(f,line); getTime(line);
-				getline(f,line);
+				int j;
+				for(j=0;j<NUM_YES;j++){
+					getline (f,line); printCheck(line,j,"All query variation(s) found in file(s).");
+					getline(f,line); getTime(line);
+					getline(f,line);
+				}
 
-				getline (f,line); printCheck(line,2,"At least one query variation not in file(s).");
-				getline(f,line); getTime(line);
-				getline(f,line);
-
-				getline (f,line); printCheck(line,3,"At least one query variation not in file(s).");
-				getline(f,line); getTime(line);
-				getline(f,line);
+				int k;
+				for(k=j;k<NUM_NO+j;k++){
+					getline (f,line); printCheck(line,2,"At least one query variation not in file(s).");
+					getline(f,line); getTime(line);
+					getline(f,line);
+				}
 
 				std::cout << std::endl;
 			}

@@ -115,11 +115,13 @@ void PIRServerSequential::job (){
        if(Constants::pre_import){
             if(Constants::pre_import){
                 try{
+                    for (auto const& x : (*m_imported_dbs)){
+                        delete x.second;
+                    }
+                    (*m_imported_dbs).clear();
                     std::vector<string> files = Tools::listFilesFolder("db/");
                     for(int i=0;i<files.size();i++){
-                        if((*m_imported_dbs).find(files[i]) == (*m_imported_dbs).end()){
-                            m_imported_dbs->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
-                        }
+                        m_imported_dbs->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
                     }
                     m_socket.sendInt(1);
                 }catch(int e){

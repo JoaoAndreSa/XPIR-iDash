@@ -20,12 +20,18 @@
 #include "PIRClient.hpp"
 
 //***PRIVATE METHODS***//
-void PIRClient::removeInfoVCF(){
-    int ret_val=std::system("exec rm -rf data/catalog.txt");
+void PIRClient::removeData(){
+    int ret_val=std::system("exec rm -rf data/*");
 
     if (ret_val==1){
         cout << "Error performing system call" << endl;
     }
+
+    delete m_SHA_256;
+    delete m_aes_256;
+
+    initAES256();
+    initSHA256();
 }
 
 int PIRClient::getInfoVCF(string filename){
@@ -203,11 +209,11 @@ void PIRClient::sendData(std::vector<std::string> catalog, string filename){
 
         total+=end_t-start_t;
     }
-    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(int)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
 
     Tools::writeToTextFile("data/catalog.txt",filename+" "+to_string(max_bytesize));
     double end = omp_get_wtime();
-    std::cout << "PIRClient: Sending encrypted file took " << end-start << " (s)\n\n";
+    std::cout << "PIRClient: Sending encrypted file took " << end-start << " (s)\n";
 }
 
 //***PUBLIC METHODS***//
@@ -221,8 +227,10 @@ void PIRClient::sendData(std::vector<std::string> catalog, string filename){
     @return num_entries number of entries written (number of variants in 'catalog')
 */
 void PIRClient::uploadData(string foldername){
-    removeInfoVCF();
+    removeData();
     std::vector<string> listFiles = Tools::listFilesFolder(foldername);
+
+    int num_attempts=0;
 
     m_socket.senduInt64(listFiles.size());
     for(uint64_t i=0;i<listFiles.size();i++){
@@ -238,6 +246,7 @@ void PIRClient::uploadData(string foldername){
 
             std::vector<std::string>catalog(pow(2,m_SHA_256->getHashSize()),"");
 
+            int redo=0;
             if (f.is_open()){
                 while(getline(f,line)){
                     if(line[0]!='#'){
@@ -246,24 +255,43 @@ void PIRClient::uploadData(string foldername){
                         uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);  //hash variant and get its position in the 'catalog'
                         catalog[pos]+=data_hash;
 
-                        if(catalog[pos].length()>(Constants::padding_size*Constants::data_hash_size)) cout << "[IMPORTANT] We must increase the padding_size" << endl;
+                        if(catalog[pos].length()>(Constants::padding_size*Constants::data_hash_size)){
+                            redo=1;
+                            break;
+                        }
                     }
                 }
             }
 
+            if(redo==1){
+                num_attempts++;
+                if(num_attempts==5){
+                    m_socket.sendInt(1);
+                    cout << "\n[IMPORTANT] You really need to increase the padding_size!" << endl;
+                    return;
+                }
+                cout << "\n[IMPORTANT] Re-uploading... You may need to increase the padding_size" << endl;
+                m_socket.sendInt(2);
+                i=-1;
+                removeData();
+                continue;
+            }
+
             f.close();
             double end = omp_get_wtime();
-            std::cout << "PIRClient: Preparing file " << listFiles[i] << " took " << end-start << " (s)\n";
+            std::cout << "\nPIRClient: Preparing file " << listFiles[i] << " took " << end-start << " (s)\n";
 
             cout << "PIRClient: Sending file " << listFiles[i] << " to the server..." << endl;
+            m_socket.sendInt(0);
             sendData(catalog,listFiles[i]);
         }catch (std::ios_base::failure &fail){
+            m_socket.sendInt(1);
             Error::error(1,"Error reading vcf file");
         }
     }
 
     cout << "PIRClient: Waiting for server to load files..." << endl;
-    if(m_socket.readInt()==1) cout << "PIRClient: All files loaded" << endl;
+    if(m_socket.readInt()==1) cout << "PIRClient: All files loaded" << endl << endl;
     else cout << "PIRClient: Error importing files at the server side" << endl;
 }
 

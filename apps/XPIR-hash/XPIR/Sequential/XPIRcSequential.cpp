@@ -187,6 +187,6 @@ void XPIRcSequential::cleanup(){
 	if(m_q_generator!=nullptr){delete m_q_generator;}
 	if(m_r_generator!=nullptr){delete m_r_generator;}
 	if(m_r_extractor!=nullptr){delete m_r_extractor;}
-	//if(m_imported_db!=nullptr){delete m_imported_db;}
+	if(m_imported_db!=nullptr && !Constants::pre_import){delete m_imported_db;}
 	upperCleanup();
 }

@@ -132,9 +132,9 @@ void PIRClientPipeline::joinAllThreads(){
 
     @return response_s stores the variant(s) we are looking for or "" otherwise
 */
-bool PIRClientPipeline::searchQuery(uint64_t num_entries,std::map<char,std::string> entry){
+bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
     imported_database_t garbage;
-    m_xpir= new XPIRcPipeline(Tools::readParamsPIR(num_entries),1,nullptr,garbage);
+    m_xpir= new XPIRcPipeline(Tools::readParamsPIR(Constants::num_entries),1,nullptr,garbage);
 
     //#-------SETUP PHASE--------#
     std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);

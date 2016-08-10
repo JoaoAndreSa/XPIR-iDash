@@ -114,7 +114,7 @@ int main(int argc, char* argv[]){
 		socket.sendInt(0);
 
 		c->setRTTStart();
-		bool resp=c->searchQuery(Constants::num_entries,entry);
+		bool resp=c->searchQuery(entry);
 		c->setRTTStop();
 
 		string output="";

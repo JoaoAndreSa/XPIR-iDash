@@ -13,7 +13,7 @@ namespace Constants{
 
     //client+server
     extern const char hostname[]{"127.0.0.1"};
-    extern const int port(12346);
+    extern const int port(12345);
     extern const double bandwith_limit(10000000);   //=0bps (means no bandwith limit)
     //extern const uint64_t bandwith_limit(0);
     extern const bool pipeline(true);              //=false (sequential execution);    =true (pipeline execution)
@@ -21,8 +21,7 @@ namespace Constants{
     extern const bool pre_import(true);
     extern const uint64_t num_entries(8192);
     extern const int data_hash_size(56);
-    extern const int padding_size(896);
-
+    extern const int padding_size(736);
 
     //server
     extern const int n_threads(10);

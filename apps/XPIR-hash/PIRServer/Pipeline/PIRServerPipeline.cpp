@@ -126,11 +126,10 @@ void PIRServerPipeline::job (){
        downloadData();
        if(Constants::pre_import){
             try{
+                (*m_imported_dbs).clear();
                 std::vector<string> files = Tools::listFilesFolder("db/");
                 for(int i=0;i<files.size();i++){
-                    if((*m_imported_dbs).find(files[i]) == (*m_imported_dbs).end()){
-                        m_imported_dbs->operator[](files[i]) = XPIRcPipeline::import_database(files[i]);
-                    }
+                    m_imported_dbs->operator[](files[i]) = XPIRcPipeline::import_database(files[i]);
                 }
                 m_socket.sendInt(1);
             }catch(int e){

@@ -120,8 +120,8 @@ char* PIRClientSequential::replyExtraction(XPIRcSequential::REPLY reply){
 
     @return response_s stores the variant(s) we are looking for or "" otherwise
 */
-bool PIRClientSequential::searchQuery(uint64_t num_entries,std::map<char,std::string> entry){
-    m_xpir= new XPIRcSequential(Tools::readParamsPIR(num_entries),1,nullptr);
+bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
+    m_xpir= new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),1,nullptr);
 
     //#-------SETUP PHASE--------#
     std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);

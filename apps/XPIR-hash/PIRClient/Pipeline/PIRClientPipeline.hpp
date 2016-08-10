@@ -37,7 +37,7 @@ public:
 	*/
 	PIRClientPipeline(Socket socket) : PIRClient(socket){}
 
-	bool searchQuery(uint64_t,std::map<char,std::string>);	//main function for the class -> query variant(s)
+	bool searchQuery(std::map<char,std::string>);	//main function for the class -> query variant(s)
 
 private:
 	void downloadWorker(int);                                        //donwload thread handler (reads reply)

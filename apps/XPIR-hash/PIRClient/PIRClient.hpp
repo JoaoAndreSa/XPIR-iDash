@@ -62,7 +62,7 @@ public:
 	void initAES256();
 	void initSHA256();
 
-	virtual bool searchQuery(uint64_t,std::map<char,std::string>)=0;	//kind of the main function of all PIRClient classes (children)
+	virtual bool searchQuery(std::map<char,std::string>)=0;	//kind of the main function of all PIRClient classes (children)
 
 	//Getters and Setters
 	void setRTTStart();
@@ -71,7 +71,7 @@ public:
 	double getRTTStop();
 
 protected:
-	void removeInfoVCF();
+	void removeData();
 	int getInfoVCF(string);
 	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
 	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);	//extract the exact plaintext (with aggregation the reply contains more than one element)
