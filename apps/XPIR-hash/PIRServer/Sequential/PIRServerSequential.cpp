@@ -63,11 +63,10 @@ vector<char*> PIRServerSequential::readVector_s(){
 
     @return
 */
-void PIRServerSequential::sendVector_s(vector<char*> vector_c){
+void PIRServerSequential::sendVector_s(vector<char*> vector_c,uint32_t length){
     double start_t,end_t,total=0;
 
     m_socket.senduInt64(static_cast<uint64_t>(vector_c.size()));
-    uint32_t length=m_xpir->getRsize(m_xpir->getD());
     m_socket.senduInt32(length);
 
     start_t = omp_get_wtime();
@@ -86,16 +85,17 @@ void PIRServerSequential::sendVector_s(vector<char*> vector_c){
 
     @return
 */
-void PIRServerSequential::sendReply(XPIRcSequential::REPLY reply){
+void PIRServerSequential::sendReply(XPIRcSequential::REPLY reply,uint32_t length){
     double start = omp_get_wtime();
 
     m_socket.senduInt64(reply.nbRepliesGenerated);
     m_socket.senduInt64(reply.maxFileSize);
-    sendVector_s(reply.reply);
+    sendVector_s(reply.reply,length);
 
     double end = omp_get_wtime();
-    cout << "PIRServer: Send reply took " << end-start << " seconds" << endl;
-    std::cout << "PIRServer: Reply sent" << "\n";
+
+    cout << "PIRServer: " << reply.nbRepliesGenerated << " reply elements (" << length*reply.nbRepliesGenerated << " bytes) sent in " << end-start << " seconds" << endl;
+    std::cout << "PIRServer: Reply sent" << "\n\n";
 }
 
 /**
@@ -112,49 +112,68 @@ void PIRServerSequential::job (){
     //read file from client
     if(m_socket.readInt()==1){
 	   downloadData();
-       if(Constants::pre_import){
-            if(Constants::pre_import){
-                try{
-                    for (auto const& x : (*m_imported_dbs)){
-                        delete x.second;
-                    }
-                    (*m_imported_dbs).clear();
-                    std::vector<string> files = Tools::listFilesFolder("db/");
-                    for(int i=0;i<files.size();i++){
-                        m_imported_dbs->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
-                    }
-                    m_socket.sendInt(1);
-                }catch(int e){
-                    cout << "Error while importing files" << e << '\n';
-                    m_socket.sendInt(0);
+
+        if(Constants::pre_import){
+            try{
+                for (auto const& x : (*m_imported_dbs)){
+                    delete x.second;
                 }
-           }
+                (*m_imported_dbs).clear();
+                std::vector<string> files = Tools::listFilesFolder("db/");
+                for(int i=0;i<files.size();i++){
+                    m_imported_dbs->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
+                }
+                m_socket.sendInt(1);
+            }catch(int e){
+                cout << "Error while importing files" << e << '\n';
+                m_socket.sendInt(0);
+            }
+       }else{
+            m_socket.sendInt(1);
        }
     }else{
         char* list = m_socket.readChar(m_socket.readInt());
         vector<string> list_clients =  Tools::tokenize(string(list),",");
 
-        DBDirectoryProcessor db(Constants::num_entries,list_clients[0]);
+        int num_variants = m_socket.readInt();
 
-        if(Constants::pre_import && m_imported_dbs->operator[](list_clients[0])!=nullptr){
-            m_xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db,m_imported_dbs->operator[](list_clients[0]),list_clients[0]);
+        std::vector<XPIRcSequential*> container;
+        std::vector<std::vector<char*>> container_queries;
+
+        for(int k=0;k<list_clients.size();k++){
+            DBDirectoryProcessor db(Constants::num_entries,list_clients[k]);
+            cout << endl;
+            for(int i=0;i<num_variants;i++){
+                XPIRcSequential* xpir;
+                if(Constants::pre_import && m_imported_dbs->operator[](list_clients[k])!=nullptr){
+                    xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db,m_imported_dbs->operator[](list_clients[k]));
+                }
+                else{
+                    xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db,XPIRcSequential::import_database(list_clients[k]));
+                }
+                container.push_back(xpir);
+
+                //#-------QUERY PHASE--------#
+                vector<char*> query=readVector_s();
+                container_queries.push_back(query);
+
+
+                if(k==list_clients.size()-1 && i==num_variants-1){
+                    for(int j=0;j<container.size();j++){
+                        //#-------REPLY PHASE--------#
+                        XPIRcSequential::REPLY reply=container[j]->replyGeneration(container_queries[j]);
+                        sendReply(reply,container[j]->getRsize(container[j]->getD()));
+
+                        //#-------CLEANUP PHASE--------#
+                        container[j]->cleanReplyBuffer();
+                        Tools::cleanupVector(reply.reply);
+                        container[j]->cleanup();
+                        delete container[j];
+                    }
+
+                }
+            }
         }
-        else{
-            m_xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db,nullptr,list_clients[0]);
-        }
-
-        //#-------QUERY PHASE--------#
-        vector<char*> query=readVector_s();
-
-        //#-------REPLY PHASE--------#
-        XPIRcSequential::REPLY reply=m_xpir->replyGeneration(query);
-        sendReply(reply);
-
-        //#-------CLEANUP PHASE--------#
-        m_xpir->cleanReplyBuffer();
-        Tools::cleanupVector(reply.reply);
-        m_xpir->cleanup();
-        delete m_xpir;
     }
     m_socket.closeSocket();
     std::cout << "THREAD [" << m_id << "] EXITED" << "\n";

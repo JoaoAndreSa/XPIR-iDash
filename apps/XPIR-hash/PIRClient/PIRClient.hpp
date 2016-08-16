@@ -72,7 +72,6 @@ public:
 
 protected:
 	void removeData();
-	int getInfoVCF(string);
 	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
 	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t);	//extract the exact plaintext (with aggregation the reply contains more than one element)
 	uint64_t considerPacking(uint64_t,uint64_t);											//returns the position relative to the aggregation/packing value

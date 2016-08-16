@@ -23,20 +23,20 @@
 
 //***PRIVATE METHODS***//
 //QUERY GENERATION & SEND QUERY
-void PIRClientSequential::sendQuery(std::vector<char*> query){
+void PIRClientSequential::sendQuery(std::vector<char*> query,XPIRcSequential* xpir){
     double start = omp_get_wtime(), start_t, end_t, total=0;
 
     uint64_t pos=0;
-    m_socket.senduInt64(m_xpir->getD());                //number of dimensions
+    m_socket.senduInt64(xpir->getD());                //number of dimensions
 
     uint64_t total_bytes=0;
-    for(uint64_t j=1 ; j<=m_xpir->getD(); j++){
-        uint32_t length=m_xpir->getQsize(j);            //query size (depends on the dimension)
+    for(uint64_t j=1 ; j<=xpir->getD(); j++){
+        uint32_t length=xpir->getQsize(j);            //query size (depends on the dimension)
         m_socket.senduInt32(length);
-        m_socket.senduInt(m_xpir->getN()[j-1]);         //number of elements in that dimension
+        m_socket.senduInt(xpir->getN()[j-1]);         //number of elements in that dimension
 
         start_t = omp_get_wtime();
-        for (uint64_t i=0; i<m_xpir->getN()[j-1]; i++){ //for each element in that dimension
+        for (uint64_t i=0; i<xpir->getN()[j-1]; i++){ //for each element in that dimension
             m_socket.sendXBytes(length,(void*)query[pos]);
             pos++;
 
@@ -46,10 +46,10 @@ void PIRClientSequential::sendQuery(std::vector<char*> query){
 
         total+=end_t-start_t;
     }
-     if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t) + m_xpir->getD()*(sizeof(uint32_t)+sizeof(int)) + total_bytes,total);
+     if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t) + xpir->getD()*(sizeof(uint32_t)+sizeof(int)) + total_bytes,total);
 
     double end = omp_get_wtime();
-    cout << "PIRClient: Send query took " << end-start << " seconds" << endl;
+    cout << "PIRClient: Send query (" << total_bytes << " bytes) took " << end-start << " seconds" << endl;
 }
 
 /**
@@ -59,9 +59,9 @@ void PIRClientSequential::sendQuery(std::vector<char*> query){
 
     @return query
 */
-std::vector<char*> PIRClientSequential::queryGeneration(uint64_t chosen_element){
+std::vector<char*> PIRClientSequential::queryGeneration(uint64_t chosen_element,XPIRcSequential* xpir){
     std::vector<char*> query;
-    query=m_xpir->queryGeneration(chosen_element);
+    query=xpir->queryGeneration(chosen_element);
 
     return query;
 }
@@ -104,9 +104,9 @@ XPIRcSequential::REPLY PIRClientSequential::readReply(){
 }
 
 //REPLY EXTRACTION
-char* PIRClientSequential::replyExtraction(XPIRcSequential::REPLY reply){
+char* PIRClientSequential::replyExtraction(XPIRcSequential::REPLY reply,XPIRcSequential* xpir){
 	char* response;
-    response=m_xpir->replyExtraction(reply);
+    response=xpir->replyExtraction(reply);
 
     return response;
 }
@@ -121,47 +121,64 @@ char* PIRClientSequential::replyExtraction(XPIRcSequential::REPLY reply){
     @return response_s stores the variant(s) we are looking for or "" otherwise
 */
 bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
-    m_xpir= new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),1,nullptr);
+    bool check=true;
 
     //#-------SETUP PHASE--------#
-    std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);
-    //TODO: Search multiple variants at the same time
-    int max_bytesize = getInfoVCF(Tools::tokenize(entry['f'],",")[0]);
-    uint64_t pack_pos=considerPacking(pos[0].first,m_xpir->getAlpha());
-
-    //#-------QUERY PHASE--------#
     m_socket.sendInt(entry['f'].length()+1);
     m_socket.sendChar_s(const_cast<char*>(entry['f'].c_str()),entry['f'].length()+1);
 
-    std::vector<char*> query=queryGeneration(pack_pos);
-    sendQuery(query);
-    std::cout << "PIRClient: Query sent" << "\n";
+    std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);
+    m_socket.sendInt(pos.size());
 
-    //#-------REPLY PHASE--------#
-    XPIRcSequential::REPLY reply = readReply();
-    char* response;
-    response=replyExtraction(reply);
+    int max_bytesize = Constants::padding_size*Constants::data_hash_size/8;
 
-    string response_s;
-    if(!Constants::encrypted){   //if PLAINTEXT
-        response_s = extractPlaintext(response,m_xpir->getAlpha(),reply.maxFileSize,pos[0].first);
-    }else{                       //if CIPHERTEXT
-        response_s = extractCiphertext(response,m_xpir->getAlpha(),reply.maxFileSize,pos[0].first);
-    }
+    std::vector<XPIRcSequential*> container;
+    for(int k=0;k<Tools::tokenize(entry['f'],",").size();k++){
+        for(int i=0;i<pos.size();i++){
+            XPIRcSequential* xpir= new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),1,nullptr);
+            container.push_back(xpir);
 
-    bool check=true;
-    for(int i=0;i<pos[0].second.size();i++){
-        if(m_SHA_256->search(pos[0].second[i],response_s)==false){
-            check=false;
+            //#-------SETUP PHASE--------#
+            uint64_t pack_pos=considerPacking(pos[i].first,xpir->getAlpha());
+
+            //#-------QUERY PHASE--------#
+            std::vector<char*> query=queryGeneration(pack_pos,xpir);
+            sendQuery(query,xpir);
+
+            container[i]->cleanQueryBuffer();
+            Tools::cleanupVector(query);
         }
     }
+    std::cout << "PIRClient: Query sent" << "\n\n";
 
-    //#-------CLEANUP PHASE--------#
-    m_xpir->cleanQueryBuffer();
-    Tools::cleanupVector(query);
-    delete[] response;
+    int k=0;
+    for(int i=0;i<container.size();i++,k++){
+        //#-------REPLY PHASE--------#
+        k=k%pos.size();
+        XPIRcSequential::REPLY reply = readReply();
+        char* response;
+        response=replyExtraction(reply,container[i]);
+
+        string response_s;
+        if(!Constants::encrypted){   //if PLAINTEXT
+            response_s = extractPlaintext(response,container[i]->getAlpha(),reply.maxFileSize,pos[k].first);
+        }else{                       //if CIPHERTEXT
+            response_s = extractCiphertext(response,container[i]->getAlpha(),reply.maxFileSize,pos[k].first);
+        }
+
+        for(int i=0;i<pos[0].second.size();i++){
+            if(m_SHA_256->search(pos[k].second[i],response_s)==false){
+                check=false;
+            }
+        }
+
+        //#-------CLEANUP PHASE--------#
+        delete[] response;
+        delete container[i];
+    }
+
+    delete m_AES_256;
     delete m_SHA_256;
-    delete m_xpir;
 
     return check;
 }

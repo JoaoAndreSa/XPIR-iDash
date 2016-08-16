@@ -34,18 +34,6 @@ void PIRClient::removeData(){
     initSHA256();
 }
 
-int PIRClient::getInfoVCF(string filename){
-    string f = Tools::readFromTextFile("data/catalog.txt");
-
-    std::vector<string> vcf = Tools::tokenize(f,"\n");
-    for(uint64_t i=0;i<vcf.size();i++){
-        std::vector<string> line = Tools::tokenize(vcf[i]," ");
-        if(line[0]==filename){
-            return atoi(line[1].c_str());
-        }
-    }
-}
-
 /**
     Extract the exact ciphertext (with aggregation the reply contains more than one element).
 

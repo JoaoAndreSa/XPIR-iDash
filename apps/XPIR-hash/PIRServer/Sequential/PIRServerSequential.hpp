@@ -24,7 +24,6 @@
 #include "../../XPIR/Sequential/XPIRcSequential.hpp"
 
 class PIRServerSequential: public PIRServer {
-	XPIRcSequential* m_xpir;
   std::map<string,imported_database*>* m_imported_dbs;
 
 public:
@@ -43,6 +42,6 @@ public:
 
 private:
 	vector<char*> readVector_s();				     //read a char* vector from socket (in other words read query array)
-	void sendVector_s(vector<char*>);	       //send a char* vector through socket (in other words send reply data)
-	void sendReply(XPIRcSequential::REPLY);	 //sends all reply parameters: data, nbRepliesGenerated, maxFileSize)
+	void sendVector_s(vector<char*>,uint32_t);	       //send a char* vector through socket (in other words send reply data)
+	void sendReply(XPIRcSequential::REPLY,uint32_t);	 //sends all reply parameters: data, nbRepliesGenerated, maxFileSize)
 };
