@@ -58,6 +58,7 @@ public:
 		if(type==0){ //if SERVER
 			m_q_generator=nullptr;
 			m_r_extractor=nullptr;
+			m_replyWriter=nullptr;
 
 			std::vector<std::string> fields;
     		boost::split(fields,m_params.crypto_params,boost::is_any_of(":"));
@@ -66,7 +67,7 @@ public:
     		m_r_generator->setCryptoMethod(m_crypto);
     		m_r_generator->setPirParams(m_params);
 
-    		if(Constants::pre_import) m_imported_db=imported_db;
+    		m_imported_db=imported_db;
 		}else{		//if CLIENT
 			m_r_generator=nullptr;
 

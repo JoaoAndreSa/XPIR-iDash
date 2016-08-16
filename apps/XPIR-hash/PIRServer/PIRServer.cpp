@@ -55,9 +55,11 @@ void PIRServer::downloadData(){
             string filename(filename_c);
 
             int error=m_socket.readInt();
-            Error::error(error==1 || len==0,"Error uploading vcf files");
-
-            if(error==2){
+            if(error==1){
+                removeDB();
+                Error::error(error==1 || len==0,"Error uploading vcf files");
+            }
+            else if(error==2){
                 i=-1;
                 removeDB();
                 delete[] filename_c;

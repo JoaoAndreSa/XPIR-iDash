@@ -35,10 +35,9 @@ std::map<char,std::string> parseEntry(int argc,char* argv[]){
 			std::string element{argv[i]};
 			std::string elemenmatch{argv[i+1]};
 
-			if(elemenmatch=="."){
-				elemenmatch=" ";
+			if(element.at(1)!='f'){
+				std::replace(elemenmatch.begin(),elemenmatch.end(),'.',' ');
 			}
-
 			entry.insert(std::make_pair(element.at(1),elemenmatch));
 		}
 	}
@@ -78,7 +77,7 @@ bool entryError(int argc,std::map<char,std::string> entry){
 			if(isdigit(entry['c'][i])==0 && entry['c'][i]!=',') return true;
 		}
 		for(int i=0;i<entry['p'].length();i++){
-			if(isdigit(entry['p'][i])==0 && entry['c'][i]!=',') return true;
+			if(isdigit(entry['p'][i])==0 && entry['p'][i]!=',') return true;
 		}
 	}
 
@@ -91,7 +90,8 @@ int main(int argc, char* argv[]){
 	//               			./client -c 1 -p 160929435 -r G -a A -f RCV000015246_10000.vcf -> Query variation in file;
 	//				 			./client -c 2 -p 161276680 -r A -a T -f RCV000015246_10000.vcf -> Query variation not in file;
 	std::map<char,std::string> entry = parseEntry(argc,argv);
-	Error::error(entryError(argc,entry),"Input Error\nUploading: ./client [-f folderPath]\nQuerying: ./client [-c chromosome1,2,...] [-p startPosition1,2,...] [-r refAllele1,2,...] [-a altAllele1,2,...] [-f vcfFile1,2,...]\n");
+
+	Error::error(entryError(argc,entry),"Input Error\nUploading: ./client [-f folderPath]\nQuerying:  ./client [-c chromosome1,2,...] [-p startPosition1,2,...] [-r refAllele1,2,...] [-a altAllele1,2,...] [-f vcfFile1,2,...]\n");
 
 	//Start server connection
 	Error::error((Constants::port > 65535) || (Constants::port < 2000),"Please choose a port number between 2000 - 65535");
@@ -134,7 +134,7 @@ int main(int argc, char* argv[]){
 	   	output+=time;
 	   	Tools::writeToTextFile("output.txt",output);
 	}
-	cout << endl << endl << endl;
+	cout << endl << endl << endl << endl << endl;
 
 	return 0;
 }

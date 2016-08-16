@@ -26,7 +26,6 @@
 class PIRServerPipeline: public PIRServer {
 
 private:
-	XPIRcPipeline* m_xpir;
   std::map<string,imported_database_t>* m_imported_dbs;
 
 public:
@@ -44,6 +43,6 @@ public:
 	void job();             //what the thread executes
 
 private:
-	void uploadWorker();   //send PIR's result, asynchronously
-	void downloadWorker(); //receive queries n messages with n = nbr of files.
+	void uploadWorker(XPIRcPipeline*);   //send PIR's result, asynchronously
+	void downloadWorker(XPIRcPipeline*); //receive queries n messages with n = nbr of files.
 };

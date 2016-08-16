@@ -144,9 +144,9 @@ bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
 
     string response_s;
     if(!Constants::encrypted){   //if PLAINTEXT
-        response_s = extractPlaintext(response,m_xpir->getAlpha(),reply.maxFileSize,pos[0].first,pos[0].second);
+        response_s = extractPlaintext(response,m_xpir->getAlpha(),reply.maxFileSize,pos[0].first);
     }else{                       //if CIPHERTEXT
-        response_s = extractCiphertext(response,m_xpir->getAlpha(),reply.maxFileSize,pos[0].first,pos[0].second);
+        response_s = extractCiphertext(response,m_xpir->getAlpha(),reply.maxFileSize,pos[0].first);
     }
 
     bool check=true;

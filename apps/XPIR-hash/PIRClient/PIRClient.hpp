@@ -39,7 +39,7 @@ protected:
 	Socket m_socket;
 
 	//Encryption and hashing variables
-	AES_ctr_256* m_aes_256;
+	AES_ctr_256* m_AES_256;
 	SHA_256* m_SHA_256;
 
 	//Time variables
@@ -73,8 +73,8 @@ public:
 protected:
 	void removeData();
 	int getInfoVCF(string);
-	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
-	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);	//extract the exact plaintext (with aggregation the reply contains more than one element)
+	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
+	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t);	//extract the exact plaintext (with aggregation the reply contains more than one element)
 	uint64_t considerPacking(uint64_t,uint64_t);											//returns the position relative to the aggregation/packing value
 	std::vector<std::pair<uint64_t,std::vector<std::string>>> listQueryPos(std::map<char,std::string>);
 

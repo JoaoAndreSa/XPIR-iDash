@@ -16,8 +16,8 @@
 #include <math.h>
 
 #define NUM_TESTS 4 		//number of different entries tested (1,000 - 10,000 - 100,000)
-#define NUM_YES 6
-#define NUM_NO 2
+#define NUM_YES 10
+#define NUM_NO 5
 
 /**
     Print test correctness depending on the results in ../PIRClient/output.txt.
@@ -67,8 +67,8 @@ int main(int argc, char* argv[]){
 				}
 
 				int k;
-				for(k=j;k<NUM_NO+j;k++){
-					getline (f,line); printCheck(line,2,"At least one query variation not in file(s).");
+				for(k=NUM_YES;k<NUM_NO+NUM_YES;k++){
+					getline (f,line); printCheck(line,k,"At least one query variation not in file(s).");
 					getline(f,line); getTime(line);
 					getline(f,line);
 				}
