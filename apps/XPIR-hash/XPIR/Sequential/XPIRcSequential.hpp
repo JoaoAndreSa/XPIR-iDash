@@ -47,7 +47,7 @@ public:
 
     	@return
 	*/
-	XPIRcSequential(PIRParameters params, int type, DBHandler* db, imported_database*  imported_db=nullptr, string filename="") : XPIRc(params,type,db) {
+	XPIRcSequential(PIRParameters params, int type, DBHandler* db, imported_database*  imported_db=nullptr) : XPIRc(params,type,db) {
 
 		if(m_type==0){ 	//if SERVER
 			m_q_generator=nullptr;
@@ -55,11 +55,7 @@ public:
 
 			m_r_generator = new PIRReplyGenerator(m_params,*m_crypto,m_db);
 
-			if(Constants::pre_import){
-				m_imported_db = imported_db;
-			}else{
-				m_imported_db = import_database(filename);
-			}
+			m_imported_db = imported_db;
 		}else{ 			//if CLIENT
 			m_r_generator=nullptr;
 			m_imported_db=nullptr;

@@ -72,7 +72,6 @@ public:
 	uint32_t getQsize(uint64_t);			//get query element size in bytes
 	uint32_t getRsize(uint64_t);			//get reply element size in bytes
 	uint32_t getAbsorptionSize(uint64_t); 	//get absorption size in bytes
-	virtual void cleanup()=0;
 
 protected:
 	void upperCleanup();	  				//clean 'tools'

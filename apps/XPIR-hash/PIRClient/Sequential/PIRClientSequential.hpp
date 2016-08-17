@@ -24,9 +24,6 @@
 #include "../PIRClient.hpp"
 
 class PIRClientSequential: public PIRClient {
-private:
-	XPIRcSequential* m_xpir;
-
 public:
 	/**
     	Constructor for PIRClientSequential object.
@@ -37,12 +34,12 @@ public:
 	*/
 	PIRClientSequential(Socket socket) : PIRClient(socket){}
 
-	bool searchQuery(uint64_t,std::map<char,std::string>);	//main function for the class -> query variant(s)
+	bool searchQuery(std::map<char,std::string>);	//main function for the class -> query variant(s)
 
 private:
 	//QUERY GENERATION & SEND QUERY
-	void sendQuery(std::vector<char*>);
-	std::vector<char*> queryGeneration(uint64_t);					//generate and return query
+	void sendQuery(std::vector<char*>,XPIRcSequential*);
+	std::vector<char*> queryGeneration(uint64_t,XPIRcSequential*);					//generate and return query
 
 	//READ REPLY
 	std::vector<char*> readReplyData();
@@ -50,5 +47,5 @@ private:
 																	  elements generated and the max file size)*/
 
 	//REPLY EXTRACTION
-	char* replyExtraction(XPIRcSequential::REPLY);
+	char* replyExtraction(XPIRcSequential::REPLY,XPIRcSequential*);
 };

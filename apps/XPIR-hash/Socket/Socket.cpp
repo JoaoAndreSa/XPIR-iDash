@@ -29,7 +29,7 @@ void Socket::createSocket(){
 */
 void Socket::connectToServer(){
 	int check = connect(m_socketFd,(struct sockaddr *) &m_svrAdd, sizeof(m_svrAdd));
-    Error::error(check<0,"Cannot connect!");
+    Error::error(check<0,"Cannot connect! You probably forgot to start the server.");
     m_connFd = m_socketFd;
 }
 
@@ -40,9 +40,13 @@ void Socket::connectToServer(){
     @return
 */
 void Socket::getServerAddress(){
+    struct hostent *server = gethostbyname(Constants::hostname);
+    Error::error(server==NULL,"Host does not exist");;
+
 	bzero((char *)&m_svrAdd, sizeof(m_svrAdd));
     m_svrAdd.sin_family = AF_INET;
-    m_svrAdd.sin_addr.s_addr = inet_addr(Constants::hostname);
+
+    bcopy((char *)server->h_addr, (char *)&m_svrAdd.sin_addr.s_addr, server->h_length);
     m_svrAdd.sin_port = htons(Constants::port);
 }
 

@@ -201,9 +201,10 @@ char* PIRReplyWriter::extractResponse(uint64_t chosenElement, uint64_t maxFileSi
   uint64_t firstElement = chosenElement - chosenElement % alpha;
   uint64_t lastElement = firstElement + alpha - 1;
   uint64_t bytestoskip = 0;
+  uint64_t pos_to_write = 0;
 
   char* tmp;
-  char* response = new char[chunkSize+1];
+  char* response = new char[maxFileSize+1];
 
   for (uint64_t i=firstElement; i<=lastElement; i++){
     if(i == chosenElement){
@@ -214,6 +215,7 @@ char* PIRReplyWriter::extractResponse(uint64_t chosenElement, uint64_t maxFileSi
       }
 
       uint64_t leftChars = maxFileSize;
+      
       while(leftChars!=0){
         uint64_t writtenchars = 0;
         uint64_t current_bytesskipped = 0; 
@@ -221,14 +223,16 @@ char* PIRReplyWriter::extractResponse(uint64_t chosenElement, uint64_t maxFileSi
         tmp = clearChunks.front();
 
         if(bytestoskip!=0){
-          memcpy(response, tmp+bytestoskip, min(leftChars, chunkSize - bytestoskip));
+          memcpy(response+pos_to_write, tmp+bytestoskip, min(leftChars, chunkSize - bytestoskip));
           writtenchars = min(leftChars, chunkSize - bytestoskip);
+          pos_to_write+=writtenchars;
           bytestoskip = chunkSize - (writtenchars+bytestoskip);
           if(bytestoskip<0) std::cout << "PIRReplyWriter: Skipping a negative amount of bytes THIS SHOULD NOT HAPPEN" << std::endl;
         }
         else{
-          memcpy(response, tmp, min(leftChars, chunkSize));
+          memcpy(response+pos_to_write, tmp, min(leftChars, chunkSize));
           writtenchars = min(leftChars, chunkSize);
+          pos_to_write+=writtenchars;
           if(writtenchars<chunkSize) bytestoskip = writtenchars;
         }
 

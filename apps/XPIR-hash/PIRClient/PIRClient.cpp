@@ -20,25 +20,20 @@
 #include "PIRClient.hpp"
 
 //***PRIVATE METHODS***//
-void PIRClient::removeInfoVCF(){
-    int ret_val=std::system("exec rm -rf data/catalog.txt");
+void PIRClient::removeData(){
+    int ret_val=std::system("exec rm -rf data/*");
 
     if (ret_val==1){
         cout << "Error performing system call" << endl;
     }
+
+    delete m_SHA_256;
+    delete m_AES_256;
+
+    initAES256();
+    initSHA256();
 }
 
-int PIRClient::getInfoVCF(string filename){
-    string f = Tools::readFromTextFile("data/catalog.txt");
-
-    std::vector<string> vcf = Tools::tokenize(f,"\n");
-    for(uint64_t i=0;i<vcf.size();i++){
-        std::vector<string> line = Tools::tokenize(vcf[i]," ");
-        if(line[0]==filename){
-            return atoi(line[1].c_str());
-        }
-    }
-}
 /**
     Extract the exact ciphertext (with aggregation the reply contains more than one element).
 
@@ -48,7 +43,7 @@ int PIRClient::getInfoVCF(string filename){
 
     @return response_s the specific element we are looking for or if it does not exist return ""
 */
-std::string PIRClient::extractCiphertext(char* response, uint64_t alpha, uint64_t aggregated_entrySize, uint64_t pos, std::vector<string> query){
+std::string PIRClient::extractCiphertext(char* response, uint64_t alpha, uint64_t aggregated_entrySize, uint64_t pos){
     unsigned char* ciphertext = new unsigned char[aggregated_entrySize];
     memcpy((char *)ciphertext,response+aggregated_entrySize*(pos%alpha),aggregated_entrySize);
 
@@ -72,7 +67,7 @@ std::string PIRClient::extractCiphertext(char* response, uint64_t alpha, uint64_
 
     @return response_s the specific element we are looking for or if it does not exist return ""
 */
-std::string PIRClient::extractPlaintext(char* response, uint64_t alpha, uint64_t aggregated_entrySize, uint64_t pos,std::vector<string> query){
+std::string PIRClient::extractPlaintext(char* response, uint64_t alpha, uint64_t aggregated_entrySize, uint64_t pos){
     return m_SHA_256->uchar_to_binary(reinterpret_cast<unsigned char*>(response+aggregated_entrySize*(pos%alpha)),aggregated_entrySize,aggregated_entrySize*8);
 }
 
@@ -139,7 +134,7 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
     @return ciphertexlen length of the ciphertext (needed for write())
 */
 int PIRClient::symmetricEncrypt(unsigned char* ciphertext, unsigned char* plaintext, uint64_t pos, int size){
-    int ciphertexlen=m_aes_256->encrypt(plaintext,size,ciphertext,pos);
+    int ciphertexlen=m_AES_256->encrypt(plaintext,size,ciphertext,pos);
     return ciphertexlen;
 }
 
@@ -152,7 +147,7 @@ int PIRClient::symmetricEncrypt(unsigned char* ciphertext, unsigned char* plaint
     @return decryptedtextlen length of the decrypted text (not needed for anything really, but just in case...)
 */
 int PIRClient::symmetricDecrypt(unsigned char* plaintext, unsigned char* ciphertext, uint64_t pos, int size){
-    int plaintexlen = m_aes_256->decrypt(ciphertext,size,plaintext,pos);
+    int plaintexlen = m_AES_256->decrypt(ciphertext,size,plaintext,pos);
     return plaintexlen;
 }
 
@@ -174,10 +169,12 @@ std::string PIRClient::padData(string input, int max_bits){
 
     @return
 */
-void PIRClient::sendData(std::vector<std::string> catalog, string filename, int max_bytesize){
+void PIRClient::sendData(std::vector<std::string> catalog, string filename){
     double start = omp_get_wtime(),total = 0;
 
+    int max_bytesize=Constants::padding_size*Constants::data_hash_size/8;
     m_socket.sendInt(max_bytesize);
+    m_socket.sendInt(catalog.size());
     for(uint64_t i=0; i<catalog.size();i++){
         unsigned char* entry;
         entry=m_SHA_256->binary_to_uchar(padData(catalog[i],max_bytesize*8));
@@ -201,11 +198,9 @@ void PIRClient::sendData(std::vector<std::string> catalog, string filename, int 
 
         total+=end_t-start_t;
     }
-    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
-
-    Tools::writeToTextFile("data/catalog.txt",filename+" "+to_string(max_bytesize));
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
     double end = omp_get_wtime();
-    std::cout << "PIRClient: Sending encrypted file took " << end-start << " (s)\n\n";
+    std::cout << "PIRClient: Sending encrypted file took " << end-start << " (s)\n";
 }
 
 //***PUBLIC METHODS***//
@@ -219,8 +214,10 @@ void PIRClient::sendData(std::vector<std::string> catalog, string filename, int 
     @return num_entries number of entries written (number of variants in 'catalog')
 */
 void PIRClient::uploadData(string foldername){
-    removeInfoVCF();
+    removeData();
     std::vector<string> listFiles = Tools::listFilesFolder(foldername);
+
+    int num_attempts=0;
 
     m_socket.senduInt64(listFiles.size());
     for(uint64_t i=0;i<listFiles.size();i++){
@@ -234,9 +231,10 @@ void PIRClient::uploadData(string foldername){
             ifstream f(foldername+listFiles[i]);
             Error::error(f==NULL || f.is_open()==0,"Error opening vcf file");
 
-            std::vector<std::string>catalog(Constants::num_entries,"");
+            std::vector<std::string>catalog(pow(2,m_SHA_256->getHashSize()),"");
 
-            int max_bitsize=0;
+            int redo=0;
+            //int max_collisions=0;
             if (f.is_open()){
                 while(getline(f,line)){
                     if(line[0]!='#'){
@@ -245,23 +243,46 @@ void PIRClient::uploadData(string foldername){
                         uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);  //hash variant and get its position in the 'catalog'
                         catalog[pos]+=data_hash;
 
-                        if(catalog[pos].length()>max_bitsize) max_bitsize=catalog[pos].length();
+                        if(catalog[pos].length()>(Constants::padding_size*Constants::data_hash_size)){
+                            redo=1;
+                            break;
+                        }
+
+                        //if(catalog[pos].length()>max_collisions) max_collisions=catalog[pos].length();
                     }
                 }
             }
+            //cout << max_collisions/Constants::data_hash_size << endl;
+
+            if(redo==1){
+                num_attempts++;
+                if(num_attempts==5){
+                    m_socket.sendInt(1);
+                    cout << "\n[IMPORTANT] You really need to increase the padding_size!" << endl;
+                    return;
+                }
+                cout << "\n[IMPORTANT] Re-uploading... You may need to increase the padding_size" << endl;
+                m_socket.sendInt(2);
+                i=-1;
+                removeData();
+                continue;
+            }
+
             f.close();
             double end = omp_get_wtime();
-            std::cout << "PIRClient: Preparing file " << listFiles[i] << " took " << end-start << " (s)\n";
+            std::cout << "\nPIRClient: Preparing file " << listFiles[i] << " took " << end-start << " (s)\n";
 
             cout << "PIRClient: Sending file " << listFiles[i] << " to the server..." << endl;
-            sendData(catalog,listFiles[i],max_bitsize/8);
+            m_socket.sendInt(0);
+            sendData(catalog,listFiles[i]);
         }catch (std::ios_base::failure &fail){
+            m_socket.sendInt(1);
             Error::error(1,"Error reading vcf file");
         }
     }
 
     cout << "PIRClient: Waiting for server to load files..." << endl;
-    if(m_socket.readInt()==1) cout << "PIRClient: All files loaded" << endl;
+    if(m_socket.readInt()==1) cout << "PIRClient: All files loaded" << endl << endl;
     else cout << "PIRClient: Error importing files at the server side" << endl;
 }
 
@@ -270,7 +291,7 @@ void PIRClient::initSHA256(){
 }
 
 void PIRClient::initAES256(){
-    m_aes_256= new AES_ctr_256();                      //=0 CBC mode, =1 CTR mode
+    m_AES_256= new AES_ctr_256();                      //=0 CBC mode, =1 CTR mode
 }
 
 void PIRClient::setRTTStart(){

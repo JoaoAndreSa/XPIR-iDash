@@ -39,7 +39,7 @@ protected:
 	Socket m_socket;
 
 	//Encryption and hashing variables
-	AES_ctr_256* m_aes_256;
+	AES_ctr_256* m_AES_256;
 	SHA_256* m_SHA_256;
 
 	//Time variables
@@ -62,7 +62,7 @@ public:
 	void initAES256();
 	void initSHA256();
 
-	virtual bool searchQuery(uint64_t,std::map<char,std::string>)=0;	//kind of the main function of all PIRClient classes (children)
+	virtual bool searchQuery(std::map<char,std::string>)=0;	//kind of the main function of all PIRClient classes (children)
 
 	//Getters and Setters
 	void setRTTStart();
@@ -71,15 +71,14 @@ public:
 	double getRTTStop();
 
 protected:
-	void removeInfoVCF();
-	int getInfoVCF(string);
-	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
-	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t, std::vector<string>);	//extract the exact plaintext (with aggregation the reply contains more than one element)
+	void removeData();
+	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
+	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t);	//extract the exact plaintext (with aggregation the reply contains more than one element)
 	uint64_t considerPacking(uint64_t,uint64_t);											//returns the position relative to the aggregation/packing value
 	std::vector<std::pair<uint64_t,std::vector<std::string>>> listQueryPos(std::map<char,std::string>);
 
 	int symmetricEncrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric encrypt plaintext and return the result
 	int symmetricDecrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric decrypt ciphertext and return the result
 	std::string padData(string,int);
-	void sendData(std::vector<std::string>,string,int);			//encrypt and send every variant in vcf file to server
+	void sendData(std::vector<std::string>,string);										//encrypt and send every variant in vcf file to server
 };

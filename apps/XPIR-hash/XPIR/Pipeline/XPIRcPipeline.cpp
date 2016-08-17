@@ -76,5 +76,6 @@ void XPIRcPipeline::cleanup(){
 	if(m_q_generator!=nullptr){delete m_q_generator;}
 	if(m_r_generator!=nullptr){delete m_r_generator;}
 	if(m_r_extractor!=nullptr){delete m_r_extractor;}
+	if(m_replyWriter!=nullptr){delete m_replyWriter;}
 	upperCleanup();
 }

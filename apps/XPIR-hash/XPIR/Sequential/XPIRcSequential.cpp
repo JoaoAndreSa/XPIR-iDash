@@ -84,7 +84,7 @@ vector<char*> XPIRcSequential::queryGeneration(uint64_t chosen_element){
 	while (m_q_generator->popQuery(&query_element)){
 		query.push_back(query_element);
 	}
-	cout << "PIRClient: Query generated" << endl;
+	cout << "PIRClient: Query generated" << endl << endl;
 
 	return query;
 }
@@ -104,7 +104,7 @@ XPIRcSequential::REPLY XPIRcSequential::replyGeneration(vector<char*> query){
 	}
 
 	// Once the query is known and the database imported launch the reply generation
-	cout << "PIRServer: Generating reply ..." << endl;
+	cout << "\nPIRServer: Generating reply ..." << endl;
 	double start = omp_get_wtime();
 	m_r_generator->generateReply(m_imported_db);
 	double end = omp_get_wtime();
@@ -122,8 +122,8 @@ XPIRcSequential::REPLY XPIRcSequential::replyGeneration(vector<char*> query){
 		reply.reply.push_back(reply_element);
 	}
 
-	reply.nbRepliesGenerated=m_r_generator->getnbRepliesGenerated();  
-	cout << "PIRServer: "<< reply.nbRepliesGenerated << " Replies generated " << endl;	
+	reply.nbRepliesGenerated=m_r_generator->getnbRepliesGenerated();
+	cout << "PIRServer: "<< reply.nbRepliesGenerated << " Replies generated " << endl;
 
 	reply.maxFileSize=m_db->getmaxFileBytesize();
 	return reply;
@@ -143,7 +143,7 @@ char* XPIRcSequential::replyExtraction(XPIRcSequential::REPLY reply){
 
 	cout << "PIRClient: Extracting reply ..." << endl;
 	m_r_extractor->extractReply(reply.maxFileSize);
-	cout << "PIRClient: Reply extracted" << endl;
+	cout << "PIRClient: Reply extracted" << endl << endl;
 
 	// In a real application instead of writing to a buffer we could write to an output file
 	char *outptr, *result, *tmp;
@@ -187,6 +187,6 @@ void XPIRcSequential::cleanup(){
 	if(m_q_generator!=nullptr){delete m_q_generator;}
 	if(m_r_generator!=nullptr){delete m_r_generator;}
 	if(m_r_extractor!=nullptr){delete m_r_extractor;}
-	//if(m_imported_db!=nullptr){delete m_imported_db;}
+	if(m_imported_db!=nullptr && !Constants::pre_import){delete m_imported_db;}
 	upperCleanup();
 }

@@ -19,15 +19,9 @@ int main(int argc, char* argv[]){
 		std::vector<string> files = Tools::listFilesFolder("db/");
 		for(int i=0;i<files.size();i++){
 			if(Constants::pipeline){	//if PIPELINE execution
-				if((*imported_dbs_p).find(files[i]) == (*imported_dbs_p).end()){
-					imported_database_t a = XPIRcPipeline::import_database(files[i]);
-					imported_dbs_p->operator[](files[i]) = a;
-					//cout << "AAAA" << a.beforeImportElementBytesize << endl;
-				}
+				imported_dbs_p->operator[](files[i]) = XPIRcPipeline::import_database(files[i]);
 			}else{						//if SEQUENTIAL execution
-				if((*imported_dbs_s).find(files[i]) == (*imported_dbs_s).end()){
-					imported_dbs_s->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
-				}
+				imported_dbs_s->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
 			}
 		}
 	}else{

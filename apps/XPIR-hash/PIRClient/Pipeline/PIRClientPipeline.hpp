@@ -24,9 +24,6 @@
 #include "../PIRClient.hpp"
 
 class PIRClientPipeline: public PIRClient {
-private:
-	XPIRcPipeline* m_xpir;
-
 public:
 	/**
     	Constructor for PIRClientPipeline object.
@@ -37,13 +34,13 @@ public:
 	*/
 	PIRClientPipeline(Socket socket) : PIRClient(socket){}
 
-	bool searchQuery(uint64_t,std::map<char,std::string>);	//main function for the class -> query variant(s)
+	bool searchQuery(std::map<char,std::string>);	//main function for the class -> query variant(s)
 
 private:
-	void downloadWorker(int);                                        //donwload thread handler (reads reply)
-	void startProcessResult(int);                                    //initiate reply extraction (reading and exctraction are do)
-	void uploadWorker();
-	void startProcessQuery(uint64_t);
+	void downloadWorker(int,XPIRcPipeline*);                                        //donwload thread handler (reads reply)
+	void startProcessResult(int,XPIRcPipeline*);                                    //initiate reply extraction (reading and exctraction are do)
+	void uploadWorker(XPIRcPipeline*);
+	void startProcessQuery(uint64_t,XPIRcPipeline*);
 
-	void joinAllThreads();
+	void joinAllThreads(vector<XPIRcPipeline*>);
 };
