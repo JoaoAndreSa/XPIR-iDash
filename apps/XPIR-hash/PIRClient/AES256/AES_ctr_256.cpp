@@ -90,6 +90,23 @@ int AES_ctr_256::decrypt(unsigned char *ciphertext, int ciphertexlen, unsigned c
 	return plaintexlen;
 }
 
+void AES_ctr_256::setIV(string filename){
+	unsigned char iv[8];
+
+	if(std::ifstream("data/nonces/"+filename+".bin")){
+    	Tools::readFromBinFile("data/nonces/"+filename+".bin",reinterpret_cast<char*>(iv),sizeof iv);
+    }else{
+    	if(!RAND_bytes(iv,8)){ std::cout << "Random Generator Error" << "\n"; exit(1);}
+    	Tools::writeToBinFile("data/nonces/"+filename+".bin",reinterpret_cast<char*>(iv),sizeof iv);
+    }
+
+	//Initialise counter in 'iv' to 0
+	memset(m_iv+8,0,8);
+
+	//Copy IV into 'iv'
+	memcpy(m_iv,iv,8);
+}
+
 void AES_ctr_256::test(unsigned char * plaintext, int plaintexlen, unsigned char *ciphertext, unsigned char *decryptedtext){
 	/* Encrypt the plaintext */
 	int ciphertexlen = encrypt(plaintext,strlen((char *)plaintext),ciphertext,1);

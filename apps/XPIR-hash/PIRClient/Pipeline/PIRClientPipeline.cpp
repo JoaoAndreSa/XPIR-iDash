@@ -72,9 +72,13 @@ void PIRClientPipeline::startProcessResult(int maxFileSize,XPIRcPipeline* xpir){
     @param
     @return
 */
-void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir){
+void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir,char* request){
 	double start = omp_get_wtime(),total=0;
 	char *tmp;
+
+  //uint64_t request_size = xpir->getCrypto()->getCiphertextBytesize();
+  //m_socket.senduInt64(xpir->getCrypto()->getCiphertextBytesize());
+  //m_socket.sendChar_s(request,);
 
   uint64_t total_bytes=0;
 	for (unsigned int j=1; j<=xpir->getD(); j++){
@@ -103,10 +107,10 @@ void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir){
     @param
     @return
 */
-void PIRClientPipeline::startProcessQuery(uint64_t pack_pos,XPIRcPipeline* xpir){
+void PIRClientPipeline::startProcessQuery(uint64_t pack_pos,XPIRcPipeline* xpir,char* request){
 	xpir->getQGenerator()->setChosenElement(pack_pos);
   xpir->getQGenerator()->startGenerateQuery();
-  uploadWorker(xpir);
+  uploadWorker(xpir,request);
 }
 
 /**
@@ -143,9 +147,12 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
     m_socket.sendInt(pos.size());
 
     int max_bytesize = Constants::padding_size*Constants::data_hash_size/8;
+    int data_hash_size=ceil(Constants::data_hash_size/8);
 
     std::vector<XPIRcPipeline*> container;
-    for(int k=0;k<Tools::tokenize(entry['f'],",").size();k++){
+    std::vector<string> files = Tools::tokenize(entry['f'],",");
+    for(int k=0;k<files.size();k++){
+        m_AES_256->setIV(files[k]);
         for(int i=0;i<pos.size();i++){
             imported_database_t garbage;
             XPIRcPipeline* xpir= new XPIRcPipeline(Tools::readParamsPIR(Constants::num_entries),1,nullptr,garbage);
@@ -153,36 +160,28 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
 
             uint64_t pack_pos=considerPacking(pos[i].first,xpir->getAlpha());
 
-            cout << endl;
             //#-------QUERY PHASE--------#
-            startProcessQuery(pack_pos,xpir);
+            cout << endl;
+            char* request = generateRequest(pos[i].first,pos[i].second[0],data_hash_size);
+            char* request_encrypted = xpir->getCrypto()->encrypt(request,data_hash_size,Constants::padding_size);
+
+            startProcessQuery(pack_pos,xpir,request_encrypted);
 
             //#-------REPLY PHASE--------#
             startProcessResult(max_bytesize,xpir);
+
+            delete[] request;
         }
     }
     joinAllThreads(container);
 
-    int k=0;
-    for(int i=0;i<container.size();i++,k++){
-        k=k%pos.size();
-        char* response = container[i]->getReplyWriter()->extractResponse(pos[k].first,max_bytesize,container[i]->getAlpha(),container[i]->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte);
-        string response_s;
-        if(!Constants::encrypted){   //if PLAINTEXT
-            response_s = extractPlaintext(response,1,max_bytesize,pos[k].first);
-        }else{                       //if CIPHERTEXT
-            response_s = extractCiphertext(response,1,max_bytesize,pos[k].first);
+    for(int k=0,l=0;k<files.size();k++){
+        m_AES_256->setIV(files[k]);
+        for(int i=0;i<pos.size();i++,l++){
+            char* response = container[l]->getReplyWriter()->extractResponse(pos[i].first,max_bytesize,container[l]->getAlpha(),container[l]->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte);
+            if(!checkContent(response,1,max_bytesize,pos[i])) check=false;
+            delete container[l];
         }
-
-        for(int j=0;j<pos[k].second.size();j++){
-            if(m_SHA_256->search(pos[k].second[j],response_s)==false){
-                check=false;
-            }
-        }
-
-        //#-------CLEANUP PHASE--------#
-        delete[] response;
-        delete container[i];
     }
 
     delete m_AES_256;

@@ -133,7 +133,8 @@ bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
     int max_bytesize = Constants::padding_size*Constants::data_hash_size/8;
 
     std::vector<XPIRcSequential*> container;
-    for(int k=0;k<Tools::tokenize(entry['f'],",").size();k++){
+    std::vector<string> files = Tools::tokenize(entry['f'],",");
+    for(int k=0;k<files.size();k++){
         for(int i=0;i<pos.size();i++){
             XPIRcSequential* xpir= new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),1,nullptr);
             container.push_back(xpir);
@@ -151,30 +152,14 @@ bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
     }
     std::cout << "PIRClient: Query sent" << "\n\n";
 
-    int k=0;
-    for(int i=0;i<container.size();i++,k++){
-        //#-------REPLY PHASE--------#
-        k=k%pos.size();
-        XPIRcSequential::REPLY reply = readReply();
-        char* response;
-        response=replyExtraction(reply,container[i]);
-
-        string response_s;
-        if(!Constants::encrypted){   //if PLAINTEXT
-            response_s = extractPlaintext(response,container[i]->getAlpha(),reply.maxFileSize,pos[k].first);
-        }else{                       //if CIPHERTEXT
-            response_s = extractCiphertext(response,container[i]->getAlpha(),reply.maxFileSize,pos[k].first);
+    for(int k=0,l=0;k<files.size();k++){
+        m_AES_256->setIV(files[k]);
+        for(int i=0;i<pos.size();i++,l++){
+            XPIRcSequential::REPLY reply = readReply();
+            char* response=replyExtraction(reply,container[i]);
+            if(!checkContent(response,container[i]->getAlpha(),max_bytesize,pos[i])) check=false;
+            delete container[i];
         }
-
-        for(int i=0;i<pos[0].second.size();i++){
-            if(m_SHA_256->search(pos[k].second[i],response_s)==false){
-                check=false;
-            }
-        }
-
-        //#-------CLEANUP PHASE--------#
-        delete[] response;
-        delete container[i];
     }
 
     delete m_AES_256;
