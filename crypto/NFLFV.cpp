@@ -21,9 +21,9 @@
 //#define Repetition 10000
 
 
-fv_cipher NFLFV::chartocipher(char* c) {
+lwe_cipher NFLFV::chartocipher(char* c) {
 
-fv_cipher ret;
+lwe_cipher ret;
 
 	ret.a = (uint64_t*) c;
 	ret.b = ret.a + polyDegree * nbModuli;
@@ -32,7 +32,7 @@ return ret;
 
 }
 
-void NFLFV_DEBUG_MESSAGE(const char *s,poly64 p, unsigned int n){
+void NFLlwe_DEBUG_MESSAGE(const char *s,poly64 p, unsigned int n){
 #ifdef CRYPTO_DEBUG
 	std::cout<<s;
 	NFLlib::print_poly64hex(p,n);
@@ -161,32 +161,32 @@ poly64 *NFLFV::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbr
 // *********************************************************
 
 
-void NFLFV::add(fv_cipher rop, fv_cipher op1, fv_cipher op2, int d)
+void NFLFV::add(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)
 {
   nflInstance.addmodPoly(rop.a, op1.a, op2.a);
   nflInstance.addmodPoly(rop.b, op1.b, op2.b);
 }
 
-void NFLFV::sub(fv_cipher rop, fv_cipher op1, fv_cipher op2, int d)
+void NFLFV::sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)
 {
   nflInstance.submodPoly(rop.a, op1.a, op2.a);
   nflInstance.submodPoly(rop.b, op1.b, op2.b);
 }
 
-void NFLFV::mulandadd(fv_cipher rop, fv_in_data op1, fv_query op2, uint64_t current_poly, int rec_lvl)
+void NFLFV::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly, int rec_lvl)
 {
-	NFLFV_DEBUG_MESSAGE("in_data[0].p : ",op1.p[0],4);
-  	NFLFV_DEBUG_MESSAGE("in_data[0].a : ",op2.a,4);
-  	NFLFV_DEBUG_MESSAGE("in_data[0].b : ",op2.b,4);
+	NFLlwe_DEBUG_MESSAGE("in_data[0].p : ",op1.p[0],4);
+  	NFLlwe_DEBUG_MESSAGE("in_data[0].a : ",op2.a,4);
+  	NFLlwe_DEBUG_MESSAGE("in_data[0].b : ",op2.b,4);
 
 	mulandaddCiphertextNTT(rop, op1, op2, current_poly);
 
-	NFLFV_DEBUG_MESSAGE("out_data[0].a : ",rop.a,4);
-  	NFLFV_DEBUG_MESSAGE("out_data[0].b : ",rop.b,4);
+	NFLlwe_DEBUG_MESSAGE("out_data[0].a : ",rop.a,4);
+  	NFLlwe_DEBUG_MESSAGE("out_data[0].b : ",rop.b,4);
 }
 
 // Shoup version
-void NFLFV::mulandadd(fv_cipher rop, const fv_in_data op1, const fv_query op2, const fv_query op2prime, const uint64_t current_poly, int rec_lvl)
+void NFLFV::mulandadd(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, const lwe_query op2prime, const uint64_t current_poly, int rec_lvl)
 {
   // Don't modify the pointers inside the data or it will be permanent
   poly64 ropa = rop.a, ropb = rop.b, op2a = op2.a, op2b = op2.b, op2primea = op2prime.a,
@@ -217,17 +217,17 @@ void NFLFV::mulandadd(fv_cipher rop, const fv_in_data op1, const fv_query op2, c
 
 }
 
-void NFLFV::mul(fv_cipher rop, const fv_in_data op1, const fv_query op2, const fv_query op2prime, const uint64_t current_poly, int rec_lvl)
+void NFLFV::mul(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, const lwe_query op2prime, const uint64_t current_poly, int rec_lvl)
 {
   // Don't modify the pointers inside the data or it will be permanent
   poly64 ropa = rop.a, ropb = rop.b, op2a = op2.a, op2b = op2.b, op2primea = op2prime.a,
          op2primeb = op2prime.b, op1pcurrent = op1.p[current_poly];
 
-	NFLFV_DEBUG_MESSAGE("in_data[0].p : ",op1.p[current_poly],4);
-	NFLFV_DEBUG_MESSAGE("in_data[0].a : ",op2.a,4);
-	NFLFV_DEBUG_MESSAGE("in_data[0].b : ",op2.b,4);
-	NFLFV_DEBUG_MESSAGE("in_data[0].a' : ",op2prime.a,4);
-	NFLFV_DEBUG_MESSAGE("in_data[0].b' : ",op2.b,4);
+	NFLlwe_DEBUG_MESSAGE("in_data[0].p : ",op1.p[current_poly],4);
+	NFLlwe_DEBUG_MESSAGE("in_data[0].a : ",op2.a,4);
+	NFLlwe_DEBUG_MESSAGE("in_data[0].b : ",op2.b,4);
+	NFLlwe_DEBUG_MESSAGE("in_data[0].a' : ",op2prime.a,4);
+	NFLlwe_DEBUG_MESSAGE("in_data[0].b' : ",op2.b,4);
 
 	for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++)
   {
@@ -244,25 +244,25 @@ void NFLFV::mul(fv_cipher rop, const fv_in_data op1, const fv_query op2, const f
 		op2primea+=polyDegree;
 		op2primeb+=polyDegree;
 	}
-	NFLFV_DEBUG_MESSAGE("out_data[0].a : ",rop.a,4);
-	NFLFV_DEBUG_MESSAGE("out_data[0].b : ",rop.b,4);
+	NFLlwe_DEBUG_MESSAGE("out_data[0].a : ",rop.a,4);
+	NFLlwe_DEBUG_MESSAGE("out_data[0].b : ",rop.b,4);
 }
 
 // Same comment as for musAndAddCiphertextNTT we do a simpler version above
-void NFLFV::mulandadd(fv_cipher rop, fv_in_data op1, fv_query op2, int rec_lvl)
+void NFLFV::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lvl)
 {
-	NFLFV_DEBUG_MESSAGE("in_data p: ",op1.p[0],4);
-	NFLFV_DEBUG_MESSAGE("in_data a: ",op2.a,4);
-	NFLFV_DEBUG_MESSAGE("in_data b: ",op2.b,4);
+	NFLlwe_DEBUG_MESSAGE("in_data p: ",op1.p[0],4);
+	NFLlwe_DEBUG_MESSAGE("in_data a: ",op2.a,4);
+	NFLlwe_DEBUG_MESSAGE("in_data b: ",op2.b,4);
 
   	mulandaddCiphertextNTT(rop, op1, op2);
 
-	NFLFV_DEBUG_MESSAGE("out_data.a : ",rop.a,4);
-	NFLFV_DEBUG_MESSAGE("out_data.b : ",rop.b,4);
+	NFLlwe_DEBUG_MESSAGE("out_data.a : ",rop.a,4);
+	NFLlwe_DEBUG_MESSAGE("out_data.b : ",rop.b,4);
 }
 
 // Deal just with one polynomial
-inline void NFLFV::mulandaddCiphertextNTT(fv_cipher rop, fv_in_data op1, fv_query op2, uint64_t current_poly)
+inline void NFLFV::mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly)
 {
     nflInstance.mulandaddPolyNTT(rop.a, op1.p[current_poly], op2.a);
     nflInstance.mulandaddPolyNTT(rop.b, op1.p[current_poly], op2.b);
@@ -270,7 +270,7 @@ inline void NFLFV::mulandaddCiphertextNTT(fv_cipher rop, fv_in_data op1, fv_quer
 
 // Good method but too greedy in memory we start with a simpler one (below)
 // Needs to change as we always write in the same rop
-void NFLFV::mulandaddCiphertextNTT(fv_cipher rop, fv_in_data op1, fv_query op2)
+void NFLFV::mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op2)
 {
   for(uint64_t i=0;i<op1.nbPolys;i++)
   {
@@ -286,11 +286,11 @@ void NFLFV::mulandaddCiphertextNTT(fv_cipher rop, fv_in_data op1, fv_query op2)
 //*********************************
 
 // The internal encrypt method
-void  NFLFV::enc(fv_cipher *c, poly64 m)
+void  NFLFV::enc(lwe_cipher *c, poly64 m)
 {
 	bool uniform = true;
 
-	NFLFV_DEBUG_MESSAGE("Encrypting m: ",m, 4);
+	NFLlwe_DEBUG_MESSAGE("Encrypting m: ",m, 4);
 
 	c->a = (poly64) calloc(polyDegree * 2 * nbModuli,  sizeof(uint64_t));
 	c->b = c->a + polyDegree * nbModuli;
@@ -309,7 +309,7 @@ void  NFLFV::enc(fv_cipher *c, poly64 m)
 	// We deal with the nbModuli polynoms at once because the noise is the same size for all of them
 	nflInstance.setBoundedRandomPoly(c->b, 2*Berr-1, !uniform);
 
-	NFLFV_DEBUG_MESSAGE("Noise used: ",c->b, 4);
+	NFLlwe_DEBUG_MESSAGE("Noise used: ",c->b, 4);
 #ifdef CRYPTO_DEBUG
 	std::cout << "NFLFV: Noise amplifier: " << A_bits << std::endl;
 #endif
@@ -339,7 +339,7 @@ void  NFLFV::enc(fv_cipher *c, poly64 m)
 	}
 	tmpb=c->b;
 
-	NFLFV_DEBUG_MESSAGE("Amplified noise and message: ",c->b, 4);
+	NFLlwe_DEBUG_MESSAGE("Amplified noise and message: ",c->b, 4);
 
 	// Noise and plaintext are the only things that are not yet in the NTT space
 	nflInstance.nttAndPowPhi(c->b);
@@ -376,16 +376,16 @@ void  NFLFV::enc(fv_cipher *c, poly64 m)
 	// There is already a ifdef debug inside this function but
 	// tmp is not defined if we are not in debug mode
 #ifdef DEBUG
-	NFLFV_DEBUG_MESSAGE("a*s: ",tmp, 4);
+	NFLlwe_DEBUG_MESSAGE("a*s: ",tmp, 4);
   free(tmp);
 #endif
 
-	NFLFV_DEBUG_MESSAGE("Ciphertext a: ",c->a, 4);
-	NFLFV_DEBUG_MESSAGE("Ciphertext b: ",c->b, 4);
+	NFLlwe_DEBUG_MESSAGE("Ciphertext a: ",c->a, 4);
+	NFLlwe_DEBUG_MESSAGE("Ciphertext b: ",c->b, 4);
 }
 
 
-void NFLFV::dec(poly64 m, fv_cipher *c)
+void NFLFV::dec(poly64 m, lwe_cipher *c)
 {
 	uint64_t A_bits = publicParams.getAbsorptionBitsize() / publicParams.getpolyDegree();
   const uint64_t bitmask = (1ULL<<A_bits) -1;
@@ -418,8 +418,8 @@ void NFLFV::dec(poly64 m, fv_cipher *c)
 	// In order to mask the noise bits we need to get out of NTT space through an inverse NTT
   nflInstance.invnttAndPowInvPhi(tmpm);
 
-  NFLFV_DEBUG_MESSAGE("Amplified noise and message (dec): ",tmpm, 4);
-  NFLFV_DEBUG_MESSAGE("Amplified noise and message (dec): ",tmpm+polyDegree, 4);
+  NFLlwe_DEBUG_MESSAGE("Amplified noise and message (dec): ",tmpm, 4);
+  NFLlwe_DEBUG_MESSAGE("Amplified noise and message (dec): ",tmpm+polyDegree, 4);
 
 
   if(nbModuli>1) {
@@ -490,7 +490,7 @@ void NFLFV::dec(poly64 m, fv_cipher *c)
 // MOK is here for the CRT modification
 
 // encrypts a uint (e.g. for producing a equest element with a 0 or a 1)
-// does not return a fv_cipher but the (char*)pointer on two consecutively allocated poly64 (a and b)
+// does not return a lwe_cipher but the (char*)pointer on two consecutively allocated poly64 (a and b)
 char* NFLFV::encrypt(unsigned int ui, unsigned int d)
 {
 	if ( ceil(log2(static_cast<double>(ui))) >= publicParams.getAbsorptionBitsize())
@@ -499,7 +499,7 @@ char* NFLFV::encrypt(unsigned int ui, unsigned int d)
 		ui %= 1<<publicParams.getAbsorptionBitsize();
 	}
 
-	fv_cipher c;
+	lwe_cipher c;
 	poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
 	for (unsigned int cm = 0 ; cm < nbModuli ; cm++)
   {
@@ -511,7 +511,7 @@ char* NFLFV::encrypt(unsigned int ui, unsigned int d)
 }
 
 char* NFLFV::encrypt(char* data, size_t s_hash, unsigned int s_list ){
-    fv_cipher c;
+    lwe_cipher c;
 	poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
 	uint64_t *ui;
 	for (int j=0; j<s_list;j++){
@@ -533,7 +533,7 @@ char* NFLFV::encrypt(char* data, size_t s_hash, unsigned int s_list ){
 // Do a ciphertext for a plaintext with alternating bits (for performance tests)
 char* NFLFV::encrypt_perftest()
 {
-	fv_cipher c;
+	lwe_cipher c;
   poly64 m = nflInstance.allocBoundedRandomPoly(0, true);
 	enc(&c,m);
 	free(m);
@@ -542,7 +542,7 @@ char* NFLFV::encrypt_perftest()
 
 char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
 {
-  fv_cipher ciphertext;
+  lwe_cipher ciphertext;
   ciphertext.a = (poly64)cipheredData;
   ciphertext.b = ciphertext.a + nbModuli * polyDegree;
   poly64 clear_data = (poly64) calloc(nbModuli * polyDegree, sizeof(uint64_t));
@@ -555,9 +555,9 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
 
   dec(clear_data, &ciphertext);
 
-  NFLFV_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
-  NFLFV_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
-  NFLFV_DEBUG_MESSAGE("Result: ",clear_data, 4);
+  NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
+  NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
+  NFLlwe_DEBUG_MESSAGE("Result: ",clear_data, 4);
 
   // unsigned char* out_data = (unsigned char*) calloc(nbModuli * polyDegree+1, sizeof(uint64_t));
   // nflInstance.serializeData64 (clear_data, out_data, bits_per_coordinate, polyDegree);
@@ -797,7 +797,7 @@ void NFLFV::clearSecretKeys()
 //  	 	std::cout<<"0-RND polynom: ";n.print_poly64(p,4);std::cout<<std::endl;
 //
 //
-//  		fv_cipher cyph;
+//  		lwe_cipher cyph;
 //  #ifdef bench
 //  		double start     = omp_get_wtime();
 //  		for(int i        = 0;i<Repetition;i++) {
@@ -820,9 +820,9 @@ void NFLFV::clearSecretKeys()
 //  		 end        = omp_get_wtime();
 //  		std::cout<<Repetition/(end-start)<<" dechiffre/s"<<std::endl;
 //  #endif
-// 		NFLFV_DEBUG_MESSAGE("Encrypted into a",cyph.a,4);
-// 		NFLFV_DEBUG_MESSAGE("Encrypted into b",cyph.b,4);
-//  	 	NFLFV_DEBUG_MESSAGE("1-Encoded-Decoded (but not unshoupified): ",result,4);
+// 		NFLlwe_DEBUG_MESSAGE("Encrypted into a",cyph.a,4);
+// 		NFLlwe_DEBUG_MESSAGE("Encrypted into b",cyph.b,4);
+//  	 	NFLlwe_DEBUG_MESSAGE("1-Encoded-Decoded (but not unshoupified): ",result,4);
 //
 //
 //  		for(int i = 0;i<1024;i++) {
@@ -852,7 +852,7 @@ void NFLFV::clearSecretKeys()
 // 	//   	std::cout<<std::endl<<"nbOfPolys = "<<nbOfPolys<<std::endl;
 // 	//
 // 	//  	// encrypt of poly64 simulation
-// 	//  	fv_cipher *cyphertext=new fv_cipher[nbOfPolys];
+// 	//  	lwe_cipher *cyphertext=new lwe_cipher[nbOfPolys];
 // 	// for(int i=0;i<nbOfPolys;i++) {
 // 	//  		n.enc(&(cyphertext[i]),*(mydata_poly + i*1024));
 // 	//  	//std::cout<<"The string has been cyphered into a["<<i<<"]";n.print_poly64(cyphertext[i].a,1024);
@@ -874,8 +874,8 @@ void NFLFV::clearSecretKeys()
 // 	//
 // 	//
 //  	//
-//  	// //fv_cipher *cypherui;
-//  	// //cypherui=(fv_cipher *)n.encrypt(1,0);
+//  	// //lwe_cipher *cypherui;
+//  	// //cypherui=(lwe_cipher *)n.encrypt(1,0);
 //  	// //unciphereddata_poly = (poly64)n.decrypt((char*)(cypherui->a), (unsigned int)0,(size_t) 0,(size_t) 0);
 //  	// char *charptr;
 //  	// charptr=n.encrypt(1,0);

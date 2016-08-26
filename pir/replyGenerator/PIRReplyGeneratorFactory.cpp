@@ -25,6 +25,10 @@ GenericPIRReplyGenerator* PIRReplyGeneratorFactory::getPIRReplyGenerator(const s
 	{
 		generator = new PIRReplyGeneratorNFL_internal( param, db); 
 	}
+  else if ((gen_name == "FV"))
+	{
+		generator = new PIRReplyGeneratorNFLFV_internal( param, db); 
+	}
 	else if (gen_name == "Paillier")
 	{
     generator = new PIRReplyGeneratorGMP( param, db);
@@ -50,6 +54,10 @@ GenericPIRReplyGenerator* PIRReplyGeneratorFactory::getPIRReplyGenerator(const s
   if ((gen_name == "LWE"))
 	{
 	  generator = new PIRReplyGeneratorNFL_internal(); 
+	}
+  else if ((gen_name == "FV"))
+	{
+	  generator = new PIRReplyGeneratorNFLFV_internal(); 
 	}
 	else if (gen_name == "Paillier")
 	{

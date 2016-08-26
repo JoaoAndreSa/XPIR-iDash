@@ -28,7 +28,7 @@
 #include <iostream>
 #include "NFLParams.hpp"
 #include "NFLlib.hpp"
-#include "NFLFVDatatypes.hpp"
+#include "NFLLWEDatatypes.hpp"
 #include "LatticesBasedCryptosystem.hpp"
 #include "crypto/HomomorphicCrypto.hpp"
 #include "CryptographicSystem.hpp"
@@ -59,8 +59,8 @@ class NFLFV : public LatticesBasedCryptosystem
    
     // Crypto related functions
     long setandgetAbsBitPerCiphertext(unsigned int elt_nbr);
-    void enc(fv_cipher *c, poly64 m);
-	  void dec(poly64 m, fv_cipher *c);	
+    void enc(lwe_cipher *c, poly64 m);
+	  void dec(poly64 m, lwe_cipher *c);	
     char* encrypt(unsigned int ui, unsigned int );
     char* encrypt(char* data, size_t, unsigned int exponent );
     char* encrypt_perftest();
@@ -71,7 +71,7 @@ class NFLFV : public LatticesBasedCryptosystem
         uint64_t dataBitsizePerBuffer, uint64_t &polyNumber);
     
     // Functions for PIROptimizer and PIRClient
-    fv_cipher chartocipher(char* c);
+    lwe_cipher chartocipher(char* c);
     std::string getSerializedCryptoParams(bool shortversion);
     unsigned int getCryptoParams(unsigned int k, std::set<std::string>& crypto_params);
     unsigned int getAllCryptoParams(std::set<std::string>& crypto_params);
@@ -89,21 +89,21 @@ class NFLFV : public LatticesBasedCryptosystem
     // **********************************
 
     // Additions
-    void add(fv_cipher rop, fv_cipher op1, fv_cipher op2, int d);
+    void add(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d);
     // Substractions
-    void sub(fv_cipher rop, fv_cipher op1, fv_cipher op2, int d);
+    void sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d);
     // Fused Multiplications-Additions
-    void mulandadd(fv_cipher rop, fv_in_data op1, fv_query op2, int rec_lvl);
-    void mulandadd(fv_cipher rop, fv_in_data op1, fv_query op2, uint64_t current_poly, 
+    void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lvl);
+    void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly, 
         int rec_lvl);
     //Shoup version
-	  void mulandadd(fv_cipher rop, fv_in_data op1, fv_query op2, fv_query op2prime, 
+	  void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime, 
         uint64_t current_poly, int rec_lvl);
-	  void mul(fv_cipher rop, fv_in_data op1, fv_query op2, fv_query op2prime, 
+	  void mul(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime, 
         uint64_t current_poly, int rec_lvl);
 
-    void mulandaddCiphertextNTT(fv_cipher rop, fv_in_data op1, fv_query op2);
-    void mulandaddCiphertextNTT(fv_cipher rop, fv_in_data op1, fv_query op2, 
+    void mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op2);
+    void mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op2, 
         uint64_t current_poly);
 
 

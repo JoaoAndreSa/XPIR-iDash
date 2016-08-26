@@ -24,6 +24,7 @@
 #include "pir/PIRParameters.hpp"
 #include "pir/replyGenerator/PIRReplyGeneratorGMP.hpp"
 #include "pir/replyGenerator/PIRReplyGeneratorNFL_internal.hpp"
+#include "pir/replyGenerator/PIRReplyGeneratorNFLFV_internal.hpp"
 #include "pir/replyGenerator/PIRReplyGeneratorTrivial.hpp"
 
 class PIRReplyGeneratorFactory
