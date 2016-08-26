@@ -27,7 +27,7 @@
 #include <math.h>
 #include <iostream>
 #include "NFLParams.hpp"
-#include "NFLlib.hpp"
+#include "NFLlib_old.hpp"
 #include "NFLLWEDatatypes.hpp"
 #include "LatticesBasedCryptosystem.hpp"
 #include "crypto/HomomorphicCrypto.hpp"
@@ -36,7 +36,7 @@
 #include <string>
 #include <cstddef>
 #include <gmp.h>
-#include "exernal_components/FV-NFLlib/FV.hpp"
+#include "external_components/FV-NFLlib/FV.hpp"
 
 class NFLFV : public LatticesBasedCryptosystem
 {

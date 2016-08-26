@@ -17,7 +17,7 @@
 
 #ifndef DEF_LATTICESBASEDCRYPTOSYSTEM
 #define DEF_LATTICESBASEDCRYPTOSYSTEM
-#include "NFLlib.hpp"
+#include "NFLlib_old.hpp"
 #include "NFLLWEDatatypes.hpp"
 #include "HomomorphicCrypto.hpp"
 
@@ -33,7 +33,7 @@ class LatticesBasedCryptosystem : public HomomorphicCrypto {
 
     virtual long setandgetAbsBitPerCiphertext(unsigned int elt_nbr)=0;
 
-    NFLlib& getnflInstance();
+    NFLlib_old& getnflInstance();
     uint64_t* getmoduli();
     uint64_t getsecurityBits();
     unsigned short getnbModuli();
@@ -44,7 +44,7 @@ class LatticesBasedCryptosystem : public HomomorphicCrypto {
         uint64_t dataBitsizePerBuffer, uint64_t &polyNumber)=0;
 
   protected:
-    NFLlib nflInstance;
+    NFLlib_old nflInstance;
     uint64_t *moduli;
     uint64_t securityBits;
     unsigned short nbModuli;

@@ -27,7 +27,7 @@
 #include <math.h>
 #include <iostream>
 #include "NFLParams.hpp"
-#include "NFLlib.hpp"
+#include "NFLlib_old.hpp"
 #include "NFLLWEDatatypes.hpp"
 #include "LatticesBasedCryptosystem.hpp"
 #include "crypto/HomomorphicCrypto.hpp"

@@ -21,7 +21,7 @@ LatticesBasedCryptosystem::LatticesBasedCryptosystem(const std::string& crypto_n
   HomomorphicCrypto(crypto_name)
 {}
 
-NFLlib& LatticesBasedCryptosystem::getnflInstance() { return nflInstance; }
+NFLlib_old& LatticesBasedCryptosystem::getnflInstance() { return nflInstance; }
 
 uint64_t* LatticesBasedCryptosystem::getmoduli() { return moduli; }
 

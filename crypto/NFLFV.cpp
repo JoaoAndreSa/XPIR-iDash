@@ -35,7 +35,7 @@ return ret;
 void NFLlwe_DEBUG_MESSAGE(const char *s,poly64 p, unsigned int n){
 #ifdef CRYPTO_DEBUG
 	std::cout<<s;
-	NFLlib::print_poly64hex(p,n);
+	NFLlib_old::print_poly64hex(p,n);
 #endif
 }
 

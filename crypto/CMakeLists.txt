@@ -16,7 +16,7 @@ add_library(pir_crypto STATIC
     NFLFV.cpp
     NFLFVPublicParameters.cpp
     NFLParams.cpp
-    NFLlib.cpp
+    NFLlib_old.cpp
     NoCryptography.cpp
     NoCryptographyPublicParameters.cpp
     PaillierAdapter.cpp
