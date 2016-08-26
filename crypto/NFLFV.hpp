@@ -1,0 +1,121 @@
+/* Copyright (C) 2014 Carlos Aguilar Melchor, Joris Barrier, Marc-Olivier Killijian
+ * This file is part of XPIR.
+ *
+ *  XPIR is free software: you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  XPIR is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with XPIR.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef DEF_NFLFV
+#define DEF_NFLFV
+
+#define SHOUP
+//#define TESTSHOUP
+
+#include <omp.h>
+#include <inttypes.h>
+#include <stdlib.h>
+#include <math.h>
+#include <iostream>
+#include "NFLParams.hpp"
+#include "NFLlib.hpp"
+#include "NFLFVDatatypes.hpp"
+#include "LatticesBasedCryptosystem.hpp"
+#include "crypto/HomomorphicCrypto.hpp"
+#include "CryptographicSystem.hpp"
+#include "NFLFVPublicParameters.hpp"
+#include <string>
+#include <cstddef>
+#include <gmp.h>
+
+class NFLFV : public LatticesBasedCryptosystem
+{
+
+  public:
+    NFLFVPublicParameters publicParams;
+    NFLFV();
+    ~NFLFV();
+
+    std::string& toString();
+    
+    unsigned int getpolyDegree();
+    poly64* getsecretKey();
+  	void recomputeNoiseAmplifiers();
+    
+    // Setters
+    void setmodulus(uint64_t modulus);
+    void setpolyDegree(unsigned int polyDegree);
+    void setNewParameters(const std::string& crypto_param_descriptor);
+    void setNewParameters(unsigned int polyDegree, unsigned int modulusBitsize, int absPCBitsize_);
+   
+    // Crypto related functions
+    long setandgetAbsBitPerCiphertext(unsigned int elt_nbr);
+    void enc(fv_cipher *c, poly64 m);
+	  void dec(poly64 m, fv_cipher *c);	
+    char* encrypt(unsigned int ui, unsigned int );
+    char* encrypt(char* data, size_t, unsigned int exponent );
+    char* encrypt_perftest();
+    char* decrypt(char* cipheredData, unsigned int, size_t, size_t);
+
+    // Data importation and exportation
+    poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, 
+        uint64_t dataBitsizePerBuffer, uint64_t &polyNumber);
+    
+    // Functions for PIROptimizer and PIRClient
+    fv_cipher chartocipher(char* c);
+    std::string getSerializedCryptoParams(bool shortversion);
+    unsigned int getCryptoParams(unsigned int k, std::set<std::string>& crypto_params);
+    unsigned int getAllCryptoParams(std::set<std::string>& crypto_params);
+    AbstractPublicParameters&  getPublicParameters();
+    unsigned int findMaxModulusBitsize(unsigned int security_bits, unsigned int poly_degree);
+    bool checkParamsSecure(unsigned int security_bits, unsigned int poly_degree, unsigned int p_size);
+    double lllOutput(unsigned int n, double& p, double delta);
+    double estimateAbsTime(std::string crypto_param);
+    double estimatePrecomputeTime(std::string crypto_param);
+    unsigned int estimateSecurity(unsigned int n, unsigned int p_size);
+	unsigned int getmodulusBitsize();
+    
+    // **********************************
+    // Modular ciphertext manipulation 
+    // **********************************
+
+    // Additions
+    void add(fv_cipher rop, fv_cipher op1, fv_cipher op2, int d);
+    // Substractions
+    void sub(fv_cipher rop, fv_cipher op1, fv_cipher op2, int d);
+    // Fused Multiplications-Additions
+    void mulandadd(fv_cipher rop, fv_in_data op1, fv_query op2, int rec_lvl);
+    void mulandadd(fv_cipher rop, fv_in_data op1, fv_query op2, uint64_t current_poly, 
+        int rec_lvl);
+    //Shoup version
+	  void mulandadd(fv_cipher rop, fv_in_data op1, fv_query op2, fv_query op2prime, 
+        uint64_t current_poly, int rec_lvl);
+	  void mul(fv_cipher rop, fv_in_data op1, fv_query op2, fv_query op2prime, 
+        uint64_t current_poly, int rec_lvl);
+
+    void mulandaddCiphertextNTT(fv_cipher rop, fv_in_data op1, fv_query op2);
+    void mulandaddCiphertextNTT(fv_cipher rop, fv_in_data op1, fv_query op2, 
+        uint64_t current_poly);
+
+
+  private:
+    // Attributes
+    unsigned int oldNbModuli;
+    unsigned int polyDegree;
+    poly64 *secretKey; // The secret key
+    poly64 *secretKeyShoup; // The secret key Shoupified
+	uint64_t *Abit_mod,*Abit_mod_shoup;
+
+    void clearSecretKeys();
+};
+
+#endif

@@ -13,6 +13,8 @@ add_library(pir_crypto STATIC
     LatticesBasedCryptosystem.cpp
     NFLLWE.cpp
     NFLLWEPublicParameters.cpp
+    NFLFV.cpp
+    NFLFVPublicParameters.cpp
     NFLParams.cpp
     NFLlib.cpp
     NoCryptography.cpp
