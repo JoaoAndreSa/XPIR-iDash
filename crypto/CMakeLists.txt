@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 2.6.0)
 add_subdirectory("prng")
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -fopenmp")
-set (CMAKE_EXE_LINKER_FLAGS "-fopenmp")
-include_directories(..)
+set (CMAKE_EXE_LINKER_FLAGS "-fopenmp -lnfllib")
+include_directories(.. ../external_components/NFLlib/include)
+
 
 add_library(pir_crypto STATIC
     AbstractPublicParameters.cpp

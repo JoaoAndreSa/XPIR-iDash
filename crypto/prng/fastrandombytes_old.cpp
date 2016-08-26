@@ -4,8 +4,8 @@
  * Public Domain
  */
 
-#include "crypto_stream_salsa20.h"
-#include "randombytes.h"
+#include "crypto_stream_salsa20_old.h"
+#include "randombytes_old.h"
 #include <omp.h>
 #include <inttypes.h>
 #include <iostream>
@@ -14,17 +14,17 @@ static int init = 0;
 static unsigned char key[crypto_stream_salsa20_KEYBYTES];
 static unsigned char nonce[crypto_stream_salsa20_NONCEBYTES] = {0};
 
-void fastrandombytes(unsigned char *r, unsigned long long rlen)
+void fastrandombytes_old(unsigned char *r, unsigned long long rlen)
 {
   unsigned long long n=0;
   int i;
   if(!init)
   {
-    randombytes(key, crypto_stream_salsa20_KEYBYTES);
+    randombytes_old(key, crypto_stream_salsa20_KEYBYTES);
     init = 1;
   }
   //crypto_stream(r,rlen,nonce,key);
-  crypto_stream_salsa20(r,rlen,nonce,key);
+  crypto_stream_salsa20_old(r,rlen,nonce,key);
 
   // Increase 64-bit counter (nonce)
   for(i=0;i<8;i++)

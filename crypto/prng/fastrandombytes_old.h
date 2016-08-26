@@ -4,9 +4,9 @@
  * Public Domain
  */
 
-#ifndef FASTRANDOMBYTES_H
-#define FASTRANDOMBYTES_H
+#ifndef FASTRANDOMBYTES_H_old
+#define FASTRANDOMBYTES_H_old
 
-void fastrandombytes(unsigned char *r, unsigned long long rlen);
+void fastrandombytes_old(unsigned char *r, unsigned long long rlen);
 
 #endif

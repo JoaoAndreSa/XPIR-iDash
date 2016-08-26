@@ -6,13 +6,13 @@ Public domain.
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "randombytes.h"
+#include "randombytes_old.h"
 
 /* it's really stupid that there isn't a syscall for this */
 
 static int fd = -1;
 
-void randombytes(unsigned char *x,unsigned long long xlen)
+void randombytes_old(unsigned char *x,unsigned long long xlen)
 {
   int i;
 

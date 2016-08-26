@@ -7,7 +7,7 @@ if(APPLE)
     cmake_policy(SET CMP0042 NEW)
 endif()
 
-set(CMAKE_C_COMPILER "gcc")
+#set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "c++")
 set(CMAKE_CXX_FLAGS "-std=c++11 -fopenmp -ggdb -Wno-deprecated-declarations")
 set(CMAKE_EXE_LINKER_FLAGS "-fopenmp")
@@ -52,10 +52,10 @@ include_directories("/opt/local/include")
 
 
 
-	add_subdirectory("apps")
+	add_subdirectory("external_components")
 	add_subdirectory("crypto")
 	add_subdirectory("pir")
-	add_subdirectory("external_components")
+	add_subdirectory("apps")
 	
 	
 

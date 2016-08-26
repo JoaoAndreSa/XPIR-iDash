@@ -294,7 +294,7 @@ void NFLlib_old::setBoundedRandomPoly(poly64 res, uint64_t upperBound_, bool uni
     rnd = rnd_orig; 
 
     // Get some randomness from the PRNG
-    fastrandombytes((unsigned char *)rnd, polyDegree * sizeof(uint64_t));
+    fastrandombytes_old((unsigned char *)rnd, polyDegree * sizeof(uint64_t));
 
     // upperBound is below the moduli so we create the same mask for all the moduli
     mask=(1ULL <<  (unsigned int)ceil(log2(upperBound_))) -1;    
@@ -325,7 +325,7 @@ void NFLlib_old::setBoundedRandomPoly(poly64 res, uint64_t upperBound_, bool uni
     // We play with the rnd pointer (in the uniform case), and thus
     // we need to remember the allocated pointer to free it at the end
     rnd = rnd_orig; 
-    fastrandombytes((unsigned char *)rnd, polyDegree * nbModuli * sizeof(uint64_t));
+    fastrandombytes_old((unsigned char *)rnd, polyDegree * nbModuli * sizeof(uint64_t));
   
     for (unsigned int cm = 0 ; cm < nbModuli ; cm++)
     {

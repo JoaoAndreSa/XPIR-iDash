@@ -57,7 +57,7 @@
 #include <gmp.h>
 #include <iostream>
 #include "NFLParams.hpp"
-#include "prng/fastrandombytes.h"
+#include "prng/fastrandombytes_old.h"
 #include <cstring>
 #include <fstream>
 #include <cassert>
