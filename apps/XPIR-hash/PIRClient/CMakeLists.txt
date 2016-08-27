@@ -9,4 +9,4 @@ file(COPY "vcf" DESTINATION ".")
 
 add_executable(client AES256/AES_ctr_256.cpp SHA256/SHA_256.cpp ../Constants/constants.cpp ../Socket/Socket.cpp ../Tools/Tools.cpp PIRClient.cpp Pipeline/PIRClientPipeline.cpp Sequential/PIRClientSequential.cpp ../XPIR/XPIRc.cpp ../XPIR/Pipeline/XPIRcPipeline.cpp ../XPIR/Sequential/XPIRcSequential.cpp client.cpp)
 
-target_link_libraries(client ssl crypto pir ${MPFR_LIBRARIES} ${Boost_LIBRARIES} ${GMP_LIBRARIES} ${GMPXX_LIBRARIES})
+target_link_libraries(client ssl crypto pir ${MPFR_LIBRARIES} ${Boost_LIBRARIES} ${GMP_LIBRARIES} ${GMPXX_LIBRARIES} nfllib)
