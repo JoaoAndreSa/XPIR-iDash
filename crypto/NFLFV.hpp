@@ -36,7 +36,6 @@
 #include <string>
 #include <cstddef>
 #include <gmp.h>
-#include "external_components/FV-NFLlib/FV.hpp"
 
 class NFLFV : public LatticesBasedCryptosystem
 {

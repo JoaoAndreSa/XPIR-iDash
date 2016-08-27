@@ -7,7 +7,7 @@ endif()
 
 find_package(GMP REQUIRED)
 
-include_directories("/opt/local/include" ${CMAKE_SOURCE_DIR}/crypto ${CMAKE_SOURCE_DIR}/pir ${CMAKE_SOURCE_DIR})
+include_directories("/opt/local/include" ${CMAKE_SOURCE_DIR}/crypto ${CMAKE_SOURCE_DIR}/pir  ${CMAKE_SOURCE_DIR}/external_components/NFLlib/include ${CMAKE_SOURCE_DIR})
 
 add_subdirectory("events")
 add_subdirectory("optim")

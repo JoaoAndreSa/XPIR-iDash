@@ -509,7 +509,7 @@ double PIRReplyGeneratorNFLFV_internal::generateReplySimulation(const PIRParamet
 
 double PIRReplyGeneratorNFLFV_internal::precomputationSimulation(const PIRParameters& pir_params, uint64_t plaintext_nbr)
 {
-  NFLlib *nflptr = &(cryptoMethod->getnflInstance());
+  NFLlib_old *nflptr = &(cryptoMethod->getnflInstance());
   setPirParams((PIRParameters&)pir_params);
   pushFakeQuery();
   importFakeData(plaintext_nbr);
