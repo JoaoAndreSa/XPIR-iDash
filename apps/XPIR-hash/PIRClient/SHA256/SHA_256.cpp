@@ -1,7 +1,22 @@
+/**
+    XPIR-hash
+    SHA_256.cpp
+    Purpose: Handles hashing (HMAC-256) and encoding.
+
+    @author Joao Sa
+    @version 1.0 07/09/16
+*/
+
 #include "SHA_256.hpp"
 
 //***PRIVATE METHODS***//
+/**
+    Print char array in hexadecimal format.
 
+    @param conv char array to be printed
+    @param size char array size
+    @return
+*/
 void SHA_256::printElem(unsigned char* conv, int size){
 	for (int i=0; i<size; i++){
 		printf("%02x", conv[i]);
@@ -9,6 +24,14 @@ void SHA_256::printElem(unsigned char* conv, int size){
 	printf("\n");
 }
 
+/**
+    Encodes metadata depending on the type of variant.
+
+    @param op type of variant
+    @param len length of the reference allele
+    @param alt alternate allele (e.g. GTAAC)
+    @return converted result
+*/
 std::string SHA_256::data_to_binary(std::string op,int len, std::string alt){
 	std::string binary="";
 	if(op=="01"){							//if DEL
@@ -22,6 +45,13 @@ std::string SHA_256::data_to_binary(std::string op,int len, std::string alt){
 	}
 }
 
+/**
+    Encodes variant type.
+
+    @param ref reference allele
+    @param alt alternate allele
+    @return converted result
+*/
 std::string SHA_256::op_to_binary(std::string ref, std::string alt){
 	if(alt==" "){														//if DEL
 		return "01";
@@ -32,14 +62,32 @@ std::string SHA_256::op_to_binary(std::string ref, std::string alt){
 	}
 }
 
+/**
+    Encodes chromosome (5bits).
+
+    @param number chromosome number
+    @return converted result
+*/
 std::string SHA_256::chr_to_binary(std::string number){
 	return std::bitset<5>(atoi(number.c_str())).to_string();
 }
 
+/**
+    Encodes position (28bits).
+
+    @param number position
+    @return converted result
+*/
 std::string SHA_256::pos_to_binary(std::string number){
 	return std::bitset<28>(atol(number.c_str())).to_string();
 }
 
+/**
+    Encodes nucleotids.
+
+    @param base allele
+    @return converted result
+*/
 std::string SHA_256::base_to_binary(std::string base){
 	std::string binary="";
 	for(int i=0;i<base.length();i++){
@@ -56,6 +104,12 @@ std::string SHA_256::base_to_binary(std::string base){
 	return binary;
 }
 
+/**
+    Converts decimal value to binary string.
+
+    @param n value to be converted
+    @return converted result
+*/
 std::string SHA_256::decimal_to_binary(unsigned n){
     const int size=sizeof(n)*8;
     std::string res;
@@ -80,6 +134,12 @@ std::string SHA_256::decimal_to_binary(unsigned n){
     SHA256_Final(hash, &sha256);
 }*/
 
+/**
+    Converts hex string to binary string.
+
+    @param hex hexadecimal value
+    @return converted result
+*/
 std::string SHA_256::hex_to_binary(std::string hex){
     std::string  binary="";
 
@@ -95,14 +155,18 @@ std::string SHA_256::hex_to_binary(std::string hex){
     return binary;
 }
 
+/**
+    Perform HMAC-SHA256.
+
+    @param str string to be hashed
+    @param hash container for the hash
+*/
 void SHA_256::mac256(std::string str,unsigned char* hash){
 	const char* key= reinterpret_cast<char*>(m_key);
 
 	HMAC_CTX ctx;
     HMAC_CTX_init(&ctx);
 
-    // Using sha1 hash engine here.
-    // You may use other hash engines. e.g EVP_md5(), EVP_sha224, EVP_sha512, etc
     HMAC_Init_ex(&ctx, key, sizeof(key), EVP_sha256(), NULL);
     HMAC_Update(&ctx, (unsigned char*)str.c_str(),str.length()+1);
 
@@ -112,7 +176,15 @@ void SHA_256::mac256(std::string str,unsigned char* hash){
 }
 
 //***PUBLIC METHODS***//
-//ASCII  to hexadecimal
+/**
+    ASCII to binary string.
+
+    @param str string to be converted
+    @param size string length
+    @param curr_bits number of bits in the binary conversion
+
+    @return converted result
+*/
 std::string SHA_256::uchar_to_binary(unsigned char* str, int size, int curr_bits){
 	string final_hash="";
 	for(int i=0;i<(curr_bits/8);i++){
@@ -121,6 +193,13 @@ std::string SHA_256::uchar_to_binary(unsigned char* str, int size, int curr_bits
 	return final_hash;
 }
 
+/**
+    Binary string to ASCII.
+
+    @param line string to be converted
+
+    @return converted result
+*/
 unsigned char* SHA_256::binary_to_uchar(std::string line){
 	int size=ceil(line.length()/8);
 	unsigned char* result = new unsigned char[size];
@@ -134,6 +213,13 @@ unsigned char* SHA_256::binary_to_uchar(std::string line){
     return result;
 }
 
+/**
+    Encodes a variant.
+
+    @param line variant to encode
+
+    @return encoded result
+*/
 std::string SHA_256::encoding(std::string line){
 	std::vector<std::string> tokens = Tools::tokenize(line,"\t");
 	std::string op = op_to_binary(tokens[3],tokens[4]);
@@ -141,6 +227,13 @@ std::string SHA_256::encoding(std::string line){
 	return op+chr_to_binary(tokens[0])+pos_to_binary(tokens[1])+data_to_binary(op,tokens[3].length(),tokens[4]);
 }
 
+/**
+    Performs HMAC-SHA256 and extracts DATA_SIZE number of bits.
+
+    @param str variant to encode
+
+    @return encoded result (only the first DATA_SIZE bits)
+*/
 string SHA_256::hash(std::string str){
 	unsigned char* sha_hash = new unsigned char[SHA256_DIGEST_LENGTH];
 	mac256(str,sha_hash);
@@ -150,7 +243,14 @@ string SHA_256::hash(std::string str){
 	return final_hash;
 }
 
+/**
+    Looks for a variant in a list of variants.
 
+    @param query variant to search
+    @param decoded_pack list of variants
+
+    @return true/false whether or not the variant is in the list
+*/
 bool SHA_256::search(std::string query, std::string decoded_pack){
     for(int i=0;i<decoded_pack.length();i+=DATA_SIZE){
         if(query.compare(decoded_pack.substr(i,DATA_SIZE))==0){

@@ -72,8 +72,10 @@ public:
 
 protected:
 	void removeData();
+	char* generateRequest(uint64_t,string,int);
 	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
-	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t);	//extract the exact plaintext (with aggregation the reply contains more than one element)
+	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t);		//extract the exact plaintext (with aggregation the reply contains more than one element)
+	bool checkContent(char*,uint64_t,int,std::pair<uint64_t,std::vector<std::string>>);
 	uint64_t considerPacking(uint64_t,uint64_t);											//returns the position relative to the aggregation/packing value
 	std::vector<std::pair<uint64_t,std::vector<std::string>>> listQueryPos(std::map<char,std::string>);
 

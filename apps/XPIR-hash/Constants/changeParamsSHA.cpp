@@ -4,7 +4,7 @@
     Purpose: Change HMAC (SHA256) parameters
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 07/09/16
 */
 
 /**
@@ -14,13 +14,13 @@
 
 		example (could be used for 100,000 entries):
 
-			16 (size of DB catalog = 65536 and 16 bits to extract from HMAC) 
+			13 (size of DB catalog = 8192 and 13 bits to extract from HMAC) 
 */
 
 #include <iostream>
 #include <fstream>
 
-//HOW TO USE: ./changeParamsSHA 16
+//HOW TO USE: ./changeParamsSHA 13
 int main(int argc, char* argv[]){
 
 	try{

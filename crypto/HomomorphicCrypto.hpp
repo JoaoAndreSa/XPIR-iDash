@@ -48,7 +48,7 @@ public:
     HomomorphicCrypto(const std::string& crypto_name);
     
     virtual char* encrypt(unsigned int ui, unsigned int )=0;
-    virtual char* encrypt(char* data, size_t, unsigned int exponent )=0;
+    virtual char* encrypt(char* data, size_t, unsigned int)=0;
     virtual char* encrypt_perftest()=0;
     virtual char* decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)=0;
     

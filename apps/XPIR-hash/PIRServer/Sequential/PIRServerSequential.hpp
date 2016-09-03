@@ -38,10 +38,10 @@ public:
     m_imported_dbs=imported_dbs;
   }
 
-	void job();								                //what the thread executes
+	void job();								                         //what the thread executes
 
 private:
-	vector<char*> readVector_s();				     //read a char* vector from socket (in other words read query array)
+	vector<char*> readVector_s();				               //read a char* vector from socket (in other words read query array)
 	void sendVector_s(vector<char*>,uint32_t);	       //send a char* vector through socket (in other words send reply data)
 	void sendReply(XPIRcSequential::REPLY,uint32_t);	 //sends all reply parameters: data, nbRepliesGenerated, maxFileSize)
 };

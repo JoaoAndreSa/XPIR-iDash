@@ -22,10 +22,9 @@
 //***PRIVATE METHODS***//
 void PIRClient::removeData(){
     int ret_val=std::system("exec rm -rf data/*");
+    if (ret_val==1) cout << "Error performing system call" << endl;
 
-    if (ret_val==1){
-        cout << "Error performing system call" << endl;
-    }
+    ret_val = std::system("exec mkdir data/nonces");
 
     delete m_SHA_256;
     delete m_AES_256;
@@ -38,22 +37,30 @@ void PIRClient::removeData(){
     Extract the exact ciphertext (with aggregation the reply contains more than one element).
 
     @param response reply data (ciphertext)
+    @param alpha aggregation value
     @param aggregated_entrySize reply element size
     @param pos the relative position inside the 'pack' we want to extract
 
-    @return response_s the specific element we are looking for or if it does not exist return ""
+    @return decoded_pack returns the symmetrically decrypted reply
 */
 std::string PIRClient::extractCiphertext(char* response, uint64_t alpha, uint64_t aggregated_entrySize, uint64_t pos){
-    unsigned char* ciphertext = new unsigned char[aggregated_entrySize];
-    memcpy((char *)ciphertext,response+aggregated_entrySize*(pos%alpha),aggregated_entrySize);
+    string decoded_pack="";
 
-    unsigned char* plaintext = new unsigned char[aggregated_entrySize];
-    int plaintexlen = symmetricDecrypt(plaintext,ciphertext,pos,aggregated_entrySize);
+    int data_hash_bytes = ceil(Constants::data_hash_size/8);
+    for(int i=0;i<Constants::padding_size;i++){
+        unsigned char* ciphertext = new unsigned char[data_hash_bytes];
+        memcpy((char *)ciphertext,response+aggregated_entrySize*(pos%alpha)+data_hash_bytes*i,data_hash_bytes);
 
-    string decoded_pack = m_SHA_256->uchar_to_binary(plaintext,aggregated_entrySize,aggregated_entrySize*8);
+        unsigned char* plaintext = new unsigned char[data_hash_bytes];
+        int plaintexlen = symmetricDecrypt(plaintext,ciphertext,pos*Constants::padding_size+i,data_hash_bytes);
 
-    delete[] ciphertext;
-    delete[] plaintext;
+        string decoded_elem = m_SHA_256->uchar_to_binary(plaintext,data_hash_bytes,data_hash_bytes*8);
+
+        decoded_pack+=decoded_elem;
+
+        delete[] ciphertext;
+        delete[] plaintext;
+    }
 
     return decoded_pack;
 }
@@ -62,6 +69,7 @@ std::string PIRClient::extractCiphertext(char* response, uint64_t alpha, uint64_
     Extract the exact plaintext (with aggregation the reply contains more than one element).
 
     @param response reply data (plaintext)
+    @param alpha aggregation value
     @param aggregated_entrySize reply element size
     @param pos the relative position inside the 'pack' we want to extract
 
@@ -69,6 +77,27 @@ std::string PIRClient::extractCiphertext(char* response, uint64_t alpha, uint64_
 */
 std::string PIRClient::extractPlaintext(char* response, uint64_t alpha, uint64_t aggregated_entrySize, uint64_t pos){
     return m_SHA_256->uchar_to_binary(reinterpret_cast<unsigned char*>(response+aggregated_entrySize*(pos%alpha)),aggregated_entrySize,aggregated_entrySize*8);
+}
+
+bool PIRClient::checkContent(char* response, uint64_t alpha, int max_bytesize, std::pair<uint64_t,std::vector<std::string>> elements){
+    bool check=true;
+
+    string response_s;
+    if(!Constants::encrypted){   //if PLAINTEXT
+        response_s = extractPlaintext(response,alpha,max_bytesize,elements.first);
+    }else{                       //if CIPHERTEXT
+        response_s = extractCiphertext(response,alpha,max_bytesize,elements.first);
+    }
+
+    for(int j=0;j<elements.second.size();j++){
+        if(m_SHA_256->search(elements.second[j],response_s)==false){
+            check=false;
+        }
+    }
+
+    //#-------CLEANUP PHASE--------#
+    delete[] response;
+    return check;
 }
 
 /**
@@ -101,7 +130,7 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
 
     for(int i=0;i<chr.size();i++){
         //string query_str=chr[i]+"\t"+pos[i]+"\t.\t"+ref[i]+"\t"+alt[i]; //the . is to represent the missing id field
-        string query_str=chr[i]+pos[i]+ref[i]+alt[i]; //the . is to represent the missing id field
+        string query_str=chr[i]+pos[i]+ref[i]+alt[i];
         string data_hash=m_SHA_256->hash(query_str);
         uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);
 
@@ -171,32 +200,37 @@ std::string PIRClient::padData(string input, int max_bits){
 */
 void PIRClient::sendData(std::vector<std::string> catalog, string filename){
     double start = omp_get_wtime(),total = 0;
+    m_AES_256->setIV(filename);
 
     int max_bytesize=Constants::padding_size*Constants::data_hash_size/8;
     m_socket.sendInt(max_bytesize);
     m_socket.sendInt(catalog.size());
+
+    int data_hash_bytes = ceil(Constants::data_hash_size/8);
+    uint64_t pos=0;
     for(uint64_t i=0; i<catalog.size();i++){
-        unsigned char* entry;
-        entry=m_SHA_256->binary_to_uchar(padData(catalog[i],max_bytesize*8));
+        unsigned char* entry=m_SHA_256->binary_to_uchar(padData(catalog[i],max_bytesize*8));
 
         double start_t,end_t;
-        if(!Constants::encrypted){    //if PLAINTEXT
+        if(!Constants::encrypted){  //if PLAINTEXT
             start_t = omp_get_wtime();
             m_socket.senduChar_s(entry,max_bytesize);
             end_t = omp_get_wtime();
-        }else{                        //if CIPHERTEXT
-            unsigned char* ciphertext = new unsigned char[max_bytesize];
-            int ciphertexlen = symmetricEncrypt(ciphertext,entry,i,max_bytesize);
+        }else{                      //if CIPHERTEXT
+            for(int j=0;j<Constants::padding_size; j++,pos++){
+                unsigned char* ciphertext = new unsigned char[data_hash_bytes];
+                int ciphertexlen = symmetricEncrypt(ciphertext,entry+data_hash_bytes*j,pos,data_hash_bytes);
 
-            start_t = omp_get_wtime();
-            m_socket.senduChar_s(ciphertext,ciphertexlen);
-            end_t = omp_get_wtime();
+                start_t = omp_get_wtime();
+                m_socket.senduChar_s(ciphertext,ciphertexlen);
+                end_t = omp_get_wtime();
 
-            delete[] ciphertext;
+                delete[] ciphertext;
+
+                total+=end_t-start_t;
+            }
         }
         delete[] entry;
-
-        total+=end_t-start_t;
     }
     if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+sizeof(int)+max_bytesize*catalog.size(),total);
     double end = omp_get_wtime();
@@ -207,7 +241,7 @@ void PIRClient::sendData(std::vector<std::string> catalog, string filename){
 /**
     Prepares and uploads the DB data to send to the server. 'Prepare' means initializing 'catalog' with size
     2^num_bits to store data, compute variant's position using HMAC (SHA256) and place in the correct place
-    in the 'catalog' (if need be append with existent content using '->' as delimiter)
+    in the 'catalog'.
 
     @param filename name of the vcf file from which we read all genomic data
 

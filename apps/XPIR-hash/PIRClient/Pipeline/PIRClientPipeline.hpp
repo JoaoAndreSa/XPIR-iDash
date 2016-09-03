@@ -2,11 +2,11 @@
     XPIR-hash
     PIRClientPipeline.hpp
     Purpose: Child class that executes client using pipelien PIR.
-			 NOTE: In pipeline PIR, client sends query to the server while he is generating it server.
+       NOTE: In pipeline PIR, client sends query to the server while he generates it.
              Furthermore, he does not need to wait and get all reply elements before starting the reply extraction.
 
-    @author Joao Sa
-    @version 1.0 01/07/16
+    @author  Joao Sa, Marc-Olivier Killijian & Carlos Aguillar
+    @version 1.0 07/09/16
 */
 
 /**
@@ -37,10 +37,10 @@ public:
 	bool searchQuery(std::map<char,std::string>);	//main function for the class -> query variant(s)
 
 private:
-	void downloadWorker(int,XPIRcPipeline*);                                        //donwload thread handler (reads reply)
-	void startProcessResult(int,XPIRcPipeline*);                                    //initiate reply extraction (reading and exctraction are do)
-	void uploadWorker(XPIRcPipeline*);
-	void startProcessQuery(uint64_t,XPIRcPipeline*);
+	void downloadWorker(int,XPIRcPipeline*);             //donwload reply thread handler (reads reply)
+	void startProcessResult(int,XPIRcPipeline*);         //initiate reply extraction
+	void uploadWorker(XPIRcPipeline*);                   //upload query thread handler
+	void startProcessQuery(uint64_t,XPIRcPipeline*);     //initiate query generation
 
-	void joinAllThreads(vector<XPIRcPipeline*>);
+	void joinAllThreads(vector<XPIRcPipeline*>);         //terminate threads
 };

@@ -71,6 +71,7 @@ class NFLLWE : public LatticesBasedCryptosystem
         uint64_t dataBitsizePerBuffer, uint64_t &polyNumber);
     
     // Functions for PIROptimizer and PIRClient
+    lwe_cipher chartocipher(char* c);
     std::string getSerializedCryptoParams(bool shortversion);
     unsigned int getCryptoParams(unsigned int k, std::set<std::string>& crypto_params);
     unsigned int getAllCryptoParams(std::set<std::string>& crypto_params);
@@ -89,6 +90,8 @@ class NFLLWE : public LatticesBasedCryptosystem
 
     // Additions
     void add(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d);
+    // Substractions
+    void sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d);
     // Fused Multiplications-Additions
     void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lvl);
     void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly, 
