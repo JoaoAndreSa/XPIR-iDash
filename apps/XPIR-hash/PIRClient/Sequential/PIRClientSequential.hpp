@@ -6,7 +6,7 @@
              Furthermore, he has to wait and get all reply elements before starting the reply extraction.
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 07/09/16
 */
 
 /**
@@ -39,7 +39,7 @@ public:
 private:
 	//QUERY GENERATION & SEND QUERY
 	void sendQuery(std::vector<char*>,XPIRcSequential*);
-	std::vector<char*> queryGeneration(uint64_t,XPIRcSequential*);					//generate and return query
+	std::vector<char*> queryGeneration(uint64_t,XPIRcSequential*);		//generate and return query
 
 	//READ REPLY
 	std::vector<char*> readReplyData();

@@ -1,3 +1,12 @@
+/**
+    XPIR-hash
+    Error.hpp
+    Purpose: Error handler
+
+    @author Joao Sa
+    @version 1.0 07/09/16
+*/
+
 #pragma once
 
 #include <boost/thread.hpp>

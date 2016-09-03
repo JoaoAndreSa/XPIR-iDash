@@ -1,12 +1,12 @@
 /**
     XPIR-hash
-    PIRClientPipeline.hpp
+    PIRClientPipeline.cpp
     Purpose: Child class that executes client using pipelien PIR.
-       NOTE: In pipeline PIR, client sends query to the server while he is generating it server.
+       NOTE: In pipeline PIR, client sends query to the server while he generates it.
              Furthermore, he does not need to wait and get all reply elements before starting the reply extraction.
 
-    @author Marc-Olivier Killijian, Carlos Aguillar & Joao Sa
-    @version 1.0 01/07/16
+    @author  Joao Sa, Marc-Olivier Killijian & Carlos Aguillar
+    @version 1.0 07/09/16
 */
 
 /**
@@ -23,9 +23,10 @@
 
 //***PRIVATE METHODS***//
 /**
-    Download reply from the server and stores it chunks in shared replies queue.
+    Download reply from the server and store its chunks in a shared replies queue.
 
-    @param
+    @param maxFileSize bytesize of an entire entry/line
+    @param xpir XPIR object to perform PIR operations
     @return
 */
 void PIRClientPipeline::downloadWorker(int maxFileSize,XPIRcPipeline* xpir){
@@ -56,9 +57,10 @@ void PIRClientPipeline::downloadWorker(int maxFileSize,XPIRcPipeline* xpir){
 }
 
 /**
-    Sets reply extractor and launches parallely reply download and reply extraction.
+    Starts reply extractor and launches parallely reply download and reply extraction.
 
-    @param
+    @param maxFileSize bytesize of an entire entry/line
+    @param xpir XPIR object to perform PIR operations
     @return
 */
 void PIRClientPipeline::startProcessResult(int maxFileSize,XPIRcPipeline* xpir){
@@ -67,18 +69,14 @@ void PIRClientPipeline::startProcessResult(int maxFileSize,XPIRcPipeline* xpir){
 }
 
 /**
-    Upload query to the server and delete its' parts from the shared query queue.
+    Upload query to the server and delete its parts from the shared queries queue.
 
-    @param
+    @param xpir XPIR object to perform PIR operations
     @return
 */
-void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir,char* request){
+void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir){
 	double start = omp_get_wtime(),total=0;
 	char *tmp;
-
-  //uint64_t request_size = xpir->getCrypto()->getCiphertextBytesize();
-  //m_socket.senduInt64(xpir->getCrypto()->getCiphertextBytesize());
-  //m_socket.sendChar_s(request,);
 
   uint64_t total_bytes=0;
 	for (unsigned int j=1; j<=xpir->getD(); j++){
@@ -102,22 +100,23 @@ void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir,char* request){
 }
 
 /**
-    Upload query to the server and delete its' parts from the shared query queue.
+    Starts query generator and launches parallely query upload.
 
-    @param
+    @param pack_pos position to be queried
+    @param xpir XPIR object to perform PIR operations
     @return
 */
-void PIRClientPipeline::startProcessQuery(uint64_t pack_pos,XPIRcPipeline* xpir,char* request){
+void PIRClientPipeline::startProcessQuery(uint64_t pack_pos,XPIRcPipeline* xpir){
 	xpir->getQGenerator()->setChosenElement(pack_pos);
   xpir->getQGenerator()->startGenerateQuery();
-  uploadWorker(xpir,request);
+  uploadWorker(xpir);
 }
 
 /**
-    Wait for helper threads to finish. These threads include the ones used by the reply extractor and reply writer
+    Wait for helper threads to finish. These threads include those used by the reply extractor and reply writer
     (search for the variant in the extracted result)
 
-    @param
+    @param container contains all threads
     @return
 */
 void PIRClientPipeline::joinAllThreads(vector<XPIRcPipeline*> container){
@@ -131,7 +130,6 @@ void PIRClientPipeline::joinAllThreads(vector<XPIRcPipeline*> container){
 /**
     Main function of PIRClientParallel class. Queries server!
 
-    @param num_entries total number of entries (size of database)
     @param entry a map/dictionary the stores que variant(s) beeing queried in a key-value way
 
     @return response_s stores the variant(s) we are looking for or "" otherwise
@@ -161,16 +159,10 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
             uint64_t pack_pos=considerPacking(pos[i].first,xpir->getAlpha());
 
             //#-------QUERY PHASE--------#
-            cout << endl;
-            char* request = generateRequest(pos[i].first,pos[i].second[0],data_hash_size);
-            char* request_encrypted = xpir->getCrypto()->encrypt(request,data_hash_size,Constants::padding_size);
-
-            startProcessQuery(pack_pos,xpir,request_encrypted);
+            startProcessQuery(pack_pos,xpir);
 
             //#-------REPLY PHASE--------#
             startProcessResult(max_bytesize,xpir);
-
-            delete[] request;
         }
     }
     joinAllThreads(container);
@@ -178,6 +170,7 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
     for(int k=0,l=0;k<files.size();k++){
         m_AES_256->setIV(files[k]);
         for(int i=0;i<pos.size();i++,l++){
+            //#-------EXTRACTION PHASE--------#
             char* response = container[l]->getReplyWriter()->extractResponse(pos[i].first,max_bytesize,container[l]->getAlpha(),container[l]->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte);
             if(!checkContent(response,1,max_bytesize,pos[i])) check=false;
             delete container[l];

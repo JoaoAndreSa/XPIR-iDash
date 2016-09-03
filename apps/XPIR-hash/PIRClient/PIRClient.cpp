@@ -33,32 +33,15 @@ void PIRClient::removeData(){
     initSHA256();
 }
 
-char* PIRClient::generateRequest(uint64_t pos, string variant_hash, int data_hash_bytes){
-    unsigned char* line = new unsigned char[Constants::padding_size*data_hash_bytes];
-
-    for(int i=0;i<Constants::padding_size;i++){
-        unsigned char* variant = m_SHA_256->binary_to_uchar(variant_hash);
-        unsigned char* ciphertext = new unsigned char[data_hash_bytes];
-        int ciphertexlen = symmetricEncrypt(ciphertext,variant,pos*Constants::padding_size+i,data_hash_bytes);
-
-        //Copy data to line
-        memcpy(line+data_hash_bytes*i,ciphertext,data_hash_bytes);
-
-        delete[] ciphertext;
-        delete[] variant;
-    }
-
-    return reinterpret_cast<char*>(line);
-}
-
 /**
     Extract the exact ciphertext (with aggregation the reply contains more than one element).
 
     @param response reply data (ciphertext)
+    @param alpha aggregation value
     @param aggregated_entrySize reply element size
     @param pos the relative position inside the 'pack' we want to extract
 
-    @return response_s the specific element we are looking for or if it does not exist return ""
+    @return decoded_pack returns the symmetrically decrypted reply
 */
 std::string PIRClient::extractCiphertext(char* response, uint64_t alpha, uint64_t aggregated_entrySize, uint64_t pos){
     string decoded_pack="";
@@ -86,6 +69,7 @@ std::string PIRClient::extractCiphertext(char* response, uint64_t alpha, uint64_
     Extract the exact plaintext (with aggregation the reply contains more than one element).
 
     @param response reply data (plaintext)
+    @param alpha aggregation value
     @param aggregated_entrySize reply element size
     @param pos the relative position inside the 'pack' we want to extract
 
@@ -146,7 +130,7 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
 
     for(int i=0;i<chr.size();i++){
         //string query_str=chr[i]+"\t"+pos[i]+"\t.\t"+ref[i]+"\t"+alt[i]; //the . is to represent the missing id field
-        string query_str=chr[i]+pos[i]+ref[i]+alt[i]; //the . is to represent the missing id field
+        string query_str=chr[i]+pos[i]+ref[i]+alt[i];
         string data_hash=m_SHA_256->hash(query_str);
         uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);
 
@@ -257,7 +241,7 @@ void PIRClient::sendData(std::vector<std::string> catalog, string filename){
 /**
     Prepares and uploads the DB data to send to the server. 'Prepare' means initializing 'catalog' with size
     2^num_bits to store data, compute variant's position using HMAC (SHA256) and place in the correct place
-    in the 'catalog' (if need be append with existent content using '->' as delimiter)
+    in the 'catalog'.
 
     @param filename name of the vcf file from which we read all genomic data
 

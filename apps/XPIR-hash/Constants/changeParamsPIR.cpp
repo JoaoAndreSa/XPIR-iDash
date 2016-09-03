@@ -4,14 +4,14 @@
     Purpose: Change PIR parameters
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 07/09/16
 */
 
 /**
 	paramsPIR.txt:
 		dimensionality: - recursion (0<d<4)
 		alpha:			- packing (number of elements per ciphertext/polynomial)
-		
+
 		(ordered values, the biggest dimension is always in N[0])
 		N[0]:			- number of query elements in dimension 1
 		N[1]:			- (...) 2 (should 0 if d<2)
@@ -22,10 +22,10 @@
 
 		example (for 1000 entries):
 
-			1
-			30
-			35   (structure 1x35 aggregated elements [30])
-			0
+			2
+			3
+			53   (structure 53x52 aggregated elements [3])
+			52
 			0
 			0
 			LWE:97:1024:60 
@@ -34,7 +34,7 @@
 #include <iostream>
 #include <fstream>
 
-//HOW TO USE: ./changeParamsPIR 1 30 35 0 0 0 LWE:97:1024:60
+//HOW TO USE: ./changeParamsPIR 2 3 53 52 0 0 LWE:97:1024:60
 int main(int argc, char* argv[]){
 
 	try{

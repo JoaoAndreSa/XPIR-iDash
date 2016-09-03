@@ -24,7 +24,7 @@
 /**
     Receive queries n messages with n = nbr of files.
 
-    @param
+    @param xpir
     @return
 */
 void PIRServerPipeline::downloadWorker(XPIRcPipeline* xpir){
@@ -67,7 +67,7 @@ void PIRServerPipeline::downloadWorker(XPIRcPipeline* xpir){
 /**
     Send PIR's result, asynchronously.
 
-    @param
+    @param xpir
     @return
 */
 void PIRServerPipeline::uploadWorker(XPIRcPipeline* xpir){
