@@ -30,6 +30,12 @@
 #include "utils.h"
 
 /// include the FV homomorphic encryption library
+#include <cstddef>
+#include <algorithm>
+#include <chrono>
+#include <iostream>
+#include <memory>
+#include <nfl.hpp>
 namespace FV {
 namespace params {
 using poly_t = nfl::poly_from_modulus<uint64_t, 1 << 12, 248>;

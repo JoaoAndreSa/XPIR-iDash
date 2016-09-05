@@ -20,15 +20,13 @@
  *
  */
 
-#pragma once
+// #include <cstddef>
+// #include <algorithm>
+// #include <chrono>
+// #include <iostream>
+// #include <memory>
+// #include <nfl.hpp>
 
-#include <cstddef>
-
-#include <algorithm>
-#include <chrono>
-#include <iostream>
-#include <memory>
-#include <nfl.hpp>
 
 namespace FV {
 
