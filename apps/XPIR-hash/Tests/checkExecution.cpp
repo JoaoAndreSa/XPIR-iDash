@@ -15,7 +15,7 @@
 #include <vector>
 #include <math.h>
 
-#define NUM_TESTS 4 		//number of different entries tested (1,000 - 10,000 - 100,000)
+#define NUM_TESTS 1 		//number of different entries tested (10,000 - 100,000 - 5,000,000)
 #define NUM_YES 10
 #define NUM_NO 5
 
@@ -57,7 +57,8 @@ int main(int argc, char* argv[]){
 
 		if (f.is_open()){
 			for(int i=0;i<NUM_TESTS;i++){
-				std::cout << "#######-----NUM ENTRIES: " << pow(10,i+3) << "-----#######" << std::endl;
+				//std::cout << "#######-----NUM ENTRIES: " << pow(10,i+3) << "-----#######" << std::endl;
+				std::cout << "#######-----NUM ENTRIES: 5000000 -----#######" << std::endl;
 
 				int j;
 				for(j=0;j<NUM_YES;j++){

@@ -89,6 +89,17 @@ bool PIRClient::checkContent(char* response, uint64_t alpha, int max_bytesize, s
         response_s = extractCiphertext(response,alpha,max_bytesize,elements.first);
     }
 
+    //TIME MEASURE (only for iDash challenge): retrieved variants/per query 
+    int variants_retrieved=0;
+    string zeros(Constants::data_hash_size,'0');
+    for(int i=0;i<response_s.length();i+=Constants::data_hash_size){
+        if(zeros.compare(response_s.substr(i,Constants::data_hash_size))!=0){
+            variants_retrieved++;
+        }
+    }
+    cout << "PIRClient: " << variants_retrieved << " variants retrieved" << endl;
+    //END
+
     for(int j=0;j<elements.second.size();j++){
         if(m_SHA_256->search(elements.second[j],response_s)==false){
             check=false;
@@ -208,6 +219,7 @@ void PIRClient::sendData(std::vector<std::string> catalog, string filename){
 
     int data_hash_bytes = ceil(Constants::data_hash_size/8);
     uint64_t pos=0;
+
     for(uint64_t i=0; i<catalog.size();i++){
         unsigned char* entry=m_SHA_256->binary_to_uchar(padData(catalog[i],max_bytesize*8));
 
@@ -268,7 +280,7 @@ void PIRClient::uploadData(string foldername){
             std::vector<std::string>catalog(pow(2,m_SHA_256->getHashSize()),"");
 
             int redo=0;
-            //int max_collisions=0;
+            int max_collisions=0;
             if (f.is_open()){
                 while(getline(f,line)){
                     if(line[0]!='#'){
@@ -281,12 +293,14 @@ void PIRClient::uploadData(string foldername){
                             redo=1;
                             break;
                         }
-
-                        //if(catalog[pos].length()>max_collisions) max_collisions=catalog[pos].length();
+                        //TIME MEASURE (only for iDash challenge): max retrieved variants/per query 
+                        if(catalog[pos].length()>max_collisions) max_collisions=catalog[pos].length();
+                        //END
                     }
                 }
             }
-            //cout << max_collisions/Constants::data_hash_size << endl;
+            max_collisions = max_collisions/Constants::data_hash_size;
+            cout << "\nPIRClient: The maximum number of collisions is " << max_collisions;
 
             if(redo==1){
                 num_attempts++;

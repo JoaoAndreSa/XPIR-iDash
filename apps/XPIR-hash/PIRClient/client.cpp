@@ -108,7 +108,10 @@ int main(int argc, char* argv[]){
 	c->initSHA256();
 	if(argc==3){			//SEND data to server
 		socket.sendInt(1);
+		double start = omp_get_wtime();
 		c->uploadData(entry['f']);
+		double end = omp_get_wtime();
+		std::cout << "PIRClient: Setup database took " << end-start << " (s)" << endl;
 		return 0;
 	}else{					//QUERY the server
 		socket.sendInt(0);
