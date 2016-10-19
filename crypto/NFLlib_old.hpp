@@ -14,9 +14,9 @@
  *  You should have received a copy of the GNU General Public License
  *  along with XPIR.  If not, see <http://www.gnu.org/licenses/>.
  *
- * This file incorporates work covered by the following copyright and  
- * permission notice:  
- * 
+ * This file incorporates work covered by the following copyright and
+ * permission notice:
+ *
  *   Demonstration code for the paper "Faster arithmetic for number-theoretic
  *   transforms", May 2012
  *
@@ -57,6 +57,7 @@
 #include <gmp.h>
 #include <iostream>
 #include "NFLParams.hpp"
+#include "Bitsplit.hpp"
 #include "prng/fastrandombytes_old.h"
 #include <cstring>
 #include <fstream>
@@ -65,7 +66,7 @@
 #include <immintrin.h>
 #include <x86intrin.h>
 
-	
+
 using namespace std;
 
 // Polynomials are pointers to arrays of uint64_t coefficients
@@ -111,7 +112,7 @@ static inline T* calloc_align_other(const size_t n)
 }
 
 // Number-Theoretic Transform Tools class
-class NFLlib_old  
+class NFLlib_old
 {
 
   public:
@@ -119,28 +120,22 @@ class NFLlib_old
     NFLlib_old();
     void configureNTT(); // Only called from setmodulus and setpolyDegree
 
-    // Fundamental setters (result in a call to initializing functions above) 
+    // Fundamental setters (result in a call to initializing functions above)
     void setmodulus(uint64_t modulus);
     void setpolyDegree(unsigned int polyDegree);
     void setNewParameters(unsigned int polyDegree, unsigned int modulusBitsize);
- 
+
     // Getters
     uint64_t* getmoduli();
     unsigned int getpolyDegree();
     unsigned short getnbModuli();
     void copymoduliProduct(mpz_t dest);
-   
+
     // Random polynomial generation functions
-    void setBoundedRandomPoly(poly64 res, uint64_t upperBound_, bool uniform); 
+    void setBoundedRandomPoly(poly64 res, uint64_t upperBound_, bool uniform);
     poly64 allocBoundedRandomPoly(uint64_t upperBound_, bool uniform);
 
-    // Data import and export main functions
-    poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, 
-        uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber);
-    static void serializeData64 (uint64_t* indata, unsigned char* outdata, 
-        unsigned int bitsPerChunk, uint64_t nb_of_uint64);
-    static void serializeData32 (uint32_t* indata, unsigned char* outdata, unsigned int bitsPerChunk, 
-        uint64_t nb_of_uint32);
+
 
     // Helper functions
     poly64 allocpoly(bool nullpoly);
@@ -151,8 +146,8 @@ class NFLlib_old
     // Destructors memory freeing routines
     ~NFLlib_old();
     void freeNTTMemory(); // Only called from configureNTT and ~NFLlib
-    
-    
+
+
     // ****************************************************
     // Modular and Polynomial computation inlined functions
     // ****************************************************
@@ -172,26 +167,34 @@ class NFLlib_old
     // Additions
     void addmodPoly(poly64 rop, poly64 op1, poly64 op2);
     void submodPoly(poly64 rop, poly64 op1, poly64 op2);
-    // Multiplications 
+    // Multiplications
     void mulmodPolyNTT(poly64 rop, poly64 op1, poly64 op2);
     void mulmodPolyNTTShoup(poly64 rop, poly64 op1, poly64 op2, poly64 op2prime);
     // Fused Multiplications-Additions
     void mulandaddPolyNTT(poly64 rop, poly64 op1, poly64 op2);
     void mulandaddPolyNTTShoup(poly64 rop, poly64 op1, poly64 op2, poly64 op2prime);
-    
+
     // Number-Theoretic Transorm functions
-    static void ntt(uint64_t*  x, const uint64_t*  wtab, const uint64_t*  winvtab, 
+    static void ntt(uint64_t*  x, const uint64_t*  wtab, const uint64_t*  winvtab,
         const unsigned K, const uint64_t p);
     static void inv_ntt(uint64_t* const x, const uint64_t* const inv_wtab, const uint64_t* const inv_winvtab,
         const unsigned K, const uint64_t invK, const uint64_t p, const uint64_t* const inv_indexes);
     static void prep_wtab(uint64_t* wtab, uint64_t* winvtab, uint64_t w, unsigned K, uint64_t p);
     void nttAndPowPhi(poly64 op);
     void invnttAndPowInvPhi(poly64);
-    
+
+    // Data import and export main functions
+    poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers,
+        uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber);
+    static void serializeData64 (uint64_t* indata, unsigned char* outdata,
+        unsigned int bitsPerChunk, uint64_t nb_of_uint64);
+    static void serializeData32 (uint32_t* indata, unsigned char* outdata, unsigned int bitsPerChunk,
+        uint64_t nb_of_uint32);
+
     // Pre-computation functions
     poly64 allocandcomputeShouppoly(poly64 x);
 
-  private: 
+  private:
     // Says whether the object has been initialized for the int amount of moduli it is set to
     unsigned int alreadyInit;
     // Polynomial attributes
@@ -201,7 +204,7 @@ class NFLlib_old
     // Chinese Remainder Theorem (CRT) and Inverse CRT related attributes
     mpz_t *liftingIntegers;
     mpz_t moduliProduct;
-    
+
     // NTT and inversse NTT related attributes
     // omega**i values (omega = polydegree-th primitive root of unity), and their inverses
     // phi**i values (phi = square root of omega), and their inverses multiplied by a constant
@@ -209,26 +212,27 @@ class NFLlib_old
     // NOTE : omega and derived values are ordered following David Harvey's algorithm
     // w**0 w**1 ... w**(polyDegree/2) w**0 w**2 ... w**(polyDegree/2) w**0 w**4 ...
     // w**(polyDegree/2) etc. (polyDegree values)
-    uint64_t **phis, **shoupphis, **invpoly_times_invphis, 
-             **shoupinvpoly_times_invphis, **omegas, 
+    uint64_t **phis, **shoupphis, **invpoly_times_invphis,
+             **shoupinvpoly_times_invphis, **omegas,
              **shoupomegas, **invomegas, **shoupinvomegas, *invpolyDegree;
     uint64_t* inv_indexes;
 
-    // WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+    // WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // ENTERING THE DEN... Internal functions you should never read and we will never comment
-    uint64_t* bitsplitter (unsigned char** inDataBuffers, uint64_t nbrOfBuffers, 
+    uint64_t* bitsplitter (unsigned char** inDataBuffers, uint64_t nbrOfBuffers,
         uint64_t bitsPerBuffer, unsigned int bitsPerChunk);
     void internalLongIntegersToCRT(uint64_t* tmpdata, poly64 outdata, uint64_t int_uint64PerChunk,
         uint64_t totalNbChunks) ;
-    void bs_finish(poly64 &outdata, uint64_t int_uint64PerChunk, uint64_t polyNumber, 
+    void bs_finish(poly64 &outdata, uint64_t int_uint64PerChunk, uint64_t polyNumber,
         uint64_t *splitData, uint64_t nbrOfBuffers, uint64_t bitsPerBuffer, unsigned int bitsPerChunk);
-    void bs_loop (unsigned char** inDataBuffers, uint64_t nbrOfBuffers, 
-        uint64_t bitsPerBuffer, unsigned int bitsPerChunk, uint64_t *&tmpdata, 
+    void bs_loop (unsigned char** inDataBuffers, uint64_t nbrOfBuffers,
+        uint64_t bitsPerBuffer, unsigned int bitsPerChunk, uint64_t *&tmpdata,
         uint64_t bufferIndex, uint64_t &bitsread, size_t &subchunkIndex);
-    uint64_t* bitsplitter_backtoback_internal_test (unsigned char** inDataBuffers, 
-        uint64_t nbrOfBuffers, uint64_t bitsPerBuffer, unsigned int bitsPerChunk, 
+    uint64_t* bitsplitter_backtoback_internal_test (unsigned char** inDataBuffers,
+        uint64_t nbrOfBuffers, uint64_t bitsPerBuffer, unsigned int bitsPerChunk,
         uint64_t totalbitsread,uint64_t bitsread, uint64_t* pointer64, unsigned int bitsToRead);
     // END OF THE DEN
+
 };
 
 
@@ -248,7 +252,7 @@ class NFLlib_old
 //     Operations over uint64_t (polynomial coefficients)
 // *********************************************************
 
-// Modular addition plain and simple : add then test if sum is superior 
+// Modular addition plain and simple : add then test if sum is superior
 // to the modulus in which case substract the modulus to the sum
 // ASSUMPTION: x + y < 2**64
 // OUTPUT: x + y lazymod p
@@ -285,14 +289,14 @@ inline uint64_t NFLlib_old::mulmodShoup(uint64_t x, uint64_t y, uint64_t yprime,
   uint64_t q = ((uint128_t) x * yprime) >> 64;
   res = x * y - q * p;
   res -= ((res>=p) ? p : 0);
-  return res;  
+  return res;
 }
 
 
 // Fused Multiply and Addition (FMA) : trivial approach
 inline void NFLlib_old::mulandadd(uint64_t& rop, uint64_t x, uint64_t y, uint64_t p)
 {
-  rop = (((uint128_t) (x) * y) + rop) % p; 
+  rop = (((uint128_t) (x) * y) + rop) % p;
 }
 
 
@@ -303,21 +307,21 @@ inline void NFLlib_old::mulandadd(uint64_t& rop, uint64_t x, uint64_t y, uint64_
 inline void NFLlib_old::mulandaddShoup(uint64_t& rop, const uint64_t x, const uint64_t y, const uint64_t yprime, const uint64_t p)
 {
   //mulandadd(rop, x, y, p);
-#ifdef DEBUG  
+#ifdef DEBUG
   // This must be before the real computation modifies rop
   uint128_t res = ((uint128_t) x * y + rop) % p;
-#endif  
+#endif
   uint64_t q = ((uint128_t) x * yprime) >> 64;
   rop += x * y - q * p;
   rop -= ((rop>=p) ? p : 0);
-#ifdef DEBUG  
+#ifdef DEBUG
   // And this must be after the modification of rop
   if((res%p)!=(rop%p))
   {
     std::cout<<"NFLlib_old: CRITICAL Shoup multiplication failed (prob. orig. precomputation or bounds)"<<std::endl;
     exit(1);
   }
-#endif      
+#endif
 }
 
 
@@ -329,7 +333,7 @@ inline void NFLlib_old::mulandaddShoup(uint64_t& rop, const uint64_t x, const ui
 
 // Apply addmod to all the coefficients of a polynomial
 inline void NFLlib_old::addmodPoly(poly64 rop, poly64 op1,poly64 op2) {
-  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) 
+  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++)
   {
     for(unsigned i=0;i<polyDegree;i++)
     {
@@ -344,7 +348,7 @@ inline void NFLlib_old::addmodPoly(poly64 rop, poly64 op1,poly64 op2) {
 
 // Apply submod to all the coefficients of a polynomial
 inline void NFLlib_old::submodPoly(poly64 rop, poly64 op1,poly64 op2) {
-  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) 
+  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++)
   {
     for(unsigned i=0;i<polyDegree;i++)
     {
@@ -362,7 +366,7 @@ inline void NFLlib_old::submodPoly(poly64 rop, poly64 op1,poly64 op2) {
 // have been processed through nttAndPowPhi
 inline void NFLlib_old::mulmodPolyNTT(poly64 rop, poly64 op1, poly64 op2)
 {
-  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) {  
+  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) {
     for (unsigned i = 0 ; i < polyDegree ;i++)
     {
       rop[i] = mulmod(op1[i],op2[i],moduli[currentModulus]);
@@ -396,7 +400,7 @@ inline void NFLlib_old::mulmodPolyNTTShoup(poly64 rop, poly64 op1,poly64 op2,pol
 // Same as mulmodPolyNTT but with fused multiplication and addition
 inline void NFLlib_old::mulandaddPolyNTT(poly64 rop, poly64 op1,poly64 op2)
 {
-  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) {  
+  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) {
     for (unsigned i = 0 ; i < polyDegree ;i++)
     {
       mulandadd(rop[i],op1[i],op2[i],moduli[currentModulus]);
@@ -431,7 +435,7 @@ inline void NFLlib_old::mulandaddPolyNTTShoup(poly64 rop, poly64 op1,poly64 op2,
 // *********************************************************
 
 // *****************************************************************
-// NTT functions from David Harvey 
+// NTT functions from David Harvey
 // From : http://web.maths.unsw.edu.au/~davidharvey/papers/fastntt/
 // Most of the functions have been modified for our needs
 // The associated copyright notice is at the beginning of this file
@@ -439,7 +443,7 @@ inline void NFLlib_old::mulandaddPolyNTTShoup(poly64 rop, poly64 op1,poly64 op2,
 
 
 // Number-Theoretic Transform: replaces a coefficient representation of a polynomial
-// by the values of the polynomial on a set of points. Allows to do coefficient wise 
+// by the values of the polynomial on a set of points. Allows to do coefficient wise
 // multiplication of polynomials instead of the usual convolution product
 // - x points to the polynomial to which we will apply the NTT
 // - wtab is a pre-computed table with the powers of a root of unity
@@ -473,7 +477,7 @@ inline void NFLlib_old::ntt(uint64_t* x, const uint64_t* wtab, const uint64_t* w
   // log2(N)-2
   const int J = _bit_scan_reverse(K)-2;
   for (int w = 0; w < J; w++) {
-	const size_t M = 1 << w; 
+	const size_t M = 1 << w;
 	const size_t N = N0 >> w;
 //#pragma omp parallel for schedule(static) num_threads(4)
 	for (size_t r = 0; r < M; r++) {
@@ -561,7 +565,7 @@ inline void NFLlib_old::inv_ntt(uint64_t* const x, const uint64_t* const inv_wta
 
   // bit-reverse again
   permut(x, y, inv_indexes, K);
-  
+
   free(y);
 }
 
@@ -585,7 +589,7 @@ inline void NFLlib_old::prep_wtab(uint64_t* wtab, uint64_t* wtabshoup, uint64_t 
   }
 }
 // *****************************************************************
-// END OF NTT functions from David Harvey 
+// END OF NTT functions from David Harvey
 // From : http://web.maths.unsw.edu.au/~davidharvey/papers/fastntt/
 // Most of the functions have been modified for our needs
 // The associated copyright notice is at the beginning of this file
@@ -594,7 +598,7 @@ inline void NFLlib_old::prep_wtab(uint64_t* wtab, uint64_t* wtabshoup, uint64_t 
 
 // In order to have polynomial operations mod X**n + 1 as we want
 // we must multiply the polynomial coefficients by phi powers before doing the NTT
-inline void NFLlib_old::nttAndPowPhi(poly64 op) 
+inline void NFLlib_old::nttAndPowPhi(poly64 op)
 {
   for (unsigned int cm = 0 ; cm < nbModuli ; cm++)
   {
@@ -610,11 +614,11 @@ inline void NFLlib_old::nttAndPowPhi(poly64 op)
 
 // In order to have polynomial operations mod X**n + 1 as we want
 // we must multiply the polynomial coefficients by invphi powers before doing the inverse-NTT
-inline void NFLlib_old::invnttAndPowInvPhi(poly64 op) 
+inline void NFLlib_old::invnttAndPowInvPhi(poly64 op)
 {
-  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) 
+  for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++)
   {
-    inv_ntt(op, invomegas[currentModulus], shoupinvomegas[currentModulus], 
+    inv_ntt(op, invomegas[currentModulus], shoupinvomegas[currentModulus],
         polyDegree, invpolyDegree[currentModulus] , moduli[currentModulus], inv_indexes);
     for (unsigned int i = 0; i < polyDegree; i++)
     {

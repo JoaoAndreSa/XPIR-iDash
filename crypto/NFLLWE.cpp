@@ -131,6 +131,7 @@ void  NFLLWE::setNewParameters(unsigned int polyDegree_, unsigned int aggregated
 // *********************************************************
 poly64* NFLLWE::getsecretKey() { return secretKey; }
 unsigned int NFLLWE::getpolyDegree() { return polyDegree; }
+NFLlib_old& NFLLWE::getnflInstance() { return nflInstance; }
 
 // *********************************************************
 // Setters

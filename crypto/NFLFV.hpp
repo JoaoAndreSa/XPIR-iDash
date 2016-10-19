@@ -18,8 +18,11 @@
 #ifndef DEF_NFLFV
 #define DEF_NFLFV
 
+
 #define SHOUP
 //#define TESTSHOUP
+
+#include "FVobject.hpp"
 
 #include <omp.h>
 #include <inttypes.h>
@@ -27,7 +30,7 @@
 #include <math.h>
 #include <iostream>
 #include "NFLParams.hpp"
-#include "NFLlib_old.hpp"
+#include "Bitsplit.hpp"
 #include "NFLLWEDatatypes.hpp"
 #include "LatticesBasedCryptosystem.hpp"
 #include "crypto/HomomorphicCrypto.hpp"
@@ -36,6 +39,7 @@
 #include <string>
 #include <cstddef>
 #include <gmp.h>
+
 
 class NFLFV : public LatticesBasedCryptosystem
 {
@@ -46,30 +50,30 @@ class NFLFV : public LatticesBasedCryptosystem
     ~NFLFV();
 
     std::string& toString();
-    
+
     unsigned int getpolyDegree();
     poly64* getsecretKey();
   	void recomputeNoiseAmplifiers();
-    
+
     // Setters
     void setmodulus(uint64_t modulus);
     void setpolyDegree(unsigned int polyDegree);
     void setNewParameters(const std::string& crypto_param_descriptor);
     void setNewParameters(unsigned int polyDegree, unsigned int modulusBitsize, int absPCBitsize_);
-   
+
     // Crypto related functions
     long setandgetAbsBitPerCiphertext(unsigned int elt_nbr);
     void enc(lwe_cipher *c, poly64 m);
-	  void dec(poly64 m, lwe_cipher *c);	
+	  void dec(poly64 m, lwe_cipher *c);
     char* encrypt(unsigned int ui, unsigned int );
     char* encrypt(char* data, size_t, unsigned int exponent );
     char* encrypt_perftest();
     char* decrypt(char* cipheredData, unsigned int, size_t, size_t);
 
     // Data importation and exportation
-    poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, 
+    poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers,
         uint64_t dataBitsizePerBuffer, uint64_t &polyNumber);
-    
+
     // Functions for PIROptimizer and PIRClient
     lwe_cipher chartocipher(char* c);
     std::string getSerializedCryptoParams(bool shortversion);
@@ -83,9 +87,9 @@ class NFLFV : public LatticesBasedCryptosystem
     double estimatePrecomputeTime(std::string crypto_param);
     unsigned int estimateSecurity(unsigned int n, unsigned int p_size);
 	unsigned int getmodulusBitsize();
-    
+
     // **********************************
-    // Modular ciphertext manipulation 
+    // Modular ciphertext manipulation
     // **********************************
 
     // Additions
@@ -94,16 +98,16 @@ class NFLFV : public LatticesBasedCryptosystem
     void sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d);
     // Fused Multiplications-Additions
     void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lvl);
-    void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly, 
+    void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly,
         int rec_lvl);
     //Shoup version
-	  void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime, 
+	  void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime,
         uint64_t current_poly, int rec_lvl);
-	  void mul(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime, 
+	  void mul(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime,
         uint64_t current_poly, int rec_lvl);
 
     void mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op2);
-    void mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op2, 
+    void mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op2,
         uint64_t current_poly);
 
 
@@ -114,6 +118,8 @@ class NFLFV : public LatticesBasedCryptosystem
     poly64 *secretKey; // The secret key
     poly64 *secretKeyShoup; // The secret key Shoupified
 	uint64_t *Abit_mod,*Abit_mod_shoup;
+	FVobject *fvobject;
+	unsigned int plainbits;
 
     void clearSecretKeys();
 };

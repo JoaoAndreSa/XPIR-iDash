@@ -9,6 +9,8 @@ include_directories(.. ../external_components/NFLlib/include)
 
 add_library(pir_crypto STATIC
     AbstractPublicParameters.cpp
+    FV2048_124.cpp
+    Bitsplit.cpp
     HomomorphicCrypto.cpp
     HomomorphicCryptoFactory_internal.cpp
     LatticesBasedCryptosystem.cpp

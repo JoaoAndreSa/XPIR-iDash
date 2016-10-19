@@ -14,54 +14,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with XPIR.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include "FV2048_124.hpp"
 #include "NFLFV.hpp"
 #include <fstream>
 //#define bench
 //#define Repetition 10000
-/// include the FV homomorphic encryption library
-#include <cstddef>
-#include <algorithm>
-#include <chrono>
-#include <iostream>
-#include <memory>
-#include <nfl.hpp>
-namespace FV1 {
-namespace FV {
-namespace params {
-using poly_t = nfl::poly_from_modulus<uint64_t, 1 << 12, 248>;
-template <typename T> struct plaintextModulus;
-template <> struct plaintextModulus<mpz_class> {
-  static mpz_class value() { return mpz_class("379"); }
-};
-using gauss_struct = nfl::gaussian<uint16_t, uint64_t, 2>;
-using gauss_t = nfl::FastGaussianNoise<uint16_t, uint64_t, 2>;
-gauss_t fg_prng_sk(8.0, 128, 1 << 14);
-gauss_t fg_prng_evk(8.0, 128, 1 << 14);
-gauss_t fg_prng_pk(8.0, 128, 1 << 14);
-gauss_t fg_prng_enc(8.0, 128, 1 << 14);
-}
-}  // namespace FV::params
-#include "external_components/FV-NFLlib/FV.hpp"
-}
-namespace FV2 {
-namespace FV {
-namespace params {
-using poly_t = nfl::poly_from_modulus<uint64_t, 1 << 10, 62>;
-template <typename T> struct plaintextModulus;
-template <> struct plaintextModulus<unsigned_long> {
-  static unsigned_long value() { return 379UL; }
-};
-using gauss_struct = nfl::gaussian<uint16_t, uint64_t, 2>;
-using gauss_t = nfl::FastGaussianNoise<uint16_t, uint64_t, 2>;
-gauss_t fg_prng_sk(8.0, 128, 1 << 14);
-gauss_t fg_prng_evk(8.0, 128, 1 << 14);
-gauss_t fg_prng_pk(8.0, 128, 1 << 14);
-gauss_t fg_prng_enc(8.0, 128, 1 << 14);
-}
-}  // namespace FV::params
-#include "external_components/FV-NFLlib/FV.hpp"
-}
+
 
 lwe_cipher NFLFV::chartocipher(char* c) {
 
@@ -93,7 +51,8 @@ void NFLlwe_DEBUG_MESSAGE(const char *s,poly64 p, unsigned int n){
 NFLFV::NFLFV():
     LatticesBasedCryptosystem("LWE"),
     oldNbModuli(0),
-    polyDegree(0)
+    polyDegree(0),
+    fvobject(nullptr)
 {
   publicParams.setcrypto_container(this);
 }
@@ -103,7 +62,7 @@ NFLFV::NFLFV():
 // k:polyDegree:modululusBitsize:AbsorptionBitsize
 void NFLFV::setNewParameters(const std::string& crypto_param_descriptor)
 {
-  unsigned int polyDegree_, aggregatedModulusBitsize_;
+  unsigned int polyDegree_, aggregatedModulusBitsize_, plainbits_;
   int abspc_bitsize = -1; // We don't know the absorption bit size yet
 
   std::vector<std::string> fields;
@@ -113,8 +72,23 @@ void NFLFV::setNewParameters(const std::string& crypto_param_descriptor)
   polyDegree_ = atoi(fields[2].c_str());
   aggregatedModulusBitsize_ = atoi(fields[3].c_str());
   // Does the fourth parameter exist ? If so set it
-  if (fields.size() >= 5) abspc_bitsize = atoi(fields[4].c_str());
+plainbits_ =atoi(fields[4].c_str());
+  if (fields.size() >= 6) abspc_bitsize = atoi(fields[5].c_str());
 
+if (fvobject != nullptr){
+delete(fvobject);
+fvobject = nullptr;
+}
+
+if ((polyDegree_ == 2048) && (aggregatedModulusBitsize_ == 124) && (plainbits_ == 30) && (securityBits<136)){
+fvobject = new FV2048_124::FV2048_124c();
+plainbits = 30;
+}
+else if ((polyDegree_ == 1024) && (aggregatedModulusBitsize_ == 60)&& (securityBits<76)) {
+fvobject = new FV1024_62::FV1024_62c();
+plainbits = 14;
+}
+aggregatedModulusBitsize_=124;
   setNewParameters(polyDegree_,aggregatedModulusBitsize_, abspc_bitsize);
 }
 
@@ -130,7 +104,7 @@ void  NFLFV::setNewParameters(unsigned int polyDegree_, unsigned int aggregatedM
 	// for the transition towards public parameter elimination
 	publicParams.setAbsPCBitsize(absPCBitsize_);
 
-	publicParams.setnoiseUB(5*getsecurityBits()/2);
+	publicParams.setnoiseUB(fvobject->getnoise());
 
 //#ifdef DEBUG
 //  std::cout << "Security bits " << getsecurityBits()<<std::endl;
@@ -140,38 +114,17 @@ void  NFLFV::setNewParameters(unsigned int polyDegree_, unsigned int aggregatedM
   // We don't use here the polyDegree setter as we would call twice NFLlib init
 	polyDegree = polyDegree_;
 
-  nflInstance.setNewParameters(polyDegree_,aggregatedModulusBitsize_);
-  clearSecretKeys();
-  nbModuli = nflInstance.getnbModuli();
-  //used to free memory
-  oldNbModuli = nbModuli;
-  moduli= nflInstance.getmoduli();
+  nbModuli = aggregatedModulusBitsize_/62;
+  //moduli= nflInstance.getmoduli();
+  moduli = fvobject->getmoduli();
 
-
-	secretKey = new poly64[nbModuli];
-	secretKeyShoup = new poly64[nbModuli];
-	Abit_mod = new uint64_t[nbModuli];
-	Abit_mod_shoup = new uint64_t[nbModuli];
-
-
-	// initialize the secret key
-  secretKey[0] = nflInstance.allocBoundedRandomPoly(0,true);
-	for (unsigned short currentModulus = 0; currentModulus < nbModuli; currentModulus++) {
-	  secretKey[currentModulus] = secretKey[0] + polyDegree*currentModulus;
-    secretKeyShoup[currentModulus] = (uint64_t*) calloc(polyDegree,sizeof(uint64_t));
-		// compute the Shoup representation of the secret key
-		for (unsigned int i=0; i < polyDegree; i++) {
-			secretKeyShoup[currentModulus][i]=((uint128_t) secretKey[currentModulus][i] << 64) / moduli[currentModulus];
-    }
-  }
- recomputeNoiseAmplifiers();
 
 }
 
 // *********************************************************
 // Getters
 // *********************************************************
-poly64* NFLFV::getsecretKey() { return secretKey; }
+poly64* NFLFV::getsecretKey() { return nullptr; }
 unsigned int NFLFV::getpolyDegree() { return polyDegree; }
 
 // *********************************************************
@@ -185,7 +138,7 @@ void NFLFV::setmodulus(uint64_t modulus_)
 void NFLFV::setpolyDegree(unsigned int polyDegree_)
 {
   polyDegree = polyDegree_;
-  nflInstance.setpolyDegree(polyDegree_);
+
 }
 
 // *********************************************************
@@ -193,7 +146,7 @@ void NFLFV::setpolyDegree(unsigned int polyDegree_)
 // *********************************************************
 
 poly64 *NFLFV::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, uint64_t &polyNumber) {
-  return nflInstance.deserializeDataNFL(inArrayOfBuffers, nbrOfBuffers, dataBitsizePerBuffer, publicParams.getAbsorptionBitsize()/polyDegree, polyNumber);
+  return fvobject->deserializeDataNFL(inArrayOfBuffers, nbrOfBuffers, dataBitsizePerBuffer, publicParams.getAbsorptionBitsize()/polyDegree, polyNumber);
 }
 
 
@@ -205,89 +158,30 @@ poly64 *NFLFV::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbr
 
 void NFLFV::add(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)
 {
-  nflInstance.addmodPoly(rop.a, op1.a, op2.a);
-  nflInstance.addmodPoly(rop.b, op1.b, op2.b);
+  fvobject->add(rop,op1,op2,d);
 }
 
 void NFLFV::sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)
 {
-  nflInstance.submodPoly(rop.a, op1.a, op2.a);
-  nflInstance.submodPoly(rop.b, op1.b, op2.b);
+ // nflInstance.submodPoly(rop.a, op1.a, op2.a);
+  //nflInstance.submodPoly(rop.b, op1.b, op2.b);
 }
 
 void NFLFV::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly, int rec_lvl)
 {
-	NFLlwe_DEBUG_MESSAGE("in_data[0].p : ",op1.p[0],4);
-  	NFLlwe_DEBUG_MESSAGE("in_data[0].a : ",op2.a,4);
-  	NFLlwe_DEBUG_MESSAGE("in_data[0].b : ",op2.b,4);
-
-	mulandaddCiphertextNTT(rop, op1, op2, current_poly);
-
-	NFLlwe_DEBUG_MESSAGE("out_data[0].a : ",rop.a,4);
-  	NFLlwe_DEBUG_MESSAGE("out_data[0].b : ",rop.b,4);
+	fvobject->mulandadd(rop,op1,op2,current_poly,rec_lvl);
 }
 
 // Shoup version
 void NFLFV::mulandadd(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, const lwe_query op2prime, const uint64_t current_poly, int rec_lvl)
 {
-  // Don't modify the pointers inside the data or it will be permanent
-  poly64 ropa = rop.a, ropb = rop.b, op2a = op2.a, op2b = op2.b, op2primea = op2prime.a,
-         op2primeb = op2prime.b, op1pcurrent = op1.p[current_poly];
-
-
-	 	const unsigned int K = polyDegree;
-		const unsigned int md = nbModuli;
-	for(unsigned short currentModulus=0;currentModulus<md;currentModulus++)
-  {
-
- 		for (unsigned i = 0; i < K; i++)
-		{
-			nflInstance.mulandaddShoup(ropa[i],op1pcurrent[i],op2a[i],op2primea[i],moduli[currentModulus]);
-		}
- 		for (unsigned i = 0; i < K; i++)
-		{
-			nflInstance.mulandaddShoup(ropb[i],op1pcurrent[i],op2b[i],op2primeb[i],moduli[currentModulus]);
-		}
-		ropa+=K;
-		ropb+=K;
-		op1pcurrent+=K;
-		op2a+=K;
-		op2b+=K;
-		op2primea+=K;
-		op2primeb+=K;
-	}
+  fvobject->mulandadd(rop,op1,op2,current_poly,rec_lvl);
 
 }
 
 void NFLFV::mul(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, const lwe_query op2prime, const uint64_t current_poly, int rec_lvl)
 {
-  // Don't modify the pointers inside the data or it will be permanent
-  poly64 ropa = rop.a, ropb = rop.b, op2a = op2.a, op2b = op2.b, op2primea = op2prime.a,
-         op2primeb = op2prime.b, op1pcurrent = op1.p[current_poly];
 
-	NFLlwe_DEBUG_MESSAGE("in_data[0].p : ",op1.p[current_poly],4);
-	NFLlwe_DEBUG_MESSAGE("in_data[0].a : ",op2.a,4);
-	NFLlwe_DEBUG_MESSAGE("in_data[0].b : ",op2.b,4);
-	NFLlwe_DEBUG_MESSAGE("in_data[0].a' : ",op2prime.a,4);
-	NFLlwe_DEBUG_MESSAGE("in_data[0].b' : ",op2.b,4);
-
-	for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++)
-  {
-		for (unsigned i = 0; i < polyDegree; i++)
-		{
-			ropa[i] = nflInstance.mulmodShoup(op1pcurrent[i],op2a[i],op2primea[i],moduli[currentModulus]);
-			ropb[i] = nflInstance.mulmodShoup(op1pcurrent[i],op2b[i],op2primeb[i],moduli[currentModulus]);
-		}
-		ropa+=polyDegree;
-		ropb+=polyDegree;
-		op1pcurrent+=polyDegree;
-		op2a+=polyDegree;
-		op2b+=polyDegree;
-		op2primea+=polyDegree;
-		op2primeb+=polyDegree;
-	}
-	NFLlwe_DEBUG_MESSAGE("out_data[0].a : ",rop.a,4);
-	NFLlwe_DEBUG_MESSAGE("out_data[0].b : ",rop.b,4);
 }
 
 // Same comment as for musAndAddCiphertextNTT we do a simpler version above
@@ -306,8 +200,8 @@ void NFLFV::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lv
 // Deal just with one polynomial
 inline void NFLFV::mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly)
 {
-    nflInstance.mulandaddPolyNTT(rop.a, op1.p[current_poly], op2.a);
-    nflInstance.mulandaddPolyNTT(rop.b, op1.p[current_poly], op2.b);
+   // nflInstance.mulandaddPolyNTT(rop.a, op1.p[current_poly], op2.a);
+   // nflInstance.mulandaddPolyNTT(rop.b, op1.p[current_poly], op2.b);
 }
 
 // Good method but too greedy in memory we start with a simpler one (below)
@@ -316,8 +210,8 @@ void NFLFV::mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op
 {
   for(uint64_t i=0;i<op1.nbPolys;i++)
   {
-    nflInstance.mulandaddPolyNTT(rop.a, op1.p[i], op2.a);
-    nflInstance.mulandaddPolyNTT(rop.b, op1.p[i], op2.b);
+   // nflInstance.mulandaddPolyNTT(rop.a, op1.p[i], op2.a);
+   // nflInstance.mulandaddPolyNTT(rop.b, op1.p[i], op2.b);
   }
 }
 
@@ -330,203 +224,12 @@ void NFLFV::mulandaddCiphertextNTT(lwe_cipher rop, lwe_in_data op1, lwe_query op
 // The internal encrypt method
 void  NFLFV::enc(lwe_cipher *c, poly64 m)
 {
-	bool uniform = true;
-
-	NFLlwe_DEBUG_MESSAGE("Encrypting m: ",m, 4);
-
-	c->a = (poly64) calloc(polyDegree * 2 * nbModuli,  sizeof(uint64_t));
-	c->b = c->a + polyDegree * nbModuli;
-
-	// tmpa and tmpb are used to access the nbModuli polynoms of the CRT
-	poly64 tmpa = c->a;
-	poly64 tmpb = c->b;
-	poly64 tmpm = m;
-
-	//   b = (a*s) % f + e * A + m;
-
-	// Noise creation
-	uint64_t Berr=publicParams.getnoiseUB();
-	uint64_t A_bits= publicParams.getAbsorptionBitsize() / publicParams.getpolyDegree();
-
-	// We deal with the nbModuli polynoms at once because the noise is the same size for all of them
-	nflInstance.setBoundedRandomPoly(c->b, 2*Berr-1, !uniform);
-
-	NFLlwe_DEBUG_MESSAGE("Noise used: ",c->b, 4);
-#ifdef CRYPTO_DEBUG
-	std::cout << "NFLFV: Noise amplifier: " << A_bits << std::endl;
-#endif
-
-	// Adjustments and addition to plaintext
-	for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) {
-		for(unsigned int i=0;i<polyDegree;i++) {
-			// e is multiplied by the amplifier A for which we know the size A_bits
-			// tmpb[i] = tmpb[i] << (unsigned) A_bits;
-			//  std::cout << "noise: " << tmpb[i] << std::endl;
-			//std::cout << std::hex << tmpb[i] << " " << std::dec;
-
-			tmpb[i] = nflInstance.mulmodShoup(tmpb[i], Abit_mod[currentModulus],Abit_mod_shoup[currentModulus], moduli[currentModulus]);
-
-			// and shifted to be in [-(Berr-1) .. (Berr-1)]
-			//tmpb[i] += moduli[currentModulus]-((Berr-1)<<A_bits);
-
-			// We add the shifted noise to the plaintext
-			tmpb[i] = nflInstance.addmod(tmpb[i], tmpm[i], moduli[currentModulus]);
-
-			// And reduce the whole if needed
-			if(tmpb[i]>moduli[currentModulus]) tmpb[i]-=moduli[currentModulus];
-
-		}
-		tmpb+=polyDegree;
-		tmpm+=polyDegree;
-	}
-	tmpb=c->b;
-
-	NFLlwe_DEBUG_MESSAGE("Amplified noise and message: ",c->b, 4);
-
-	// Noise and plaintext are the only things that are not yet in the NTT space
-	nflInstance.nttAndPowPhi(c->b);
-
-	// We still have to get a. No NTT needed because uniformly taken
-	nflInstance.setBoundedRandomPoly(tmpa, 0, uniform);
-
-#ifdef DEBUG
-	poly64 tmp = (poly64) calloc(polyDegree*nbModuli, sizeof(uint64_t));
-#endif
-
-	for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++)
-	{
-
-		// We multiply it by s and add to the previous message and noise
-		for (unsigned int i = 0 ; i < polyDegree ; i++)
-		{
-			nflInstance.mulandaddShoup(tmpb[i],tmpa[i], secretKey[currentModulus][i],
-			secretKeyShoup[currentModulus][i], moduli[currentModulus]);
-
-#ifdef DEBUG
-			nflInstance.mulandaddShoup(tmp[i+currentModulus*polyDegree], tmpa[i],secretKey[currentModulus][i],secretKeyShoup[currentModulus][i], moduli[currentModulus]);
-#endif
-
-#ifdef SHOUP
-			tmpa[i]=tmpa[i]%moduli[currentModulus];
-			tmpb[i]=tmpb[i]%moduli[currentModulus];
-#endif
-		}
-		tmpa+=polyDegree;
-		tmpb+=polyDegree;
-	}
-
-	// There is already a ifdef debug inside this function but
-	// tmp is not defined if we are not in debug mode
-#ifdef DEBUG
-	NFLlwe_DEBUG_MESSAGE("a*s: ",tmp, 4);
-  free(tmp);
-#endif
-
-	NFLlwe_DEBUG_MESSAGE("Ciphertext a: ",c->a, 4);
-	NFLlwe_DEBUG_MESSAGE("Ciphertext b: ",c->b, 4);
 }
 
 
 void NFLFV::dec(poly64 m, lwe_cipher *c)
 {
-	uint64_t A_bits = publicParams.getAbsorptionBitsize() / publicParams.getpolyDegree();
-  const uint64_t bitmask = (1ULL<<A_bits) -1;
-  mpz_t moduliProduct;
 
-  // Get the product of all moduli from the nflInstance object;
-  nflInstance.copymoduliProduct(moduliProduct);
-
-	// tmpa and tmpb are used to access the nbModuli polynoms of the CRT
-	poly64 tmpa=c->a;
-	poly64 tmpb=c->b;
-	poly64 tmpm=m;
-
-	for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) {
-
-		// We first get the amplified noise plus message (e*A+m =b-a*S)
-		for (unsigned int i=0 ; i < polyDegree; i++)
-    {
-			uint64_t temp=0;
-			nflInstance.mulandaddShoup(temp, tmpa[i], secretKey[currentModulus][i],
-      secretKeyShoup[currentModulus][i], moduli[currentModulus]);
-			tmpm[i] = nflInstance.submod(tmpb[i], temp, moduli[currentModulus]);
-		}
-		tmpa+=polyDegree;
-		tmpb+=polyDegree;
-    tmpm+=polyDegree;
-	}
-  tmpm=m;
-
-	// In order to mask the noise bits we need to get out of NTT space through an inverse NTT
-  nflInstance.invnttAndPowInvPhi(tmpm);
-
-  NFLlwe_DEBUG_MESSAGE("Amplified noise and message (dec): ",tmpm, 4);
-  NFLlwe_DEBUG_MESSAGE("Amplified noise and message (dec): ",tmpm+polyDegree, 4);
-
-
-  if(nbModuli>1) {
-
-	  mpz_t *tmprez=nflInstance.poly2mpz(tmpm);
-
-
-
-  	// If e*A+m < p/2 we mask the message bits: bitmask = (1ULL<<A_bits) -1
-	  // If e *A+m > p/2 we do a little trick to avoid signed integers and modulus reduction
-	  // e[i]= e[i] + 2**61 - p (we replace p by 2**61) and then bitmask the message.
-    mpz_t magicConstz;
-    mpz_init(magicConstz);
-    mpz_ui_pow_ui(magicConstz, 2, (kModulusBitsize + 1) * nbModuli);
-    mpz_sub(magicConstz,magicConstz, moduliProduct);
-    mpz_t bitmaskz;
-    mpz_init(bitmaskz);
-    mpz_ui_pow_ui(bitmaskz, 2, A_bits);
-    mpz_sub_ui(bitmaskz, bitmaskz, 1);
-#ifdef CRYPTO_DEBUG
-    gmp_printf("Mask used: %Zx\n",bitmaskz);
-#endif
-	  // Shall we prefetch here ?
-    mpz_t tmpz;
-    mpz_init(tmpz);
-    // We need to zero tmpm as export writes nothing on the output for null values
-    bzero(tmpm,polyDegree*nbModuli*sizeof(uint64_t));
-    for (unsigned int i = 0 ; i < polyDegree ; i++)
-	  {
-		  //For testing we may do a hardcoded modulus but not always. m[i] = m[i] % modulus;
-      mpz_mul_ui(tmpz, tmprez[i], 2UL);
-      if (mpz_cmp(tmpz, moduliProduct)==1)// tmprez[i] > moduliProduct / 2
-      {
-        mpz_add(tmpz, tmprez[i], magicConstz);
-        mpz_and(tmprez[i], tmpz, bitmaskz);
-      }
-      else
-      {
-        mpz_and(tmprez[i], tmprez[i], bitmaskz);
-      }
-
-    	// Combien d'uint32 ?
-	    int combien = ceil((double)A_bits/32);
-	    mpz_export(((uint32_t*)tmpm)+i*combien, NULL, -1, sizeof(uint32_t), 0, 0, tmprez[i]);
-	    mpz_clear(tmprez[i]);
-	  }
-
-    delete[] tmprez;
-    mpz_clears(moduliProduct, tmpz, magicConstz, bitmaskz, NULL);
-
-  } else { // nbModuli=1
-
-
-		// If e*A+m < p/2 we mask the message bits: bitmask = (1ULL<<A_bits) -1
-		// If e*A+m > p/2 we do a little trick to avoid signed integers and modulus reduction
-		// e[i]= e[i] + 2**61 - p (we replace p by 2**61) and then bitmask the message.
-		const uint64_t magicConst = (1ULL<<61)-moduli[0];// 2**61 - p
-
-		// Shall we prefetch here ?
-		for (unsigned int i = 0 ; i < polyDegree ; i++)
-		{
-			//For testing we may do a hardcoded modulus but not always. m[i] = m[i] % modulus;
-			tmpm[i] = (tmpm[i] > moduli[0]/2) ? (tmpm[i] + magicConst)& bitmask : tmpm[i] & bitmask;
-		}
-	}
 }
 
 // MOK is here for the CRT modification
@@ -535,6 +238,7 @@ void NFLFV::dec(poly64 m, lwe_cipher *c)
 // does not return a lwe_cipher but the (char*)pointer on two consecutively allocated poly64 (a and b)
 char* NFLFV::encrypt(unsigned int ui, unsigned int d)
 {
+
 	if ( ceil(log2(static_cast<double>(ui))) >= publicParams.getAbsorptionBitsize())
 	{
 		std::cerr << "NFFLWE: The given unsigned int does not fit in " << publicParams.getAbsorptionBitsize() << " bits"<< std::endl;
@@ -547,7 +251,10 @@ char* NFLFV::encrypt(unsigned int ui, unsigned int d)
   {
     m[cm*polyDegree]=(uint64_t)ui;
   }
-	enc(&c,m);
+	fvobject->enc(&c,m);
+	if(m==nullptr){
+	cout<<"coucou"<<endl;
+	}
 	free(m);
 	return (char*) c.a;
 }
@@ -566,7 +273,7 @@ char* NFLFV::encrypt(char* data, size_t s_hash, unsigned int s_list ){
         }
     }
 
-  	enc(&c,m);
+  	fvobject->enc(&c,m);
 	free(m);
 	return (char*) c.a;
 }
@@ -576,8 +283,8 @@ char* NFLFV::encrypt(char* data, size_t s_hash, unsigned int s_list ){
 char* NFLFV::encrypt_perftest()
 {
 	lwe_cipher c;
-  poly64 m = nflInstance.allocBoundedRandomPoly(0, true);
-	enc(&c,m);
+  poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
+	fvobject->enc(&c,m);
 	free(m);
 	return (char*) c.a;
 }
@@ -595,7 +302,7 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
   std::cout<<"Bits per coordinate: "<<bits_per_coordinate<<std::endl;
 #endif
 
-  dec(clear_data, &ciphertext);
+  fvobject->dec(clear_data, &ciphertext);
 
   NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
   NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
@@ -607,11 +314,11 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
   unsigned char* out_data = (unsigned char*) calloc(bits_per_coordinate*polyDegree/64 + 1, sizeof(uint64_t));
   if (nbModuli == 1)
   {
-    nflInstance.serializeData64(clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/64)* polyDegree);
+    fvobject->serializeData64(clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/64)* polyDegree);
   }
   else // nbModuli > 1
   {
-    nflInstance.serializeData32 ((uint32_t*)clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/32)* polyDegree);
+    fvobject->serializeData32 ((uint32_t*)clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/32)* polyDegree);
   }
 #ifdef DEBUG
   //std::cout<<"Bitgrouped into: "<<out_data<<std::endl;
@@ -661,19 +368,7 @@ unsigned int NFLFV::getCryptoParams(unsigned int k, std::set<std::string>& crypt
 }
 
 void NFLFV::recomputeNoiseAmplifiers() {
-	uint64_t A_bits= publicParams.getAbsorptionBitsize() / publicParams.getpolyDegree();
-	mpz_t tmpz1,tmpz2;
-	mpz_init(tmpz1);
-	mpz_init(tmpz2);
-	for(unsigned short currentModulus=0;currentModulus<nbModuli;currentModulus++) {
-		mpz_ui_pow_ui(tmpz2, 2, A_bits);
-		mpz_import(tmpz2, 1, 1, sizeof(uint64_t), 0, 0, moduli+currentModulus);
-		mpz_mod(tmpz1, tmpz1, tmpz2);
-		Abit_mod[currentModulus]=0;
-		mpz_export(&Abit_mod[currentModulus], NULL, 1, sizeof(uint64_t), 0, 0, tmpz1);
-		Abit_mod_shoup[currentModulus]=((uint128_t) Abit_mod[currentModulus] << 64) / moduli[currentModulus];
-	}
-  mpz_clears(tmpz1, tmpz2, NULL);
+
 }
 
 unsigned int NFLFV::estimateSecurity(unsigned int n, unsigned int p_size)
@@ -691,13 +386,18 @@ long NFLFV::setandgetAbsBitPerCiphertext(unsigned int elt_nbr)
     double Berr = static_cast<double>(publicParams.getnoiseUB());
     double nb_sum = elt_nbr;
     double p_size = getmodulusBitsize();
-    double nbr_bit = floor(( (p_size - 1) - log2(nb_sum) - log2(Berr) -log2(static_cast<double>(polyDegree))) / 2.0);
+    double avail_bits = floor(( (p_size - 1) - log2(nb_sum) - log2(Berr) -log2(static_cast<double>(polyDegree))) / 2.0);
+    double nbr_bits;
 
-    publicParams.setAbsPCBitsize(nbr_bit);
+    if (avail_bits - plainbits < 0) {
+        nbr_bits = 0;
+    }
+    nbr_bits = avail_bits - plainbits;
+    publicParams.setAbsPCBitsize(nbr_bits);
 
-	recomputeNoiseAmplifiers();
+	//recomputeNoiseAmplifiers();
 
-    return long(nbr_bit);
+    return long(nbr_bits);
 }
 
 
@@ -802,24 +502,7 @@ std::string& NFLFV::toString()
 
 void NFLFV::clearSecretKeys()
 {
-  if(oldNbModuli)
-  {
-    // secreKey was allocated with a single allocation
-    delete[] Abit_mod;
-    delete[] Abit_mod_shoup;
-    free(secretKey[0]);
-    delete[] secretKey;
-  }
 
-  if(oldNbModuli)
-  {
-    for (unsigned int i = 0; i < oldNbModuli; i++) {
-      free(secretKeyShoup[i]);
-    }
-    delete[] secretKeyShoup;
-  }
-
-  oldNbModuli = 0;
 }
 
 

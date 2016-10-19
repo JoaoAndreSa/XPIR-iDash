@@ -61,13 +61,14 @@ unsigned int NFLFVPublicParameters::getpolyDegree() { return crypto_container->g
 
 // Setters
 void NFLFVPublicParameters::setnoiseUB(uint64_t noise_upper_bound) { noise_ub = noise_upper_bound;}
+
 void NFLFVPublicParameters::setAbsPCBitsize(int bitSize_)
 {
 	absPerCoordinateBitsize = bitSize_;
-	
+
 }
-void NFLFVPublicParameters::setsecurityBits(uint64_t security_bits_) 
-{ 
+void NFLFVPublicParameters::setsecurityBits(uint64_t security_bits_)
+{
 		crypto_container->setsecurityBits(security_bits_);
 }
 void NFLFVPublicParameters::setmodulus(uint64_t modulus_)
@@ -96,8 +97,8 @@ unsigned int NFLFVPublicParameters::getSerializedModulusBitsize()
 // k:polyDegree:modululusBitsize:AbsorptionBitsize
 void NFLFVPublicParameters::setNewParameters(std::string crypto_param_descriptor)
 {
-  // We want to get rid of public parameter objects so we transfer the most 
-  // we can to the crypto object 
+  // We want to get rid of public parameter objects so we transfer the most
+  // we can to the crypto object
   crypto_container->setNewParameters(crypto_param_descriptor);
 }
 
@@ -106,7 +107,7 @@ void NFLFVPublicParameters::setNewParameters(std::string crypto_param_descriptor
 std::string NFLFVPublicParameters::getSerializedParams(bool shortversion)
 {
   std::string params;
-  
+
   // Name:security:degree:modulusbitsize
   // WARNING send modulus representation
   params = cryptoName + ":" + std::to_string(getsecurityBits()) + ":" + std::to_string(getpolyDegree()) + ":" + std::to_string(getmodulusBitsize());
@@ -124,7 +125,7 @@ std::string NFLFVPublicParameters::getSerializedParams(bool shortversion)
 
 char* NFLFVPublicParameters::getByteModulus()
 {
- char* byte_pub_key  = new char[getpolyDegree() * sizeof(uint64_t)](); 
+ char* byte_pub_key  = new char[getpolyDegree() * sizeof(uint64_t)]();
  memcpy(byte_pub_key, &P64, getpolyDegree() * sizeof(uint64_t));
 	return byte_pub_key;
 }

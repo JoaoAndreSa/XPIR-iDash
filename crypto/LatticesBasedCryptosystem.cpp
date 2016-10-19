@@ -21,7 +21,6 @@ LatticesBasedCryptosystem::LatticesBasedCryptosystem(const std::string& crypto_n
   HomomorphicCrypto(crypto_name)
 {}
 
-NFLlib_old& LatticesBasedCryptosystem::getnflInstance() { return nflInstance; }
 
 uint64_t* LatticesBasedCryptosystem::getmoduli() { return moduli; }
 
@@ -29,4 +28,4 @@ uint64_t LatticesBasedCryptosystem::getsecurityBits() { return securityBits; }
 
 unsigned short LatticesBasedCryptosystem::getnbModuli() { return nbModuli; }
 
-void LatticesBasedCryptosystem::setsecurityBits(uint64_t security_bits) { securityBits = security_bits;} 
+void LatticesBasedCryptosystem::setsecurityBits(uint64_t security_bits) { securityBits = security_bits;}
