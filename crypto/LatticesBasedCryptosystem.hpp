@@ -38,8 +38,8 @@ class LatticesBasedCryptosystem : public HomomorphicCrypto {
     uint64_t getsecurityBits();
     unsigned short getnbModuli();
     void setsecurityBits(uint64_t security_bits);
-//    virtual void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly,
-//        int rec_lvl)=0;
+    virtual void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly,
+        int rec_lvl)=0;
     virtual poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers,
         uint64_t dataBitsizePerBuffer, uint64_t &polyNumber)=0;
 

@@ -555,7 +555,7 @@ char* NFLLWE::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
 #endif
 
   dec(clear_data, &ciphertext);
-
+  //std::cout<<clear_data[0]<<std::endl;
   NFLLWE_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
   NFLLWE_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
   NFLLWE_DEBUG_MESSAGE("Result: ",clear_data, 4);

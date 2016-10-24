@@ -80,7 +80,7 @@ delete(fvobject);
 fvobject = nullptr;
 }
 
-if ((polyDegree_ == 2048) && (aggregatedModulusBitsize_ == 124) && (plainbits_ == 30) && (securityBits<136)){
+if ((polyDegree_ == 2048) && (aggregatedModulusBitsize_ == 124) && (plainbits_ == 30) && (securityBits<90)){
 fvobject = new FV2048_124::FV2048_124c();
 plainbits = 30;
 }
@@ -88,7 +88,7 @@ else if ((polyDegree_ == 1024) && (aggregatedModulusBitsize_ == 60)&& (securityB
 fvobject = new FV1024_62::FV1024_62c();
 plainbits = 14;
 }
-aggregatedModulusBitsize_=124;
+
   setNewParameters(polyDegree_,aggregatedModulusBitsize_, abspc_bitsize);
 }
 
@@ -115,6 +115,7 @@ void  NFLFV::setNewParameters(unsigned int polyDegree_, unsigned int aggregatedM
 	polyDegree = polyDegree_;
 
   nbModuli = aggregatedModulusBitsize_/62;
+
   //moduli= nflInstance.getmoduli();
   moduli = fvobject->getmoduli();
 
@@ -175,8 +176,37 @@ void NFLFV::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t c
 // Shoup version
 void NFLFV::mulandadd(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, const lwe_query op2prime, const uint64_t current_poly, int rec_lvl)
 {
-  fvobject->mulandadd(rop,op1,op2,current_poly,rec_lvl);
 
+  fvobject->mulandadd(rop,op1,op2,current_poly,rec_lvl);
+  /*
+  // Don't modify the pointers inside the data or it will be permanent
+  poly64 ropa = rop.a, ropb = rop.b, op2a = op2.a, op2b = op2.b, op2primea = op2prime.a,
+         op2primeb = op2prime.b, op1pcurrent = op1.p[current_poly];
+
+
+	 	const unsigned int K = polyDegree;
+		const unsigned int md = nbModuli;
+	for(unsigned short currentModulus=0;currentModulus<md;currentModulus++)
+  {
+
+ 		for (unsigned i = 0; i < K; i++)
+		{
+			nflInstance.mulandaddShoup(ropa[i],op1pcurrent[i],op2a[i],op2primea[i],moduli[currentModulus]);
+		}
+ 		for (unsigned i = 0; i < K; i++)
+		{
+			nflInstance.mulandaddShoup(ropb[i],op1pcurrent[i],op2b[i],op2primeb[i],moduli[currentModulus]);
+		}
+		ropa+=K;
+		ropb+=K;
+		op1pcurrent+=K;
+		op2a+=K;
+		op2b+=K;
+		op2primea+=K;
+		op2primeb+=K;
+	}
+
+*/
 }
 
 void NFLFV::mul(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, const lwe_query op2prime, const uint64_t current_poly, int rec_lvl)
@@ -187,6 +217,7 @@ void NFLFV::mul(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, cons
 // Same comment as for musAndAddCiphertextNTT we do a simpler version above
 void NFLFV::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lvl)
 {
+/*
 	NFLlwe_DEBUG_MESSAGE("in_data p: ",op1.p[0],4);
 	NFLlwe_DEBUG_MESSAGE("in_data a: ",op2.a,4);
 	NFLlwe_DEBUG_MESSAGE("in_data b: ",op2.b,4);
@@ -195,6 +226,7 @@ void NFLFV::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lv
 
 	NFLlwe_DEBUG_MESSAGE("out_data.a : ",rop.a,4);
 	NFLlwe_DEBUG_MESSAGE("out_data.b : ",rop.b,4);
+	*/
 }
 
 // Deal just with one polynomial
@@ -251,10 +283,8 @@ char* NFLFV::encrypt(unsigned int ui, unsigned int d)
   {
     m[cm*polyDegree]=(uint64_t)ui;
   }
+
 	fvobject->enc(&c,m);
-	if(m==nullptr){
-	cout<<"coucou"<<endl;
-	}
 	free(m);
 	return (char*) c.a;
 }
@@ -303,6 +333,7 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
 #endif
 
   fvobject->dec(clear_data, &ciphertext);
+  //std::cout<<clear_data[0]<<std::endl;
 
   NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
   NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
@@ -312,14 +343,14 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
   // nflInstance.serializeData64 (clear_data, out_data, bits_per_coordinate, polyDegree);
 
   unsigned char* out_data = (unsigned char*) calloc(bits_per_coordinate*polyDegree/64 + 1, sizeof(uint64_t));
-  if (nbModuli == 1)
-  {
-    fvobject->serializeData64(clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/64)* polyDegree);
-  }
-  else // nbModuli > 1
-  {
+ // if (nbModuli == 2)
+  //{
+   //fvobject->serializeData64(clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/64)* polyDegree);
+ // }
+ // else // nbModuli > 1
+ // {
     fvobject->serializeData32 ((uint32_t*)clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/32)* polyDegree);
-  }
+ // }
 #ifdef DEBUG
   //std::cout<<"Bitgrouped into: "<<out_data<<std::endl;
 #endif
@@ -356,9 +387,9 @@ unsigned int NFLFV::getCryptoParams(unsigned int k, std::set<std::string>& crypt
 
     // We give a very small margin 59 instead of 60 so that 100:1024:60 passes the test
     //for (unsigned int i = 1; i * 59 <= p_size ; i++)//(p_size > 64) && ((p_size % 64) != 0))
-    for (unsigned int i = 1; i * 59 <= p_size && i * 60 <= 240; i++)
+    for (unsigned int i = 1; i * 61 <= p_size && i * 62 <= 248; i++)
     {
-      param =  cryptoName + ":" + to_string(estimateSecurity(degree,i*kModulusBitsize)) + ":" + to_string(degree) + ":" + to_string(i*kModulusBitsize) ;
+      param =  cryptoName + ":" + to_string(estimateSecurity(degree,i*62)) + ":" + to_string(degree) + ":" + to_string(i*62) ;
       if (crypto_params.insert(param).second) params_nbr++;
       param = "";
     }
@@ -387,17 +418,15 @@ long NFLFV::setandgetAbsBitPerCiphertext(unsigned int elt_nbr)
     double nb_sum = elt_nbr;
     double p_size = getmodulusBitsize();
     double avail_bits = floor(( (p_size - 1) - log2(nb_sum) - log2(Berr) -log2(static_cast<double>(polyDegree))) / 2.0);
-    double nbr_bits;
 
-    if (avail_bits - plainbits < 0) {
-        nbr_bits = 0;
-    }
-    nbr_bits = avail_bits - plainbits;
-    publicParams.setAbsPCBitsize(nbr_bits);
-
+    //nbr_bits = floor(avail_bits/plainbits)*plainbits;
+    if(avail_bits>plainbits -1){
+    fvobject->setnbrbits(plainbits -1);
+    publicParams.setAbsPCBitsize(plainbits -1);
 	//recomputeNoiseAmplifiers();
 
-    return long(nbr_bits);
+    return long(plainbits -1);
+    }
 }
 
 
@@ -470,7 +499,7 @@ double NFLFV::estimatePrecomputeTime(std::string crypto_param)
 }
 
 unsigned int NFLFV::getmodulusBitsize() {
-	return nbModuli*kModulusBitsize;
+	return nbModuli*62;
 }
 
 // *********************************************************
@@ -492,6 +521,7 @@ std::string NFLFV::getSerializedCryptoParams(bool shortversion)
 NFLFV::~NFLFV()
 {
   clearSecretKeys();
+  delete fvobject;
 }
 
 

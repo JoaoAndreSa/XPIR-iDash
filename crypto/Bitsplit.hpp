@@ -51,6 +51,7 @@ static uint64_t mulmod(uint64_t x, uint64_t y, uint64_t p);
     unsigned short nbModuli;
     unsigned int polyDegree;
 
+public :
 
     uint64_t* bitsplitter (unsigned char** inDataBuffers, uint64_t nbrOfBuffers,
         uint64_t bitsPerBuffer, unsigned int bitsPerChunk);

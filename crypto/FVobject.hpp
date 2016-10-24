@@ -23,6 +23,7 @@ virtual void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t 
 virtual void mulandadd(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, const lwe_query op2prime, const uint64_t current_poly, int rec_lvl)=0;
 virtual uint64_t* getmoduli()=0;
 virtual long getnoise()=0;
+virtual void setnbrbits(double nbr_bits)=0;
 
 virtual poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers,
         uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber)=0;

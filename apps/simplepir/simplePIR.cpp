@@ -218,8 +218,9 @@ int main(int argc, char * argv[]) {
   // You can get a list of all available cryptographic parameters with this function call
   // HomomorphicCryptoFactory::printAllCryptoParams();
   params.crypto_params = "FV:80:2048:124:30";
+  //params.crypto_params = "LWE:80:2048:180";
   tests_failed |= run(&db, chosen_element, params);
-/*
+
   // Test with aggregation
   // WARNING we must provide the representation of the database GIVEN recursion and aggregation
   // as here we have 100 elements and aggregate them in a unique group we have params.n[0]=1
@@ -228,31 +229,32 @@ int main(int argc, char * argv[]) {
   std::cout << "params.alpha = 100; params.d = 1; crypto_params = FV:80:2048:124:30;" << std::endl;
   std::cout << "======================================================================" << std::endl;
   database_size = 1ULL<<25; nb_files = 100; maxFileBytesize = database_size/nb_files;
-  DBGenerator db2(nb_files, maxFileBytesize, *//*bool silent*//* false);
+  DBGenerator db2(nb_files, maxFileBytesize, /*bool silent*/ false);
   chosen_element = 0;
   params.alpha = 100; params.d = 1; params.n[0] = 1;
   params.crypto_params = "FV:80:2048:124:30";
   tests_failed |= run(&db2, chosen_element, params);
-/*
+
   // Test with recursion 2
   std::cout << "======================================================================" << std::endl;
   std::cout << "Test 3/7: database_size = 1ULL<<25; nb_files = 100;" << std::endl;
   std::cout << "params.alpha = 1; params.d = 2; crypto_params = FV:80:2048:124:30;" << std::endl;
   std::cout << "======================================================================" << std::endl;
   database_size = 1ULL<<25; nb_files = 100; maxFileBytesize = database_size/nb_files;
-  DBGenerator db3(nb_files, maxFileBytesize, *//*bool silent*//* false);
+  DBGenerator db3(nb_files, maxFileBytesize, /*bool silent*/ false);
   chosen_element = 3;
   params.alpha = 1; params.d = 2; params.n[0] = 50; params.n[1] = 2;
   params.crypto_params = "FV:80:2048:124:30";
+  //params.crypto_params = "LWE:80:2048:120";
   tests_failed |= run(&db3, chosen_element, params);
-*//*
+
   // Test with recursion 2 and aggregation
   std::cout << "======================================================================" << std::endl;
   std::cout << "Test 4/7: database_size = 1ULL<<25; nb_files = 100;" << std::endl;
   std::cout << "params.alpha = 2; params.d = 2; crypto_params = FV:80:2048:124:30;" << std::endl;
   std::cout << "======================================================================" << std::endl;
   database_size = 1ULL<<25; nb_files = 100; maxFileBytesize = database_size/nb_files;
-  DBGenerator db4(nb_files, maxFileBytesize,*//* bool silent*/ /*false);
+  DBGenerator db4(nb_files, maxFileBytesize,/* bool silent*/ false);
   chosen_element = 3;
   params.alpha = 2; params.d = 2; params.n[0] = 25; params.n[1] = 2;
   params.crypto_params = "FV:80:2048:124:30";
@@ -264,7 +266,7 @@ int main(int argc, char * argv[]) {
   std::cout << "params.alpha = 1; params.d = 3; crypto_params = FV:80:2048:124:30;" << std::endl;
   std::cout << "======================================================================" << std::endl;
   database_size = 1ULL<<25; nb_files = 100; maxFileBytesize = database_size/nb_files;
-  DBGenerator db5(nb_files, maxFileBytesize, *//*bool silent*/ /*false);
+  DBGenerator db5(nb_files, maxFileBytesize, /*bool silent*/ false);
   chosen_element = 3;
   params.alpha = 1; params.d = 3; params.n[0] = 5; params.n[1] = 5; params.n[2] = 4;
   params.crypto_params = "FV:80:2048:124:30";
@@ -276,7 +278,7 @@ int main(int argc, char * argv[]) {
   std::cout << "params.alpha = 1; params.d = 1; crypto_params = FV:80:2048:124:30;" << std::endl;
   std::cout << "======================================================================" << std::endl;
   database_size = 1ULL<<25; nb_files = 4; maxFileBytesize = database_size/nb_files;
-  DBDirectoryProcessor db6(*//*split the first file in*/ /*nb_files*/ /*files*//*);
+  DBDirectoryProcessor db6(/*split the first file in*/ nb_files /*files*/);
   if (db6.getErrorStatus()==true){
     std::cout << "SimplePIR : Error with db directory skipping test ..." << std::endl << std::endl;
   } else {
@@ -301,7 +303,7 @@ int main(int argc, char * argv[]) {
     params.alpha = 1; params.d = 1; params.n[0] = nb_files;
     params.crypto_params = "FV:80:2048:124:30";
     tests_failed |= run(&db7, chosen_element, params);
-  }*/
+  }
 
   if (tests_failed)
   {
