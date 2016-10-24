@@ -417,13 +417,23 @@ long NFLFV::setandgetAbsBitPerCiphertext(unsigned int elt_nbr)
     double Berr = static_cast<double>(publicParams.getnoiseUB());
     double nb_sum = elt_nbr;
     double p_size = getmodulusBitsize();
-    double avail_bits = floor(( (p_size - 1) - log2(nb_sum) - log2(Berr) -log2(static_cast<double>(polyDegree))) / 2.0);
+    double avail_bits = floor(( (p_size - 1) - log2(nb_sum) - log2(Berr) 
+          -log2(static_cast<double>(polyDegree))) / 2.0);
+    unsigned int nbr_bits = avail_bits;
 
-    //nbr_bits = floor(avail_bits/plainbits)*plainbits;
-    if(avail_bits>plainbits -1){
-    fvobject->setnbrbits(plainbits -1);
-    publicParams.setAbsPCBitsize(plainbits -1);
-	//recomputeNoiseAmplifiers();
+    // The amount of absorbed bits cannot go beyond plaintext space ...
+    if(nbr_bits > plainbits -1)
+    {
+      nbr_bits = plainbits - 1;
+    }
+    // ... nor be lesser than 0
+    if(nbr_bits < 0)
+    {
+      nbr_bits = 0;
+    }
+
+    fvobject->setnbrbits(nbr_bits);
+    publicParams.setAbsPCBitsize(nbr_bits);
 
     return long(plainbits -1);
     }
