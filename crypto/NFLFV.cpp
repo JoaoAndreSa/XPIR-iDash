@@ -435,8 +435,7 @@ long NFLFV::setandgetAbsBitPerCiphertext(unsigned int elt_nbr)
     fvobject->setnbrbits(nbr_bits);
     publicParams.setAbsPCBitsize(nbr_bits);
 
-    return long(plainbits -1);
-    }
+    return long(nbr_bits);
 }
 
 
