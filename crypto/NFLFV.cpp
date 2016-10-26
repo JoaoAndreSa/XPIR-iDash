@@ -72,22 +72,24 @@ void NFLFV::setNewParameters(const std::string& crypto_param_descriptor)
   polyDegree_ = atoi(fields[2].c_str());
   aggregatedModulusBitsize_ = atoi(fields[3].c_str());
   // Does the fourth parameter exist ? If so set it
-plainbits_ =atoi(fields[4].c_str());
+  plainbits_ = atoi(fields[4].c_str());
   if (fields.size() >= 6) abspc_bitsize = atoi(fields[5].c_str());
 
-if (fvobject != nullptr){
-delete(fvobject);
-fvobject = nullptr;
-}
+  if (fvobject != nullptr)
+  {
+    delete(fvobject);
+    fvobject = nullptr;
+  }
 
-if ((polyDegree_ == 2048) && (aggregatedModulusBitsize_ == 124) && (plainbits_ == 30) && (securityBits<90)){
-fvobject = new FV2048_124::FV2048_124c();
-plainbits = 30;
-}
-else if ((polyDegree_ == 1024) && (aggregatedModulusBitsize_ == 60)&& (securityBits<76)) {
-fvobject = new FV1024_62::FV1024_62c();
-plainbits = 14;
-}
+  if ((polyDegree_ == 2048) && (aggregatedModulusBitsize_ == 124) && (plainbits_ == 30) && (securityBits<90)){
+    fvobject = new FV2048_124::FV2048_124c();
+    plainbits = 30;
+  }
+  else if ((polyDegree_ == 1024) && (aggregatedModulusBitsize_ == 60)&& (securityBits<76))
+  {
+    fvobject = new FV1024_62::FV1024_62c();
+    plainbits = 14;
+  }
 
   setNewParameters(polyDegree_,aggregatedModulusBitsize_, abspc_bitsize);
 }
@@ -112,11 +114,10 @@ void  NFLFV::setNewParameters(unsigned int polyDegree_, unsigned int aggregatedM
 //#endif
 
   // We don't use here the polyDegree setter as we would call twice NFLlib init
-	polyDegree = polyDegree_;
+  polyDegree = polyDegree_;
 
   nbModuli = aggregatedModulusBitsize_/62;
 
-  //moduli= nflInstance.getmoduli();
   moduli = fvobject->getmoduli();
 
 
@@ -146,7 +147,8 @@ void NFLFV::setpolyDegree(unsigned int polyDegree_)
 //         Serialize/Deserialize
 // *********************************************************
 
-poly64 *NFLFV::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, uint64_t &polyNumber) {
+poly64 *NFLFV::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, uint64_t &polyNumber)
+{
   return fvobject->deserializeDataNFL(inArrayOfBuffers, nbrOfBuffers, dataBitsizePerBuffer, publicParams.getAbsorptionBitsize()/polyDegree, polyNumber);
 }
 
@@ -178,35 +180,7 @@ void NFLFV::mulandadd(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2
 {
 
   fvobject->mulandadd(rop,op1,op2,current_poly,rec_lvl);
-  /*
-  // Don't modify the pointers inside the data or it will be permanent
-  poly64 ropa = rop.a, ropb = rop.b, op2a = op2.a, op2b = op2.b, op2primea = op2prime.a,
-         op2primeb = op2prime.b, op1pcurrent = op1.p[current_poly];
 
-
-	 	const unsigned int K = polyDegree;
-		const unsigned int md = nbModuli;
-	for(unsigned short currentModulus=0;currentModulus<md;currentModulus++)
-  {
-
- 		for (unsigned i = 0; i < K; i++)
-		{
-			nflInstance.mulandaddShoup(ropa[i],op1pcurrent[i],op2a[i],op2primea[i],moduli[currentModulus]);
-		}
- 		for (unsigned i = 0; i < K; i++)
-		{
-			nflInstance.mulandaddShoup(ropb[i],op1pcurrent[i],op2b[i],op2primeb[i],moduli[currentModulus]);
-		}
-		ropa+=K;
-		ropb+=K;
-		op1pcurrent+=K;
-		op2a+=K;
-		op2b+=K;
-		op2primea+=K;
-		op2primeb+=K;
-	}
-
-*/
 }
 
 void NFLFV::mul(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, const lwe_query op2prime, const uint64_t current_poly, int rec_lvl)
@@ -333,24 +307,15 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
 #endif
 
   fvobject->dec(clear_data, &ciphertext);
-  //std::cout<<clear_data[0]<<std::endl;
 
   NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
   NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
   NFLlwe_DEBUG_MESSAGE("Result: ",clear_data, 4);
 
-  // unsigned char* out_data = (unsigned char*) calloc(nbModuli * polyDegree+1, sizeof(uint64_t));
-  // nflInstance.serializeData64 (clear_data, out_data, bits_per_coordinate, polyDegree);
-
   unsigned char* out_data = (unsigned char*) calloc(bits_per_coordinate*polyDegree/64 + 1, sizeof(uint64_t));
- // if (nbModuli == 2)
-  //{
-   //fvobject->serializeData64(clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/64)* polyDegree);
- // }
- // else // nbModuli > 1
- // {
-    fvobject->serializeData32 ((uint32_t*)clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/32)* polyDegree);
- // }
+
+  fvobject->serializeData32 ((uint32_t*)clear_data, out_data, bits_per_coordinate, ceil((double)bits_per_coordinate/32)* polyDegree);
+
 #ifdef DEBUG
   //std::cout<<"Bitgrouped into: "<<out_data<<std::endl;
 #endif
@@ -417,7 +382,7 @@ long NFLFV::setandgetAbsBitPerCiphertext(unsigned int elt_nbr)
     double Berr = static_cast<double>(publicParams.getnoiseUB());
     double nb_sum = elt_nbr;
     double p_size = getmodulusBitsize();
-    double avail_bits = floor(( (p_size - 1) - log2(nb_sum) - log2(Berr) 
+    double avail_bits = floor(( (p_size - 1) - log2(nb_sum) - log2(Berr)
           -log2(static_cast<double>(polyDegree))) / 2.0);
     unsigned int nbr_bits = avail_bits;
 
@@ -435,9 +400,9 @@ long NFLFV::setandgetAbsBitPerCiphertext(unsigned int elt_nbr)
     fvobject->setnbrbits(nbr_bits);
     publicParams.setAbsPCBitsize(nbr_bits);
 
-    return long(plainbits -1);
-    }
+    return long(nbr_bits);
 }
+
 
 
 unsigned int NFLFV::findMaxModulusBitsize(unsigned int k, unsigned int n)
@@ -508,7 +473,8 @@ double NFLFV::estimatePrecomputeTime(std::string crypto_param)
   return 1/(0.75*pow(10, 5)/(a*b));
 }
 
-unsigned int NFLFV::getmodulusBitsize() {
+unsigned int NFLFV::getmodulusBitsize()
+{
 	return nbModuli*62;
 }
 

@@ -45,6 +45,7 @@ using poly_p =
     nfl::poly_p<typename poly_t::value_type, poly_t::degree, poly_t::nmoduli>;
 using polyZ_p = nfl::poly<typename poly_t::value_type, poly_t::degree,
                           poly_t::nmoduli * 2 + 1>;
+
 }
 
 class sk_t;
@@ -74,8 +75,18 @@ inline void lift(std::array<mpz_t, params::polyZ_p::degree> &coefficients,
                  params::polyZ_p const &c);
 void convert(params::polyZ_p &new_c, params::poly_p const &c,
              bool ntt_form = true);
+void convert(params::polyP_p &new_c, params::poly_p const &c,
+             bool ntt_form = true);
 template <typename T>
 T message_from_mpz_t(mpz_t value);
+
+void encode_poly_with_values(params::poly_p& res, params::polyP_p& poly_m);
+void encode_poly_with_values(params::poly_p& res, mpz_t *values);
+void decode_poly_with_values(params::polyP_p& res, params::poly_p& poly_m);
+void decode_poly_with_values(params::polyP_p& res, mpz_t *coeffs);
+void decode_poly_with_values(mpz_t *res, params::poly_p& poly_m);
+void decode_poly_with_values(mpz_t *res, mpz_t *coeffs);
+
 }  // namespace util
 }  // namespace FV
 
@@ -478,7 +489,6 @@ class ciphertext_t {
     c1b = c00 * c11 + c01 * c10;
     c00 = c00 * c10;
     c11 = c01 * c11;
-
     // Multiply by 2/q
     std::array<mpz_t, P::degree> coefficients;
     for (size_t i = 0; i < P::degree; i++) {
@@ -631,7 +641,10 @@ void encrypt_poly(C &ct, const PK &pk, params::poly_p &poly_m) {
   poly_m.ntt_pow_phi();
 
   // Generate a small u
+
   P u{params::gauss_struct(&params::fg_prng_enc)};
+
+ // P u{};
   u.ntt_pow_phi();
 
   // Set the ciphertext pk
@@ -639,14 +652,25 @@ void encrypt_poly(C &ct, const PK &pk, params::poly_p &poly_m) {
 
   // Generate ct = (c0, c1)
   // where c0 = b*u + Delta*m + small error
+
   ct.c0 = params::gauss_struct(&params::fg_prng_enc);
+
+  //ct.c0 = 0;
   ct.c0.ntt_pow_phi();
+
   ct.c0 = ct.c0 + nfl::shoup(u * pk.b, pk.b_shoup) +
           nfl::shoup(poly_m * pk.delta, pk.delta_shoup);
 
+  //ct.c0 = ct.c0 + nfl::shoup(u * pk.b, pk.b_shoup) +
+  //        poly_m;
+
   // where c1 = a*u + small error
+
   ct.c1 = params::gauss_struct(&params::fg_prng_enc);
+
+  //ct.c1 = 0;
   ct.c1.ntt_pow_phi();
+
   ct.c1 = ct.c1 + nfl::shoup(u * pk.a, pk.a_shoup);
 
   ct.isnull = false;
@@ -1078,3 +1102,197 @@ void convert(params::polyZ_p &new_c, params::poly_p const &c, bool ntt_form) {
 }
 }  // namespace util
 }  // namespace FV
+
+
+
+
+
+
+
+
+namespace FV{
+namespace util{
+
+void convert(params::polyP_p &new_c, params::poly_p const &c, bool ntt_form) {
+  using P = params::poly_p;
+  using PZ = params::polyP_p;
+
+  size_t size_for_shoup = P::bits_in_moduli_product() +
+                          sizeof(typename P::value_type) * CHAR_BIT +
+                          nfl::static_log2<P::nmoduli>::value + 1;
+
+  // Copy c
+  P other{c};
+
+  // Compute the inverse NTT if needed
+  if (ntt_form) {
+    other.invntt_pow_invphi();
+  }
+
+  // Initialize temporary values
+  mpz_t tmp, coefficient;
+  mpz_init2(tmp, nfl::static_log2<P::nmoduli>::value + size_for_shoup);
+  mpz_init2(coefficient,
+            P::bits_in_moduli_product() + nfl::static_log2<P::nmoduli>::value);
+
+  // Loop on all the coefficients of c
+  for (size_t i = 0; i < P::degree; i++) {
+    // Construct the i-th coefficient over ZZ
+    mpz_set_ui(coefficient, 0);
+    for (size_t cm = 0; cm < P::nmoduli; cm++) {
+      // coefficient += other(cm, i) * lifting_integers[cm]
+      mpz_addmul_ui(coefficient, P::lifting_integers()[cm], other(cm, i));
+    }
+
+    // Modular reduction modulo "moduli_product" using Shoup
+    mpz_mul(tmp, coefficient, P::modulus_shoup());
+    mpz_tdiv_q_2exp(tmp, tmp, size_for_shoup);  // right shift
+    mpz_submul(coefficient, tmp,
+               P::moduli_product());  // coefficient -= tmp * moduli_product
+    if (mpz_cmp(coefficient, P::moduli_product()) >= 0) {
+      mpz_sub(coefficient, coefficient, P::moduli_product());
+    }
+
+    // Store the coefficients in new_c
+    for (size_t cm = 0; cm < P::nmoduli; cm++) {
+      // don't need to recompute for the first moduli
+      new_c(cm, i) = other(cm, i);
+    }
+    for (size_t cm = P::nmoduli; cm < PZ::nmoduli; cm++) {
+      new_c(cm, i) = mpz_fdiv_ui(coefficient, P::get_modulus(cm));
+    }
+  }
+
+  if (ntt_form) {
+    new_c.ntt_pow_phi();
+  }
+
+  // Clean
+  mpz_clears(tmp, coefficient, nullptr);
+}
+
+
+
+/**
+ * Encode poly_m (value array in PP) into res (coefficient array in P)
+ * @param res    returned coefficient polynomial in P
+ * @param poly_m input polynomial by values in PP
+ */
+
+void encode_poly_with_values(params::poly_p& res, params::polyP_p& poly_m) {
+  using P = params::poly_p;
+  using PP = params::polyP_p;
+  static_assert(!std::is_same<typename P::value_type, typename PP::value_type>::value,"cannot use polynomials over the same word size for plaintext and ciphertext due to co-primality issues");
+
+  // Pass from a value array in PP to a coefficient array in PP
+  poly_m.invntt_pow_invphi();
+
+  // Pass from a coefficient array in PP to a coefficient array in P
+  util::convert(poly_m,res , false);
+
+  // Undo work on poly_m side effects
+  poly_m.ntt_pow_phi();
+}
+
+/**
+ * Encode values (value array lifted from PP) into res (coefficient array in P)
+ * @param res    returned coefficient polynomial in P
+ * @param values input values as a vector of mpz_t lifted from PP
+ */
+
+void encode_poly_with_values(params::poly_p& res,  std::array<mpz_t, params::poly_p::degree> values) {
+  using P = params::poly_p;
+  using PP = params::polyP_p;
+  PP *poly_m = alloc_aligned<PP,32>(1);
+
+  // Project values in crt form into PP
+  poly_m->mpz2poly(values);
+
+  // Call the generic function
+  encode_poly_with_values(res, *poly_m);
+
+  // Clean
+  free(poly_m);
+}
+
+/**
+ * Decode poly_m (coefficient array in P) into res (value array in PP)
+ * @param res       returned polynomial by values in PP
+ * @param poly_m    input polynomial by coefficients in P
+ */
+
+void decode_poly_with_values(params::polyP_p& res, params::poly_p& poly_m) {
+  using P = params::poly_p;
+  using PP = params::polyP_p;
+  // Lift poly_m from P and project in crt form into PP
+  util::convert(res, poly_m, false);
+
+  // Pass from a coefficient array in PP to a value array PP
+  res.ntt_pow_phi();
+}
+
+/**
+ * Decode decode coeffs (coefficient array lifted from P) into res (value array in PP)
+ * @param res       returned polynomial by values in PP
+ * @param coeffs    input coefficients lifted from P
+ */
+
+void decode_poly_with_values(params::polyP_p& res, std::array<mpz_t, params::poly_p::degree> coeffs) {
+  using P = params::poly_p;
+  using PP = params::polyP_p;
+  // Project coeffs into CRT form in PP
+  res.mpz2poly(coeffs);
+
+  // Pass from a coefficient array in PP to a value array PP
+  res.ntt_pow_phi();
+}
+
+/**
+ * Decode decode poly_m (coefficient array in P) into res (value array lifted from PP)
+ * @param res       returned polynomial by values lifted from PP
+ * @param poly_m    input polynomial by coefficients in P
+ */
+
+void decode_poly_with_values(std::array<mpz_t, params::poly_p::degree> res, params::poly_p& poly_m) {
+  using P = params::poly_p;
+  using PP = params::polyZ_p;
+  PP *res_pp = alloc_aligned<PP,32>(1);
+
+  // Lift poly_m from P and project in crt form into PP
+  util::convert(*res_pp, poly_m, false);
+
+  // Pass from a coefficient array in PP to a value array PP
+  res_pp->ntt_pow_phi();
+
+  // Lift the values from PP
+  res_pp->poly2mpz(res);
+
+  free(res_pp);
+}
+
+/**
+ * Decode decode poly_m (coefficient array in P) into res (value array lifted from PP)
+ * @param res       returned polynomial by values lifted from PP
+ * @param coeffs     input polynomial by coefficients lifted from P
+ */
+
+void decode_poly_with_values(std::array<mpz_t, params::poly_p::degree>res, std::array<mpz_t, params::poly_p::degree>coeffs) {
+  using P = params::poly_p;
+  using PP = params::polyP_p;
+  PP *res_pp = alloc_aligned<PP,32>(1);
+
+  // Project input into CRT form in PP
+  res_pp->mpz2poly(coeffs);
+
+  // Transform it to a value array in PP
+  res_pp->ntt_pow_phi();
+
+  // Lift the values from PP
+  res_pp->poly2mpz(res);
+
+  // Clean
+  free(res_pp);
+}
+}  // namespace util
+}  // namespace FV
+
