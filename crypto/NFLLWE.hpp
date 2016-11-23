@@ -64,6 +64,7 @@ class NFLLWE : public LatticesBasedCryptosystem
 	  void dec(poly64 m, lwe_cipher *c);
     char* encrypt(unsigned int ui, unsigned int );
     char* encrypt(char* data, size_t, unsigned int exponent );
+    std::vector<char*> encryptsub(unsigned char* data, size_t, unsigned int exponent );
     char* encrypt_perftest();
     char* decrypt(char* cipheredData, unsigned int, size_t, size_t);
 
@@ -97,6 +98,7 @@ class NFLLWE : public LatticesBasedCryptosystem
     void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lvl);
     void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly,
         int rec_lvl);
+    void mulrdm(lwe_cipher rop, poly64 rdm);
     //Shoup version
 	  void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime,
         uint64_t current_poly, int rec_lvl);

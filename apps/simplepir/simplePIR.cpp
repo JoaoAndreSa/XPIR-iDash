@@ -208,7 +208,7 @@ int main(int argc, char * argv[]) {
   // Simple test
   std::cout << "======================================================================" << std::endl;
   std::cout << "Test 1/7: database_size = 1ULL<<30; nb_files = 20;" << std::endl;
-  std::cout << "params.alpha = 1; params.d = 1; crypto_params = FV:80:2048:124:30;" << std::endl;
+  std::cout << "params.alpha = 1; params.d = 1; crypto_params = FV:80:1024:62:14;" << std::endl;
   std::cout << "======================================================================" << std::endl;
   database_size = 1ULL<<20; nb_files = 20; maxFileBytesize = database_size/nb_files;
   DBGenerator db(nb_files, maxFileBytesize, /*bool silent*/ false);
@@ -217,8 +217,10 @@ int main(int argc, char * argv[]) {
   // The crypto parameters can be set to other values
   // You can get a list of all available cryptographic parameters with this function call
   // HomomorphicCryptoFactory::printAllCryptoParams();
-  params.crypto_params = "FV:80:2048:124:30";
-  //params.crypto_params = "LWE:80:2048:180";
+  params.crypto_params = "FV:80:1024:62:14";
+//params.crypto_params = "FV:80:2048:124:30";
+  //params.crypto_params = "LWE:97:1024:60";
+  //params.crypto_params = "LWE:80:2048:120";
   tests_failed |= run(&db, chosen_element, params);
 
   // Test with aggregation
@@ -232,7 +234,7 @@ int main(int argc, char * argv[]) {
   DBGenerator db2(nb_files, maxFileBytesize, /*bool silent*/ false);
   chosen_element = 0;
   params.alpha = 100; params.d = 1; params.n[0] = 1;
-  params.crypto_params = "FV:80:2048:124:30";
+  params.crypto_params = "FV:80:1024:62:14";
   tests_failed |= run(&db2, chosen_element, params);
 
   // Test with recursion 2
@@ -244,7 +246,7 @@ int main(int argc, char * argv[]) {
   DBGenerator db3(nb_files, maxFileBytesize, /*bool silent*/ false);
   chosen_element = 3;
   params.alpha = 1; params.d = 2; params.n[0] = 50; params.n[1] = 2;
-  params.crypto_params = "FV:80:2048:124:30";
+  params.crypto_params = "FV:80:1024:62:14";
   //params.crypto_params = "LWE:80:2048:120";
   tests_failed |= run(&db3, chosen_element, params);
 
@@ -257,7 +259,7 @@ int main(int argc, char * argv[]) {
   DBGenerator db4(nb_files, maxFileBytesize,/* bool silent*/ false);
   chosen_element = 3;
   params.alpha = 2; params.d = 2; params.n[0] = 25; params.n[1] = 2;
-  params.crypto_params = "FV:80:2048:124:30";
+  params.crypto_params = "FV:80:1024:62:14";
   tests_failed |= run(&db4, chosen_element, params);
 
   // Test with recursion 3
@@ -269,7 +271,7 @@ int main(int argc, char * argv[]) {
   DBGenerator db5(nb_files, maxFileBytesize, /*bool silent*/ false);
   chosen_element = 3;
   params.alpha = 1; params.d = 3; params.n[0] = 5; params.n[1] = 5; params.n[2] = 4;
-  params.crypto_params = "FV:80:2048:124:30";
+  params.crypto_params = "FV:80:1024:62:14";
   tests_failed |= run(&db5, chosen_element, params);
 
   // Test with a DBDirectoryProcessor splitting a big real file
@@ -284,7 +286,7 @@ int main(int argc, char * argv[]) {
   } else {
     chosen_element = 3;
     params.alpha = 1; params.d = 1; params.n[0] = nb_files;
-    params.crypto_params = "FV:80:2048:124:30";
+    params.crypto_params = "FV:80:1024:62:14";
     tests_failed |= run(&db6, chosen_element, params);
   }
 
@@ -301,7 +303,7 @@ int main(int argc, char * argv[]) {
     maxFileBytesize = database_size/nb_files;
     chosen_element = 0;
     params.alpha = 1; params.d = 1; params.n[0] = nb_files;
-    params.crypto_params = "FV:80:2048:124:30";
+    params.crypto_params = "FV:80:1024:62:14";
     tests_failed |= run(&db7, chosen_element, params);
   }
 

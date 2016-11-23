@@ -24,7 +24,7 @@ using namespace std;
 NFLFVPublicParameters::NFLFVPublicParameters()//:
   //polyDegree(0)
 {
-    cryptoName = "LWE";
+    cryptoName = "FV";
     crypto_container=nullptr;
     // -1 means uninitialized, 0 means no absorption possible
     absPerCoordinateBitsize=-1;
@@ -36,7 +36,7 @@ NFLFVPublicParameters::NFLFVPublicParameters(unsigned int modulusBitsize_, unsig
     absPerCoordinateBitsize(absPCBitsize_)
 {
     crypto_container=nullptr;
-    cryptoName = "LWE";
+    cryptoName = "FV";
 }
 
 // Function that sets the modulus and polyDegree from a raw description sent over the network

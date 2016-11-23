@@ -13,7 +13,7 @@
 			      |
 	   ----------- -----------
 	   |                     |
-  XPIRcPipeline (*)    XPIRcSequential 
+  XPIRcPipeline (*)    XPIRcSequential
 
 */
 
@@ -41,7 +41,7 @@ private:
 	imported_database_t m_imported_db;				//it seems the same object as in XPIRcSequential but it's not
 
 	PIRReplyWriter* m_replyWriter;					//needed for the reply extraction
-	messageListener m_messageListeners; 
+	messageListener m_messageListeners;
     writeListener	m_writeListeners;
 
 public:
@@ -60,13 +60,7 @@ public:
 			m_r_extractor=nullptr;
 			m_replyWriter=nullptr;
 
-			std::vector<std::string> fields;
-    		boost::split(fields,m_params.crypto_params,boost::is_any_of(":"));
-
-	    	m_r_generator = PIRReplyGeneratorFactory::getPIRReplyGenerator(fields.at(0),m_params,m_db);
-    		m_r_generator->setCryptoMethod(m_crypto);
-    		m_r_generator->setPirParams(m_params);
-
+			m_r_generator=initRGenerator(db,params);
     		m_imported_db=imported_db;
 		}else{		//if CLIENT
 			m_r_generator=nullptr;
@@ -77,7 +71,9 @@ public:
 		}
 	}
 
-	static imported_database_t import_database(string);
+	static imported_database_t import_database(uint64_t,string);
+
+	GenericPIRReplyGenerator* initRGenerator(DBHandler*,PIRParameters);
 
 	PIRReplyWriter* getReplyWriter();				//m_replyWriter getter (needed to proceed with the reply extraction)
 	PIRQueryGenerator_internal* getQGenerator();	/*m_q_generator getter (opposite to what happens in the sequential execution

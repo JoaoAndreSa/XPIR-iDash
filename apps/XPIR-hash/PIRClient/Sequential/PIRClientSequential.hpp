@@ -38,7 +38,7 @@ public:
 
 private:
 	//QUERY GENERATION & SEND QUERY
-	void sendQuery(std::vector<char*>,XPIRcSequential*);
+	void sendQuery(std::vector<char*>,XPIRcSequential*,vector<char*>);
 	std::vector<char*> queryGeneration(uint64_t,XPIRcSequential*);					//generate and return query
 
 	//READ REPLY

@@ -21,6 +21,7 @@ public:
 	static vector<string> listFilesFolder(string);
 	static string readFromTextFile(string);
 	static void writeToTextFile(string, string);
+	static void clearBinFile(string filename);
 	static void readFromBinFile(string, char*, int);
 	static void writeToBinFile(string, char*, int);
 
@@ -28,6 +29,7 @@ public:
 	static PIRParameters readParamsPIR(uint64_t);			//reads PIR params needed to create an XPIRc object
 
 	static std::vector<std::string> tokenize(std::string,std::string);
+	static void printCharArray(char*,int);
 
 	static void cleanupVector(vector<char*>);  					//free allocated memory
 private:

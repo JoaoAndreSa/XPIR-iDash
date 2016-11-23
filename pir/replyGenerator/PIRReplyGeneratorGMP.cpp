@@ -158,6 +158,8 @@ double PIRReplyGeneratorGMP::generateReplySimulation(const PIRParameters& pir_pa
   return stop;
 }
 
+imported_database_t PIRReplyGeneratorGMP::generateReplyGeneric(bool keep_imported_data, bool import, vector<char*> request){}
+
 imported_database_t PIRReplyGeneratorGMP::generateReplyGeneric(bool keep_imported_data, bool import)
 {
   imported_database_t database_wrapper;
@@ -208,6 +210,9 @@ void PIRReplyGeneratorGMP::generateReplyGenericFromData(const imported_database_
   //mutex.lock();
   generateReply();
 }
+
+void PIRReplyGeneratorGMP::generateReplyGenericFromData(const imported_database_t database,vector<char*> request){}
+
 /**
  * Compute Lipmaa PIR Scheme with imported data.
  **/

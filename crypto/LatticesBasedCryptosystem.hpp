@@ -27,11 +27,12 @@ class LatticesBasedCryptosystem : public HomomorphicCrypto {
     LatticesBasedCryptosystem(const std::string& crypto_name);
 
     virtual unsigned int getpolyDegree()=0;
+    virtual void sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)=0;
     virtual void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime,
         uint64_t current_poly, int rec_lvl)=0;
     virtual void mul(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime,
         uint64_t current_poly, int rec_lvl)=0;
-
+    virtual void mulrdm(lwe_cipher rop, poly64 rdm)=0;
     virtual long setandgetAbsBitPerCiphertext(unsigned int elt_nbr)=0;
 
     uint64_t* getmoduli();

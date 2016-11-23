@@ -67,6 +67,7 @@ class NFLFV : public LatticesBasedCryptosystem
 	  void dec(poly64 m, lwe_cipher *c);
     char* encrypt(unsigned int ui, unsigned int );
     char* encrypt(char* data, size_t, unsigned int exponent );
+    std::vector<char*> encryptsub(unsigned char* data, size_t, unsigned int exponent );
     char* encrypt_perftest();
     char* decrypt(char* cipheredData, unsigned int, size_t, size_t);
 
@@ -97,6 +98,7 @@ class NFLFV : public LatticesBasedCryptosystem
     // Substractions
     void sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d);
     // Fused Multiplications-Additions
+    void mulrdm(lwe_cipher rop, poly64 rdm);
     void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lvl);
     void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly,
         int rec_lvl);

@@ -85,3 +85,19 @@ uint32_t XPIRc::getRsize(uint64_t d){
 uint32_t  XPIRc::getAbsorptionSize(uint64_t d){
     return (uint32_t) m_crypto->getPublicParameters().getAbsorptionBitsize(d)/GlobalConstant::kBitsPerByte;
 }
+
+vector<char*> XPIRc::getRequest(){
+    return m_request;
+}
+
+PIRParameters XPIRc::getParams(){
+    return m_params;
+}
+
+void XPIRc::setDB(DBHandler* db){
+    m_db = db;
+}
+
+void XPIRc::setRequest(vector<char*> request){
+    m_request=request;
+}

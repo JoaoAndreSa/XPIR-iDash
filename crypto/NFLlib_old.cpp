@@ -406,14 +406,14 @@ mpz_t* NFLlib_old::poly2mpz(poly64 p)
   return resultmpz;
 }
 
-
+#include <iomanip>
 // Debug printing function
 void NFLlib_old::print_poly64hex(poly64 p, unsigned int coeff_nbr)
 {
  std::cout << "[";
  for (unsigned int i = 0 ; i < coeff_nbr ; i++)
  {
-   std::cout << std::hex << (unsigned int)(p[i]>>32)<<(unsigned int) p[i] << " ";
+   std::cout << std::hex << setfill('0') << setw(8) << (unsigned int)(p[i]>>32)<<setfill('0') << setw(8) << (unsigned int) p[i] << " ";
  }
  std::cout << "]" << std::dec << std::endl;
 }

@@ -851,7 +851,7 @@ void PIRReplyGeneratorNFLFV_internal::setCryptoMethod(CryptographicSystem* cm)
 {
   //cryptoMethod = (NFLLWE*) cm;
   cryptoMethod = (LatticesBasedCryptosystem*) cm;
-  lwe = (cryptoMethod->toString() == "LWE") ? true : false;
+  lwe = (cryptoMethod->toString() == "FV") ? true : false;
 }
 
 void PIRReplyGeneratorNFLFV_internal::freeInputData()

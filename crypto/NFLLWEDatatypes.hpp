@@ -17,6 +17,12 @@
 
 #ifndef DEF_NFLLWEDATATYPES
 #define DEF_NFLLWEDATATYPES
+namespace FV1024_62{
+namespace FV{
+class ciphertext_t;
+};
+};
+
 struct lwe_in_data
 {
 	poly64 *p;
@@ -27,12 +33,16 @@ struct lwe_cipher
 {
   	poly64 a;
   	poly64 b;
+  	FV1024_62::FV::ciphertext_t *c;
+
 };
 
 struct lwe_query
 {
 	poly64 a;
 	poly64 b;
+	FV1024_62::FV::ciphertext_t *c;
+
 };
 
 #endif //DEF_NFLLWEDATATYPES

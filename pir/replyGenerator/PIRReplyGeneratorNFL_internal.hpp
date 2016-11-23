@@ -43,6 +43,11 @@ private:
                        lwe_in_data* data,
                        unsigned int lvl,
                        lwe_cipher* result);
+    void generateReply(	lwe_query *queries,
+                       lwe_in_data* data,
+                       unsigned int lvl,
+                       lwe_cipher* result,
+                       lwe_cipher* subtract);
     char** exportResult(lwe_cipher** inter_reply, unsigned int absp_nbr, unsigned int max_chunk, unsigned int rec_lvl);
     lwe_cipher** importDatabase(char** database, unsigned int x_size, unsigned int y_size, unsigned int absp_nbr);
     lwe_in_data* fromResulttoInData(lwe_cipher** inter_reply, uint64_t reply_elt_nbr, unsigned int reply_rec_lvl);
@@ -55,13 +60,17 @@ protected:
     void freeQueries();
     void freeQueriesBuffer();
     void generateReply();
+    void generateReply(lwe_cipher* subtract);
     imported_database_t generateReplyGeneric(bool keep_imported_data = false, bool import = false);
+    imported_database_t generateReplyGeneric(bool keep_imported_data, bool import, vector<char*> request);
     void generateReplyGenericFromData(const imported_database_t database);
+    lwe_cipher* charToLWECipher(vector<char*>);
+    void generateReplyGenericFromData(const imported_database_t,vector<char*>);
     size_t getTotalSystemMemory();
     lwe_in_data* input_data;
     LatticesBasedCryptosystem* cryptoMethod;
     uint64_t currentMaxNbPolys;
-	
+
 public:
     PIRReplyGeneratorNFL_internal();
     PIRReplyGeneratorNFL_internal(PIRParameters& param, DBHandler *db);

@@ -33,22 +33,37 @@ void PIRClient::removeData(){
     initSHA256();
 }
 
-char* PIRClient::generateRequest(uint64_t pos, string variant_hash, int data_hash_bytes){
+unsigned char* PIRClient::generateRequest(uint64_t pos, string variant_hash, int data_hash_bytes){
     unsigned char* line = new unsigned char[Constants::padding_size*data_hash_bytes];
 
     for(int i=0;i<Constants::padding_size;i++){
         unsigned char* variant = m_SHA_256->binary_to_uchar(variant_hash);
-        unsigned char* ciphertext = new unsigned char[data_hash_bytes];
-        int ciphertexlen = symmetricEncrypt(ciphertext,variant,pos*Constants::padding_size+i,data_hash_bytes);
 
-        //Copy data to line
-        memcpy(line+data_hash_bytes*i,ciphertext,data_hash_bytes);
+        if(Constants::encrypted){
+            unsigned char* ciphertext = new unsigned char[data_hash_bytes];
+            int ciphertexlen = symmetricEncrypt(ciphertext,variant,pos*Constants::padding_size+i,data_hash_bytes);
+            memcpy(line+data_hash_bytes*i,ciphertext,data_hash_bytes);
+            delete[] ciphertext;
+        }else{
+            memcpy(line+data_hash_bytes*i,variant,data_hash_bytes);
+        }
 
-        delete[] ciphertext;
         delete[] variant;
     }
 
-    return reinterpret_cast<char*>(line);
+    return line;
+}
+
+vector<char*> PIRClient::encryptRequest(unsigned char* request, HomomorphicCrypto* crypto, uint64_t alpha, int max_bytesize){
+    std::vector<char*> encrypt_request;
+    unsigned char* reply= new unsigned char[alpha*max_bytesize];
+
+    for(uint64_t i=0;i<alpha;i++){
+        memcpy(reply+i*max_bytesize,request,max_bytesize);
+    }
+
+    encrypt_request=crypto->encryptsub(reply,1,alpha*max_bytesize);
+    return encrypt_request;
 }
 
 /**
@@ -95,24 +110,32 @@ std::string PIRClient::extractPlaintext(char* response, uint64_t alpha, uint64_t
     return m_SHA_256->uchar_to_binary(reinterpret_cast<unsigned char*>(response+aggregated_entrySize*(pos%alpha)),aggregated_entrySize,aggregated_entrySize*8);
 }
 
-bool PIRClient::checkContent(char* response, uint64_t alpha, int max_bytesize, std::pair<uint64_t,std::vector<std::string>> elements){
-    bool check=true;
+//bool PIRClient::checkContent(char* response, uint64_t alpha, int max_bytesize, std::pair<uint64_t,std::vector<std::string>> elements){
+bool PIRClient::checkContent(char* response, int data_hash_bytes){
 
-    string response_s;
-    if(!Constants::encrypted){   //if PLAINTEXT
-        response_s = extractPlaintext(response,alpha,max_bytesize,elements.first);
-    }else{                       //if CIPHERTEXT
-        response_s = extractCiphertext(response,alpha,max_bytesize,elements.first);
-    }
 
-    for(int j=0;j<elements.second.size();j++){
-        if(m_SHA_256->search(elements.second[j],response_s)==false){
-            check=false;
+    bool check=false;
+    char test[data_hash_bytes];
+    memset(test,0,data_hash_bytes);
+
+    for(int h=0;h<Constants::padding_size;h++){
+        if(memcmp(response+h*data_hash_bytes,test,data_hash_bytes)==0){
+            check=true;
         }
     }
 
-    //#-------CLEANUP PHASE--------#
-    delete[] response;
+    //string response_s;
+    //if(!Constants::encrypted){
+    //    response_s = extractPlaintext(response,alpha,max_bytesize,elements.first);
+    //}else{
+    //    response_s = extractCiphertext(response,3,Constants::padding_size*Constants::data_hash_size/8,elements.first);
+    //}
+    //for(int j=0;j<elements.second.size();j++){
+    //    if(m_SHA_256->search(elements.second[j],response_s)==false){
+    //        check=false;
+    //    }
+    //}
+
     return check;
 }
 
@@ -132,7 +155,7 @@ uint64_t PIRClient::considerPacking(uint64_t pos, uint64_t alpha){
     }
 }
 
-std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPos(std::map<char,std::string> entry){
+std::vector<std::pair<uint64_t,std::string>> PIRClient::listQueryPos(std::map<char,std::string> entry){
     std::vector<std::string> chr = Tools::tokenize(entry['c'],",");
     std::vector<std::string> pos = Tools::tokenize(entry['p'],",");
     std::vector<std::string> ref = Tools::tokenize(entry['r'],",");
@@ -142,7 +165,7 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
         Error::error(1,"Input Error\nUploading: ./client [-f folderPath]\nQuerying: ./client [-c chromosome1,2,...] [-p startPosition1,2,...] [-r refAllele1,2,...] [-a altAllele1,2,...] [-f vcfFile1,2,...]\n");
     }
 
-    std::vector<std::pair<uint64_t,std::vector<std::string>>> all_pos;
+    std::vector<std::pair<uint64_t,std::string>> all_pos;
 
     for(int i=0;i<chr.size();i++){
         //string query_str=chr[i]+"\t"+pos[i]+"\t.\t"+ref[i]+"\t"+alt[i]; //the . is to represent the missing id field
@@ -150,22 +173,7 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
         string data_hash=m_SHA_256->hash(query_str);
         uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);
 
-        bool exists=false;
-        int j;
-        for(j=0;j<all_pos.size();j++){
-            if(all_pos[j].first==pos){
-                exists=true;
-                break;
-            }
-        }
-
-        if(exists){
-            all_pos[j].second.push_back(data_hash);
-        }else{
-            std::vector<string> container;
-            container.push_back(data_hash);
-            all_pos.push_back(std::make_pair(pos,container));
-        }
+        all_pos.push_back(std::make_pair(pos,data_hash));
     }
     return all_pos;
 }

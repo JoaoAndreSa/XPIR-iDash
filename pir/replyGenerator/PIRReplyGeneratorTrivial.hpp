@@ -54,7 +54,9 @@ public:
     void importData();
     void initQueriesBuffer();
     imported_database_t generateReplyGeneric(bool keep_imported_data = false, bool import = false);
+    imported_database_t generateReplyGeneric(bool keep_imported_data, bool import, vector<char*> request);
     void generateReplyGenericFromData(const imported_database_t database);
+    void generateReplyGenericFromData(const imported_database_t,vector<char*>);
     double generateReplySimulation(const PIRParameters& pir_params, uint64_t plaintext_nbr);
     unsigned long computeReplySizeInChunks(unsigned long int);
     void pushQuery(char* rawQuery, unsigned int size, int dim, int nbr);

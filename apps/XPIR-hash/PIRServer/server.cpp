@@ -19,9 +19,9 @@ int main(int argc, char* argv[]){
 		std::vector<string> files = Tools::listFilesFolder("db/");
 		for(int i=0;i<files.size();i++){
 			if(Constants::pipeline){	//if PIPELINE execution
-				imported_dbs_p->operator[](files[i]) = XPIRcPipeline::import_database(files[i]);
+				imported_dbs_p->operator[](files[i]) = XPIRcPipeline::import_database(Constants::num_entries,files[i]);
 			}else{						//if SEQUENTIAL execution
-				imported_dbs_s->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
+				imported_dbs_s->operator[](files[i]) = XPIRcSequential::import_database(Constants::num_entries,files[i]);
 			}
 		}
 	}else{

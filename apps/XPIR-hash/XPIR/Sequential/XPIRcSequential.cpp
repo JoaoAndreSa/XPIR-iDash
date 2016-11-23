@@ -30,11 +30,11 @@ void import_all_databases(){
 	@param
 	@return
 */
-imported_database* XPIRcSequential::import_database(string filename){
-	DBDirectoryProcessor db(Constants::num_entries,filename);
+imported_database* XPIRcSequential::import_database(uint64_t num_entries,string filename){
+	DBDirectoryProcessor db(num_entries,filename);
 	PIRParameters params = Tools::readParamsPIR(Constants::num_entries);
 	HomomorphicCrypto* crypto=HomomorphicCryptoFactory::getCryptoMethod(params.crypto_params);
-	crypto->setandgetAbsBitPerCiphertext(params.n[0]);
+	crypto->setandgetAbsBitPerCiphertext(1500*1500*4);
 
 	/**
 		Import database
@@ -47,7 +47,6 @@ imported_database* XPIRcSequential::import_database(string filename){
 	/**
 		Warning aggregation is dealt with internally, the bytes_per_db_element parameter here is to be given WITHOUT multiplying it by params.alpha
 	*/
-
 	PIRReplyGenerator* r_generator = new PIRReplyGenerator(params,*crypto,&db);
 
 	imported_database*  imported_db = r_generator->importData(/* uint64_t offset*/ 0, /*uint64_t bytes_per_db_element */ (&db)->getmaxFileBytesize());
@@ -55,6 +54,7 @@ imported_database* XPIRcSequential::import_database(string filename){
 
 	delete r_generator;
 	delete crypto;
+
 	return imported_db;
 }
 
@@ -66,7 +66,7 @@ imported_database* XPIRcSequential::import_database(string filename){
 	@return query array that cointains the corresponding encrypted query (all its elements)
 */
 vector<char*> XPIRcSequential::queryGeneration(uint64_t chosen_element){
-	cout << "PIRClient: Generating query ..." << endl;
+	if(m_type!=2) cout << "PIRClient: Generating query ..." << endl;
 	/**
 		Generate a query to get an element in the database (indexes begin at 0).
 		Warning: if we set params.alpha=2, elements would be aggregated 2 by 2 and generateQuery
@@ -84,7 +84,7 @@ vector<char*> XPIRcSequential::queryGeneration(uint64_t chosen_element){
 	while (m_q_generator->popQuery(&query_element)){
 		query.push_back(query_element);
 	}
-	cout << "PIRClient: Query generated" << endl << endl;
+	if(m_type!=2) cout << "PIRClient: Query generated" << endl << endl;
 
 	return query;
 }
@@ -98,17 +98,16 @@ vector<char*> XPIRcSequential::queryGeneration(uint64_t chosen_element){
 	              the size of the biggest aggegated file
 */
 XPIRcSequential::REPLY XPIRcSequential::replyGeneration(vector<char*> query){
-
 	for(int i=0;i<query.size();i++){
 		m_r_generator->pushQuery(query[i]);
 	}
 
 	// Once the query is known and the database imported launch the reply generation
-	cout << "\nPIRServer: Generating reply ..." << endl;
+	if(m_type!=2) cout << "\nPIRServer: Generating reply ..." << endl;
 	double start = omp_get_wtime();
-	m_r_generator->generateReply(m_imported_db);
+	m_r_generator->generateReply(m_imported_db,m_request);
 	double end = omp_get_wtime();
-	cout << "PIRServer: Reply generated in " << end-start << " seconds" << endl;
+	if(m_type!=2) cout << "PIRServer: Reply generated in " << end-start << " seconds" << endl;
 
 	/**
 		The server would pop the replies from m_r_generator with popReply and
@@ -123,7 +122,7 @@ XPIRcSequential::REPLY XPIRcSequential::replyGeneration(vector<char*> query){
 	}
 
 	reply.nbRepliesGenerated=m_r_generator->getnbRepliesGenerated();
-	cout << "PIRServer: "<< reply.nbRepliesGenerated << " Replies generated " << endl;
+	if(m_type!=2) cout << "PIRServer: "<< reply.nbRepliesGenerated << " Replies generated " << endl;
 
 	reply.maxFileSize=m_db->getmaxFileBytesize();
 	return reply;
@@ -141,9 +140,9 @@ char* XPIRcSequential::replyExtraction(XPIRcSequential::REPLY reply){
 		m_r_extractor->pushEncryptedReply(reply.reply[i]);
 	}
 
-	cout << "PIRClient: Extracting reply ..." << endl;
+	if(m_type!=2) cout << "PIRClient: Extracting reply ..." << endl;
 	m_r_extractor->extractReply(reply.maxFileSize);
-	cout << "PIRClient: Reply extracted" << endl << endl;
+	if(m_type!=2) cout << "PIRClient: Reply extracted" << endl << endl;
 
 	// In a real application instead of writing to a buffer we could write to an output file
 	char *outptr, *result, *tmp;

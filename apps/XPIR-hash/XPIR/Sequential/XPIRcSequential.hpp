@@ -47,8 +47,7 @@ public:
 
     	@return
 	*/
-	XPIRcSequential(PIRParameters params, int type, DBHandler* db, imported_database*  imported_db=nullptr) : XPIRc(params,type,db) {
-
+	XPIRcSequential(PIRParameters params, int type, DBHandler* db, imported_database*  imported_db) : XPIRc(params,type,db) {
 		if(m_type==0){ 	//if SERVER
 			m_q_generator=nullptr;
 			m_r_extractor=nullptr;
@@ -63,10 +62,9 @@ public:
 			m_q_generator = new PIRQueryGenerator(m_params,*m_crypto);
 			m_r_extractor = new PIRReplyExtraction(m_params,*m_crypto);
 		}
-
 	}
-	static imported_database* import_database(string);//import database and initialize imported_database object
-	vector<char*> queryGeneration(uint64_t chosen_element);  //generate query (client)
+	static imported_database* import_database(uint64_t,string);//import database and initialize imported_database object
+	vector<char*> queryGeneration(uint64_t);  					//generate query (client)
 	REPLY replyGeneration(vector<char*>);					 //generate reply (server)
 	char* replyExtraction(REPLY);							 //extract reply  (client)
 	void cleanQueryBuffer();								 //clean queries  (client)

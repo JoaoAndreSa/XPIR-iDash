@@ -18,6 +18,7 @@
 #include "PIRReplyExtraction_internal.hpp"
 #include "apps/client/PIRViewCLI.hpp"
 //#define DEBUG
+//#define CRYPTO_DEBUG
 
 /**
  *	Class constructor.
@@ -74,19 +75,19 @@ void PIRReplyExtraction_internal::extractReply(int aggregated_maxFileSize, share
 #endif
     cout << "PIRReplyExtraction_internal: Waiting for first replies..." << endl;
 
-    for (unsigned int j = 0 ; j < ciphertext_nbr ; j++)
+    for (unsigned int j = 0 ; j < ciphertext_nbr; j++)
     {
       data = (rec_lvl == pirParams.d) ? repliesBuffer.pop_front() : in_data+(j*data_size);
-      if (rec_lvl == pirParams.d && j == 0 )
-      {
+      if (rec_lvl == pirParams.d && j == 0 ) 
+      { 
         cout << "PIRReplyExtraction_internal: Starting reply extraction..." << endl;
       }
       out_data = cryptoMethod.decrypt(data, rec_lvl, data_size, data_size2b);
      if (rec_lvl > 1) {
-       memcpy(in_data_2b+(data_size2b * j), out_data, data_size2b);
+       memcpy(in_data_2b+(data_size2b * j), out_data, data_size2b); 
        free(out_data);
      }
-     else
+     else 
      {
        clearChunks->push(out_data);
 #ifdef CRYPTO_DEBUG
@@ -96,11 +97,7 @@ void PIRReplyExtraction_internal::extractReply(int aggregated_maxFileSize, share
       cout << dec << endl;
 #endif
      }
-     if(rec_lvl == pirParams.d) {
-
-     free(data);
-
-     }
+     if(rec_lvl == pirParams.d) free(data);
     }
     if (rec_lvl < pirParams.d) free(in_data);
     in_data = in_data_2b;
@@ -113,12 +110,12 @@ void PIRReplyExtraction_internal::extractReply(int aggregated_maxFileSize, share
 /**
  *	Start extractReply in a thread.
  **/
-void PIRReplyExtraction_internal::startExtractReply(int aggregated_maxFileSize, shared_queue<char*>* clearChunks)
+void PIRReplyExtraction_internal::startExtractReply(int aggregated_maxFileSize, shared_queue<char*>* clearChunks) 
 {
   replyThread = boost::thread(&PIRReplyExtraction_internal::extractReply, this, aggregated_maxFileSize, clearChunks);
 }
 
-void PIRReplyExtraction_internal::setFileParam(string filename_ ,int fileSize_)
+void PIRReplyExtraction_internal::setFileParam(string filename_ ,int fileSize_) 
 {
   assert (!filename_.empty());
   assert (fileSize_ >= 0);
@@ -127,7 +124,7 @@ void PIRReplyExtraction_internal::setFileParam(string filename_ ,int fileSize_)
   filename = filename_;
 }
 
-PIRReplyExtraction_internal::~PIRReplyExtraction_internal()
+PIRReplyExtraction_internal::~PIRReplyExtraction_internal() 
 {
   joinThread();
 
@@ -139,7 +136,7 @@ PIRReplyExtraction_internal::~PIRReplyExtraction_internal()
 /**
  *	Join reply extraction thread if it's possible.
  **/
-void PIRReplyExtraction_internal::joinThread()
+void PIRReplyExtraction_internal::joinThread() 
 {
   if (replyThread.joinable()) replyThread.join();
 }
@@ -172,7 +169,7 @@ int PIRReplyExtraction_internal::getChosenFileSize()
   //			clear_size = cryptoMethod.getPublicParameters().getCiphBitsizeFromRecLvl(pirParams.recLvl - i -1);
   //			tmp1 = buf;
   //
-  //			if (exp_factor - i == 1)
+  //			if (exp_factor - i == 1) 
   //				clear_size--;
   //
   //			buf = cryptoMethod.decrypt(tmp1, exp_factor - i, ciph_size, clear_size);

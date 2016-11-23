@@ -38,14 +38,14 @@ class PaillierAdapter : public HomomorphicCrypto {
 		int unsigned modulusbits;
 		int security_bits;
 		PaillierPrivateParameters privateParameters;
-	
+
 		/*Methods*/
 		void keygen(unsigned int modulusbits,
 											paillier_pubkey* pub,
 											paillier_prvkey* prv,
 											unsigned int s);
-		void complete_prvkey( 	paillier_prvkey* prv, 
-								paillier_pubkey* pub, 
+		void complete_prvkey( 	paillier_prvkey* prv,
+								paillier_pubkey* pub,
 								unsigned int s );
 		void generatePrivateKey(void);
 		void generatePublicKey(void);
@@ -54,10 +54,10 @@ class PaillierAdapter : public HomomorphicCrypto {
 							unsigned int s,
 							mpz_t c
 							);
-		
+
 		void dec( paillier_pubkey* pub,
 							paillier_prvkey* prv,
-							mpz_t ct,  
+							mpz_t ct,
 							unsigned int,
 							mpz_t i);
 
@@ -68,13 +68,14 @@ class PaillierAdapter : public HomomorphicCrypto {
 	public:
 		void e_add(mpz_t res, mpz_t a, mpz_t b, int);
 		void e_mul_const(mpz_t res, mpz_t a, mpz_t n, int);
-		static unsigned int securityToModulus(int); 
+		static unsigned int securityToModulus(int);
 		/*Attributs*/
 		PaillierPublicParameters publicParameters;
-		
+
 		/*Methods*/
 		char* encrypt(unsigned int ui, unsigned int);
 		char* encrypt(char* data, size_t, unsigned int exponent);
+		std::vector<char*> encryptsub(unsigned char* data, size_t, unsigned int exponent );
     char* encrypt_perftest();
 		char* decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t);
     unsigned int getCryptoParams(unsigned int k,set<std::string>& crypto_params);
@@ -85,7 +86,7 @@ class PaillierAdapter : public HomomorphicCrypto {
     PaillierAdapter();
     PaillierAdapter(int security_bits, int recLvl);
 		~PaillierAdapter(void);
-		
+
     double estimateAbsTime(std::string crypto_param);
 		AbstractPublicParameters&  getPublicParameters(void);
 		double getDecCost(unsigned int length, unsigned int s);

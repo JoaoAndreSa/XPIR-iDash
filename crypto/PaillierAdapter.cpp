@@ -27,7 +27,7 @@ const int kMillion = 1000000;
  * Static fonction to feet approximately standards. NIST SP800-57 table 2 page 64
  * Beyond 128 bits of security modules will not be used as getCryptoParams blocks when ciphertext modulus is above 10K bits.
  **/
-unsigned int PaillierAdapter::securityToModulus(int security_bits) 
+unsigned int PaillierAdapter::securityToModulus(int security_bits)
 {
   if(security_bits <= 40)
     return 128;
@@ -56,7 +56,7 @@ PaillierAdapter::PaillierAdapter() :
  * 		- int security_bits : number of security bit wanted (size of the cipher space);
  * 		- int recLvl				: number of recursion level.
  **/
-PaillierAdapter::PaillierAdapter(int _security_bits, int init_s ) : 
+PaillierAdapter::PaillierAdapter(int _security_bits, int init_s ) :
   HomomorphicCrypto("Paillier"),
   security_bits(_security_bits),
   privateParameters(),
@@ -96,8 +96,8 @@ void PaillierAdapter::initRandomGenerator()
  *	Return :
  *		- char* : an allocated pointer to the encrypted data.
  **/
-  char* 
-PaillierAdapter::encrypt(unsigned int ui, unsigned int s) 
+  char*
+PaillierAdapter::encrypt(unsigned int ui, unsigned int s)
 {
   unsigned int ciph_size = publicParameters.getKeyBitsize()*(s+1)/8;
   char *tmp, *request = (char*) calloc((ciph_size + 1), sizeof(char));
@@ -113,7 +113,7 @@ PaillierAdapter::encrypt(unsigned int ui, unsigned int s)
 #endif
   tmp = (char*)mpz_export(NULL, &n, 1, sizeof(char), 0, 0, ct);
   //Padding
-  memcpy(request+sizeof(char)*((ciph_size) - n), tmp, n);	
+  memcpy(request+sizeof(char)*((ciph_size) - n), tmp, n);
 
   //Free memory
   mpz_clears(ct, pt, NULL);
@@ -122,7 +122,7 @@ PaillierAdapter::encrypt(unsigned int ui, unsigned int s)
 
   return request;
 }
-
+std::vector<char*> PaillierAdapter::encryptsub(unsigned char* data, size_t, unsigned int exponent ) {}
 // To test decryption performance
 char* PaillierAdapter::encrypt_perftest()
 {
@@ -138,7 +138,7 @@ char* PaillierAdapter::encrypt_perftest()
  *	Return :
  *		- char* : an allocated pointer to the encrypted data.
  **/
-char* PaillierAdapter::encrypt(char* data, size_t dataSize,  unsigned int exponent) 
+char* PaillierAdapter::encrypt(char* data, size_t dataSize,  unsigned int exponent)
 {
   char* request;
   mpz_t ct, imported_data;
@@ -169,12 +169,12 @@ char* PaillierAdapter::encrypt(char* data, size_t dataSize,  unsigned int expone
  * 		Return :
  * 		- char* : an allocated pointer to the decrypted data.
  **/
-char* PaillierAdapter::decrypt( char* cipheredData, 
-    unsigned int exp_fac, 
-    size_t ciph_size , 
-    size_t clear_size) 
+char* PaillierAdapter::decrypt( char* cipheredData,
+    unsigned int exp_fac,
+    size_t ciph_size ,
+    size_t clear_size)
 {
-  size_t n = 0; 
+  size_t n = 0;
   mpz_t ct, res;
   char* tmp;
   mpz_inits(ct, res, NULL);
@@ -183,7 +183,7 @@ char* PaillierAdapter::decrypt( char* cipheredData,
 
   dec(publicParameters.getPubKey(),
       privateParameters.getPrvKey(),
-      ct, 
+      ct,
       exp_fac,
       res );
 
@@ -192,12 +192,12 @@ char* PaillierAdapter::decrypt( char* cipheredData,
 #endif
 
   tmp = (char*) mpz_export(NULL, &n, 1, sizeof(char) , 0, 0, res);
-  
+
   mpz_clears(res, ct, NULL); //clear content of mpz_t, t
 
   if( n < clear_size)
   {
-    char *pt = (char*)calloc(clear_size+1, sizeof(char)); 
+    char *pt = (char*)calloc(clear_size+1, sizeof(char));
     memcpy(pt+sizeof(char)*((clear_size) - n), tmp, n);
     free(tmp); // malloc'd
     return pt;
@@ -209,12 +209,12 @@ char* PaillierAdapter::decrypt( char* cipheredData,
 }
 
 
-PaillierAdapter::~PaillierAdapter() 
+PaillierAdapter::~PaillierAdapter()
 {
   gmp_randclear(rand);
 }
 
-AbstractPublicParameters& PaillierAdapter::getPublicParameters() 
+AbstractPublicParameters& PaillierAdapter::getPublicParameters()
 {
   return publicParameters;
 }
@@ -227,7 +227,7 @@ AbstractPublicParameters& PaillierAdapter::getPublicParameters()
  *		- unsigned int s : recursion level ;
  *		- mpz_t c				 : result operande .
  **/
-  void 
+  void
 PaillierAdapter::enc( paillier_pubkey* pub,
     mpz_t m,
     unsigned int s,
@@ -238,9 +238,9 @@ PaillierAdapter::enc( paillier_pubkey* pub,
   unsigned int modulusbits = publicParameters.getKeyBitsize();
   do
   {
-    mpz_urandomb(r, rand, (s+1)*modulusbits); 
+    mpz_urandomb(r, rand, (s+1)*modulusbits);
   } while( mpz_cmp(r, *pub->getnj(s+1)) >= 0 );
-  
+
   mpz_powm(gm, *pub->getg(), m,  *pub->getnj(s+1));
   mpz_powm(rns, r, *pub->getnj(s), *pub->getnj(s+1));
   mpz_mul(c, gm, rns);
@@ -249,7 +249,7 @@ PaillierAdapter::enc( paillier_pubkey* pub,
 #ifdef DEBUG_ENCRYPT
   mpz_t test;
   mpz_init(test);
-  dec(pub, privateParameters.getPrvKey(), c, s, test); 
+  dec(pub, privateParameters.getPrvKey(), c, s, test);
   gmp_printf("Decrypting %Zd into %Zd\n\n", c, test);
 #endif
 
@@ -257,7 +257,7 @@ PaillierAdapter::enc( paillier_pubkey* pub,
 }
 
 /**
- *	Reimplemented version of decrypt to not use paillier structures. 
+ *	Reimplemented version of decrypt to not use paillier structures.
  *	Params:
  *		- paillier_prvkey* prv : Paillier private key pointer ;
  *		- mpz_t c : encrypted data ;
@@ -289,10 +289,10 @@ PaillierAdapter::enc( paillier_pubkey* pub,
 */
 
 
-  void 
+  void
 PaillierAdapter::dec( paillier_pubkey* pub,
     paillier_prvkey* prv,
-    mpz_t c, 
+    mpz_t c,
     unsigned int s,
     mpz_t res)
 {
@@ -300,14 +300,14 @@ PaillierAdapter::dec( paillier_pubkey* pub,
 	mpz_t cprime, temp, tempDivisor, i_jCur, i_jPrev;
 
 	mpz_init(cprime);
-	
+
 	//cprime = c^key mod n^{s+1}
 	mpz_powm(cprime,c,prv->d,*pub->getnj(s+1));
-	
-	
-	
+
+
+
 	//the algorithm from extracting i from (1+n)^i described in the paper.
-	
+
 	//the algorithm iteratively extracts i mod n, i mod n^2, etc. i mod n starts us off, and is just input - 1 / n.
 	mpz_init(temp);
 	mpz_init(tempDivisor);
@@ -316,22 +316,22 @@ PaillierAdapter::dec( paillier_pubkey* pub,
 	mpz_sub_ui(i_jPrev,i_jPrev,1);
 	mpz_divexact(i_jPrev,i_jPrev,*pub->getnj(1));
 	mpz_mod(i_jPrev,i_jPrev,*pub->getnj(2));
-	
+
 	//just in case s=1; in that case we need this line to actually set i_jcur
 	if(s==1)
 		mpz_set(i_jCur,i_jPrev);
-	
+
 	//extract i_j = i mod n^j given i_{j-1}. this is done by taking (input - 1 mod n^{j+1}) / n , and subtracting
 	//from that: ((  (i_{j-1} choose 2)*n  + (i_{j-1} choose 3)*n^2  + ... +  (i_{j-1} choose j)*n^{j-1}  ))   mod n^j
 	for(j=2;j<=s;j++)
 	{
-		//L((1+n)^i) as they call it 
+		//L((1+n)^i) as they call it
 		mpz_mod(i_jCur,cprime,*pub->getnj(j+1));
 		mpz_sub_ui(i_jCur,i_jCur,1);
 		mpz_divexact(i_jCur,i_jCur,*pub->getnj(1));
-		
+
 		mpz_mod(i_jCur,i_jCur,*pub->getnj(j));
-		
+
 		//subtract each of the binomial things
 		for(k=2;k<=j;k++)
 		{
@@ -343,19 +343,19 @@ PaillierAdapter::dec( paillier_pubkey* pub,
 		}
 		mpz_set(i_jPrev,i_jCur);
 	}
-	
+
 	//i_jCur is currently the message times the private key.
 	mpz_invert(temp, prv->d, *pub->getnj(s));
 	mpz_mul(res, i_jCur, temp);
 	mpz_mod(res, res, *pub->getnj(s));
-	
+
 	//cleanup and return
 	mpz_clear(cprime);
 	mpz_clear(i_jPrev);
 	mpz_clear(i_jCur);
 	mpz_clear(temp);
 	mpz_clear(tempDivisor);
-	
+
 
   //  unsigned int kfac, k;
 //  mpz_t t1, t2, t3, a, id ;
@@ -463,7 +463,7 @@ PaillierAdapter::get_prime_of_size(mpz_t rop, unsigned int length)
   mpz_clears(z_p, z_min, NULL);
 }
 
-  void 
+  void
 PaillierAdapter::getRandFromfile(int len, mpz_t* val )
 {
   char* p = new char[len + 1]();
@@ -501,7 +501,7 @@ PaillierAdapter::setNewParameters(const std::string& crypto_params)
 PaillierAdapter::getDecCost(unsigned int length, unsigned int s)
 {
   double  start, result;
-  unsigned int cores = omp_get_num_procs(); 
+  unsigned int cores = omp_get_num_procs();
   unsigned int rounds = 2000/pow((length*(s+1)/2048), 3);//Amount of rounds for a one second test on the poor devlopper's computer.
   mpz_t z_r, z_a[cores];
   mpz_init(z_r);
@@ -525,7 +525,7 @@ PaillierAdapter::getDecCost(unsigned int length, unsigned int s)
     {
       dec(publicParameters.getPubKey(),
           privateParameters.getPrvKey(),
-          z_r, 
+          z_r,
           s ,
           z_a[i] );
       usleep(5);
@@ -539,14 +539,14 @@ PaillierAdapter::getDecCost(unsigned int length, unsigned int s)
 
   result = omp_get_wtime() - start;
 
-  return result /(cores)/rounds ; 
+  return result /(cores)/rounds ;
 }
 
-  void 
+  void
 PaillierAdapter::getRandInteger(mpz_t rop, unsigned int length, gmp_randstate_t prng)
 {
   do {
-    mpz_urandomb(rop, prng, length);	
+    mpz_urandomb(rop, prng, length);
   }while(mpz_sizeinbase(rop, 2) != length);
 }
 
@@ -576,7 +576,7 @@ unsigned int PaillierAdapter::getCryptoParams(unsigned int k, std::set<std::stri
   // We'll increase params_nbr when the client handles better s
   for (unsigned int s = 1 ; params_nbr < 1 ; s++)
   {
-    string param = cryptoName + ":" + k_str + ":" + to_string(modulus_size*s) + ":" + to_string(modulus_size*(s+1)); 
+    string param = cryptoName + ":" + k_str + ":" + to_string(modulus_size*s) + ":" + to_string(modulus_size*(s+1));
     if(crypto_params.insert(param).second) params_nbr++;
     param = "";
   }

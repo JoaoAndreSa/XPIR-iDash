@@ -39,8 +39,8 @@ public:
 private:
 	void downloadWorker(int,XPIRcPipeline*);                                        //donwload thread handler (reads reply)
 	void startProcessResult(int,XPIRcPipeline*);                                    //initiate reply extraction (reading and exctraction are do)
-	void uploadWorker(XPIRcPipeline*,char*);
-	void startProcessQuery(uint64_t,XPIRcPipeline*,char*);
+	void uploadWorker(XPIRcPipeline*,vector<char*>);
+  void startProcessQuery(uint64_t,XPIRcPipeline*,vector<char*>);
 
 	void joinAllThreads(vector<XPIRcPipeline*>);
 };

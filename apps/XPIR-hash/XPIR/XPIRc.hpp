@@ -33,11 +33,13 @@
 
 class XPIRc{
 protected:
-	bool m_type;					//if =0 server, if =1 client
+	int m_type;					//if =0 server, if =1 client
 
 	HomomorphicCrypto* m_crypto;
 	DBHandler* m_db;				//if client m_db=nullptr
 	PIRParameters m_params;
+
+	vector<char*> m_request;
 
 public:
 
@@ -50,18 +52,18 @@ public:
 
     	@return
 	*/
-	XPIRc(PIRParameters params, bool type, DBHandler* db) {
+	XPIRc(PIRParameters params, int type, DBHandler* db) {
 		m_params=params;
 		m_type=type;
 		m_db=db;
 
 		/**
-			Absorption capacity of an LWE encryption scheme depends on the number of sums that are going to be done in the 
+			Absorption capacity of an LWE encryption scheme depends on the number of sums that are going to be done in the
 			PIR protocol, it must therefore be initialized.
 		 	Warning here we suppose the biggest dimension is in d[0] otherwise absorbtion needs to be computed accordingly
 		*/
-		m_crypto=HomomorphicCryptoFactory::getCryptoMethod(m_params.crypto_params);
-		m_crypto->setandgetAbsBitPerCiphertext(m_params.n[0]);
+		m_crypto=HomomorphicCryptoFactory::getCryptoMethod(params.crypto_params);
+		m_crypto->setandgetAbsBitPerCiphertext(1500*1500*4); //8 bits per coefficient
 	}
 
 	uint64_t getD();   						//m_params.d getter (recursion/dimension value)
@@ -72,6 +74,11 @@ public:
 	uint32_t getQsize(uint64_t);			//get query element size in bytes
 	uint32_t getRsize(uint64_t);			//get reply element size in bytes
 	uint32_t getAbsorptionSize(uint64_t); 	//get absorption size in bytes
+	vector<char*> getRequest();
+	PIRParameters getParams();
+
+	void setDB(DBHandler*);
+	void setRequest(vector<char*>);
 
 protected:
 	void upperCleanup();	  				//clean 'tools'

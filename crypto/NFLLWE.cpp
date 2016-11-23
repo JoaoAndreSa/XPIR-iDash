@@ -174,6 +174,11 @@ void NFLLWE::sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)
   nflInstance.submodPoly(rop.b, op1.b, op2.b);
 }
 
+void NFLLWE::mulrdm(lwe_cipher rop, poly64 rdm)
+{
+
+}
+
 void NFLLWE::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly, int rec_lvl)
 {
 	NFLLWE_DEBUG_MESSAGE("in_data[0].p : ",op1.p[0],4);
@@ -511,10 +516,34 @@ char* NFLLWE::encrypt(unsigned int ui, unsigned int d)
 	return (char*) c.a;
 }
 
+std::vector<char*> NFLLWE::encryptsub(unsigned char* data, size_t s_coef, unsigned int nb_coef ){
+    std::vector<char*> c(1 +nb_coef/polyDegree);
+    for (int l=0;l<nb_coef/polyDegree +1;l++){
+        lwe_cipher c_tmp;
+        poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
+        uint64_t ui[polyDegree];
+        for (int j=0; j<min(polyDegree,nb_coef-l*polyDegree);j++){
+            for (int i = s_coef -1; i>-1;i--){
+                if (i==s_coef -1) {ui[j]=uint64_t(data[i+j*s_coef+l*s_coef*polyDegree]);}
+                else {ui[j] = (ui[j]<<8) | data[i+j*s_coef+l*s_coef*polyDegree];}
+            }
+            for (unsigned int cm = 0 ; cm < nbModuli ; cm++){
+                m[cm*polyDegree+j]=ui[j];
+            }
+        }
+        enc(&c_tmp,m);
+        c[l]=(char*)c_tmp.a;
+        free(m);
+
+	}
+	return c;
+}
+
 char* NFLLWE::encrypt(char* data, size_t s_hash, unsigned int s_list ){
+
     lwe_cipher c;
 	poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
-	uint64_t *ui;
+	uint64_t ui[s_list];
 	for (int j=0; j<s_list;j++){
         for (int i = 0; i<s_hash;i++){
             if (i==0) {ui[j]=uint64_t(data[i+j*s_hash]);}
@@ -524,7 +553,6 @@ char* NFLLWE::encrypt(char* data, size_t s_hash, unsigned int s_list ){
             m[cm*polyDegree+j]=ui[j];
         }
     }
-
   	enc(&c,m);
 	free(m);
 	return (char*) c.a;

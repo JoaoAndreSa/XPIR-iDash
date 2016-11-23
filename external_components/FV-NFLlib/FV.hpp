@@ -644,7 +644,7 @@ void encrypt_poly(C &ct, const PK &pk, params::poly_p &poly_m) {
 
   P u{params::gauss_struct(&params::fg_prng_enc)};
 
- // P u{};
+  //P u{};
   u.ntt_pow_phi();
 
   // Set the ciphertext pk

@@ -63,7 +63,9 @@ class GenericPIRReplyGenerator
 
     virtual void initQueriesBuffer()=0;
     virtual imported_database_t generateReplyGeneric(bool keep_imported_data = false,bool import = false)=0;
+    virtual imported_database_t generateReplyGeneric(bool keep_imported_data, bool import, vector<char*> request)=0;
     virtual void generateReplyGenericFromData(const imported_database_t database)=0;
+    virtual void generateReplyGenericFromData(const imported_database_t,vector<char*>)=0;
     virtual double generateReplySimulation(const PIRParameters& pir_params, uint64_t plaintext_nbr)=0;
 		virtual unsigned long computeReplySizeInChunks(unsigned long int)=0;
 		virtual void pushQuery(char* rawQuery, unsigned int size, int dim, int nbr)=0;

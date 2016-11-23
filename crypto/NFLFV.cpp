@@ -33,10 +33,10 @@ return ret;
 }
 
 void NFLlwe_DEBUG_MESSAGE(const char *s,poly64 p, unsigned int n){
-#ifdef CRYPTO_DEBUG
+//#ifdef CRYPTO_DEBUG
 	std::cout<<s;
 	NFLlib_old::print_poly64hex(p,n);
-#endif
+//#endif
 }
 
 // *********************************************************
@@ -49,7 +49,7 @@ void NFLlwe_DEBUG_MESSAGE(const char *s,poly64 p, unsigned int n){
 
 
 NFLFV::NFLFV():
-    LatticesBasedCryptosystem("LWE"),
+    LatticesBasedCryptosystem("FV"),
     oldNbModuli(0),
     polyDegree(0),
     fvobject(nullptr)
@@ -85,7 +85,7 @@ void NFLFV::setNewParameters(const std::string& crypto_param_descriptor)
     fvobject = new FV2048_124::FV2048_124c();
     plainbits = 30;
   }
-  else if ((polyDegree_ == 1024) && (aggregatedModulusBitsize_ == 60)&& (securityBits<76))
+  else if ((polyDegree_ == 1024) && (aggregatedModulusBitsize_ == 62) && (plainbits_ == 14)&& (securityBits<90))
   {
     fvobject = new FV1024_62::FV1024_62c();
     plainbits = 14;
@@ -166,8 +166,7 @@ void NFLFV::add(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)
 
 void NFLFV::sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)
 {
- // nflInstance.submodPoly(rop.a, op1.a, op2.a);
-  //nflInstance.submodPoly(rop.b, op1.b, op2.b);
+ fvobject->sub(rop,op1,op2,d);
 }
 
 void NFLFV::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly, int rec_lvl)
@@ -183,10 +182,19 @@ void NFLFV::mulandadd(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2
 
 }
 
+void NFLFV::mulrdm(lwe_cipher rop, poly64 rdm){
+
+    fvobject->mulrdm(rop,rdm);
+
+}
+
 void NFLFV::mul(lwe_cipher rop, const lwe_in_data op1, const lwe_query op2, const lwe_query op2prime, const uint64_t current_poly, int rec_lvl)
 {
 
+ fvobject->mul(rop,op1,op2,current_poly,rec_lvl);
+
 }
+
 
 // Same comment as for musAndAddCiphertextNTT we do a simpler version above
 void NFLFV::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, int rec_lvl)
@@ -264,9 +272,10 @@ char* NFLFV::encrypt(unsigned int ui, unsigned int d)
 }
 
 char* NFLFV::encrypt(char* data, size_t s_hash, unsigned int s_list ){
+
     lwe_cipher c;
 	poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
-	uint64_t *ui;
+	uint64_t ui[s_list];
 	for (int j=0; j<s_list;j++){
         for (int i = 0; i<s_hash;i++){
             if (i==0) {ui[j]=uint64_t(data[i+j*s_hash]);}
@@ -276,10 +285,32 @@ char* NFLFV::encrypt(char* data, size_t s_hash, unsigned int s_list ){
             m[cm*polyDegree+j]=ui[j];
         }
     }
-
-  	fvobject->enc(&c,m);
+    fvobject->enc(&c,m);
 	free(m);
 	return (char*) c.a;
+}
+
+std::vector<char*> NFLFV::encryptsub(unsigned char* data, size_t s_coef, unsigned int nb_coef ){
+    std::vector<char*> c(1 +nb_coef/polyDegree);
+    for (int l=0;l<nb_coef/polyDegree +1;l++){
+        lwe_cipher c_tmp;
+        poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
+        uint64_t ui[polyDegree];
+        for (int j=0; j<min(polyDegree,nb_coef-l*polyDegree);j++){
+            for (int i = s_coef -1; i>-1;i--){
+                if (i==s_coef -1) {ui[j]=uint64_t(data[i+j*s_coef+l*s_coef*polyDegree]);}
+                else {ui[j] = (ui[j]<<8) | data[i+j*s_coef+l*s_coef*polyDegree];}
+            }
+            for (unsigned int cm = 0 ; cm < nbModuli ; cm++){
+                m[cm*polyDegree+j]=ui[j];
+            }
+        }
+        fvobject->encNTT(&c_tmp,m);
+        c[l]=(char*)c_tmp.a;
+        free(m);
+
+	}
+	return c;
 }
 
 
@@ -306,11 +337,22 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
   std::cout<<"Bits per coordinate: "<<bits_per_coordinate<<std::endl;
 #endif
 
+
+
+//NFLlwe_DEBUG_MESSAGE("Avant soustraction: ",ciphertext.a, 4);
+//NFLlwe_DEBUG_MESSAGE("Subtract : ",test.a, 4);
+
+
   fvobject->dec(clear_data, &ciphertext);
 
-  NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
-  NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
-  NFLlwe_DEBUG_MESSAGE("Result: ",clear_data, 4);
+uint32_t *tmp = (uint32_t *)clear_data;
+
+for (int i =0;i<polyDegree;i++){
+tmp[i]&=255;
+}
+  //NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
+  //NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
+  //NFLlwe_DEBUG_MESSAGE("Result: ",clear_data, 4);
 
   unsigned char* out_data = (unsigned char*) calloc(bits_per_coordinate*polyDegree/64 + 1, sizeof(uint64_t));
 
@@ -320,6 +362,7 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
   //std::cout<<"Bitgrouped into: "<<out_data<<std::endl;
 #endif
   free(clear_data);
+
   return (char*) out_data;
 }
 
@@ -327,8 +370,8 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
 unsigned int NFLFV::getAllCryptoParams(std::set<std::string>& crypto_params)
 {
   unsigned int params_nbr  = 0;
-  unsigned int k_array_size = 5;
-  unsigned int k[5] = {80, 100, 128, 192, 256};
+  unsigned int k_array_size = 1;
+  unsigned int k[1] = {80};
 
   for (unsigned int i = 0 ; i < k_array_size ; i++)
   {
@@ -345,20 +388,19 @@ unsigned int NFLFV::getCryptoParams(unsigned int k, std::set<std::string>& crypt
   unsigned int p_size, params_nbr = 0;
   string k_str  = to_string(k);
 
-  for (unsigned int degree = kMinPolyDegree ; degree <= kMaxPolyDegree; degree <<= 1)
-  {
+
     string param;
-    p_size = findMaxModulusBitsize(k, degree);
 
     // We give a very small margin 59 instead of 60 so that 100:1024:60 passes the test
     //for (unsigned int i = 1; i * 59 <= p_size ; i++)//(p_size > 64) && ((p_size % 64) != 0))
-    for (unsigned int i = 1; i * 61 <= p_size && i * 62 <= 248; i++)
-    {
-      param =  cryptoName + ":" + to_string(estimateSecurity(degree,i*62)) + ":" + to_string(degree) + ":" + to_string(i*62) ;
-      if (crypto_params.insert(param).second) params_nbr++;
-      param = "";
-    }
-  }
+
+      param =  "FV:80:" + to_string(2048) + ":" + to_string(124) +":30" ;
+      crypto_params.insert(param);
+      params_nbr++;
+      param =  "FV:80:" + to_string(1024) + ":" + to_string(62) +":14" ;
+      crypto_params.insert(param);
+      params_nbr++;
+
 
   return params_nbr;
 }
@@ -389,14 +431,16 @@ long NFLFV::setandgetAbsBitPerCiphertext(unsigned int elt_nbr)
     // The amount of absorbed bits cannot go beyond plaintext space ...
     if(nbr_bits > plainbits -1)
     {
-      nbr_bits = plainbits - 1;
+      nbr_bits = plainbits -2;
     }
+
     // ... nor be lesser than 0
     if(nbr_bits < 0)
     {
       nbr_bits = 0;
     }
 
+    nbr_bits = 8;
     fvobject->setnbrbits(nbr_bits);
     publicParams.setAbsPCBitsize(nbr_bits);
 

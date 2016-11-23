@@ -4,4 +4,4 @@ include_directories(.)
 include_directories(..)
 include_directories(../..)
 
-add_library(pir_server_pir STATIC PIROptimizer.cpp GenericPIRReplyGenerator.cpp PIRReplyGeneratorFactory.cpp PIRReplyGeneratorGMP.cpp PIRReplyGeneratorNFL_internal.cpp PIRReplyGeneratorNFLFV_internal.cpp PIRReplyGeneratorTrivial.cpp)
+add_library(pir_server_pir STATIC PIROptimizer.cpp GenericPIRReplyGenerator.cpp PIRReplyGeneratorFactory.cpp PIRReplyGeneratorGMP.cpp PIRReplyGeneratorNFL_internal.cpp PIRReplyGeneratorTrivial.cpp)

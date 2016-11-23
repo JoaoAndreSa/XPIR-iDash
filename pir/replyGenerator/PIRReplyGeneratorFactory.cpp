@@ -20,15 +20,15 @@
 GenericPIRReplyGenerator* PIRReplyGeneratorFactory::getPIRReplyGenerator(const std::string& gen_name, PIRParameters& param, DBHandler *db)
 {
   GenericPIRReplyGenerator* generator;
-  
+
   if ((gen_name == "LWE"))
 	{
-		generator = new PIRReplyGeneratorNFL_internal( param, db); 
+		generator = new PIRReplyGeneratorNFL_internal( param, db);
 	}
-  else if ((gen_name == "FV"))
+	 else if ((gen_name == "FV"))
 	{
-		generator = new PIRReplyGeneratorNFLFV_internal( param, db); 
-	}
+		generator = new PIRReplyGeneratorNFL_internal( param, db);
+}
 	else if (gen_name == "Paillier")
 	{
     generator = new PIRReplyGeneratorGMP( param, db);
@@ -50,14 +50,10 @@ GenericPIRReplyGenerator* PIRReplyGeneratorFactory::getPIRReplyGenerator(const s
 GenericPIRReplyGenerator* PIRReplyGeneratorFactory::getPIRReplyGenerator(const std::string& gen_name)
 {
   GenericPIRReplyGenerator* generator;
- 
+
   if ((gen_name == "LWE"))
 	{
-	  generator = new PIRReplyGeneratorNFL_internal(); 
-	}
-  else if ((gen_name == "FV"))
-	{
-	  generator = new PIRReplyGeneratorNFLFV_internal(); 
+	  generator = new PIRReplyGeneratorNFL_internal();
 	}
 	else if (gen_name == "Paillier")
 	{

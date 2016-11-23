@@ -33,7 +33,7 @@ void PIRClientPipeline::downloadWorker(int maxFileSize,XPIRcPipeline* xpir){
 
     unsigned int message_length=xpir->getRsize(xpir->getD());
 
-    double nbr = ceil(static_cast<double>(maxFileSize*xpir->getAlpha())/double(xpir->getAbsorptionSize(0))); 
+    double nbr = ceil(static_cast<double>(maxFileSize*xpir->getAlpha())/double(xpir->getAbsorptionSize(0)));
 
     for (unsigned int i=1; i<xpir->getD(); i++){
     	 nbr = ceil(nbr * double(xpir->getRsize(i)) / double(xpir->getAbsorptionSize(i)));
@@ -52,7 +52,7 @@ void PIRClientPipeline::downloadWorker(int maxFileSize,XPIRcPipeline* xpir){
     end_t = omp_get_wtime();
     if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(nbr*message_length,end_t-start_t);
 
-    cout << "PIRClient: Finish reply element reception" << endl;
+    cout << "PIRClient: Finish reply element reception" << endl << endl;
 }
 
 /**
@@ -62,8 +62,8 @@ void PIRClientPipeline::downloadWorker(int maxFileSize,XPIRcPipeline* xpir){
     @return
 */
 void PIRClientPipeline::startProcessResult(int maxFileSize,XPIRcPipeline* xpir){
-  xpir->getRExtractor()->startExtractReply(maxFileSize*xpir->getAlpha(),xpir->getReplyWriter()->getClearDataQueue());
-  downloadWorker(maxFileSize,xpir);
+    xpir->getRExtractor()->startExtractReply(maxFileSize*xpir->getAlpha(),xpir->getReplyWriter()->getClearDataQueue());
+    downloadWorker(maxFileSize,xpir);
 }
 
 /**
@@ -72,33 +72,37 @@ void PIRClientPipeline::startProcessResult(int maxFileSize,XPIRcPipeline* xpir){
     @param
     @return
 */
-void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir,char* request){
+void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir,vector<char*> request){
 	double start = omp_get_wtime(),total=0;
 	char *tmp;
 
-  //uint64_t request_size = xpir->getCrypto()->getCiphertextBytesize();
-  //m_socket.senduInt64(xpir->getCrypto()->getCiphertextBytesize());
-  //m_socket.sendChar_s(request,);
+    uint64_t request_size = xpir->getCrypto()->getCiphertextBytesize();
+    m_socket.sendInt(request.size());
 
-  uint64_t total_bytes=0;
+    for(int i=0;i<request.size();i++){
+        m_socket.sendXBytes(request_size,(void*)request[i]);
+        //delete[] request[i];
+    }
+
+    uint64_t total_bytes=0;
 	for (unsigned int j=1; j<=xpir->getD(); j++){
 		unsigned int length=xpir->getQsize(j);
 
-    double start_t = omp_get_wtime();
+        double start_t = omp_get_wtime();
 		for (unsigned int i=0; i<xpir->getN()[j-1]; i++){
 			tmp = xpir->getQGenerator()->queryBuffer.pop_front();
 			m_socket.sendXBytes(length,(void*)tmp);
 			free(tmp);
+        }
+        double end_t = omp_get_wtime();
+        total+=end_t-start_t;
+        total_bytes+=xpir->getN()[j-1]*length;
     }
-    double end_t = omp_get_wtime();
-    total+=end_t-start_t;
-    total_bytes+=xpir->getN()[j-1]*length;
-  }
-  if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(total_bytes,total);
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(total_bytes+request_size*request.size()+sizeof(int),total);
 
-  double end = omp_get_wtime();
-  cout << "PIRClient: Send query (" << total_bytes << " bytes) took " << end-start << " seconds" << endl;
-  std::cout << "PIRClient: Query sent" << "\n";
+    double end = omp_get_wtime();
+    cout << "PIRClient: Send query (" << total_bytes << " bytes) took " << end-start << " seconds" << endl;
+    std::cout << "PIRClient: Query sent" << "\n";
 }
 
 /**
@@ -107,10 +111,10 @@ void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir,char* request){
     @param
     @return
 */
-void PIRClientPipeline::startProcessQuery(uint64_t pack_pos,XPIRcPipeline* xpir,char* request){
+void PIRClientPipeline::startProcessQuery(uint64_t pack_pos,XPIRcPipeline* xpir,vector<char*> request){
 	xpir->getQGenerator()->setChosenElement(pack_pos);
-  xpir->getQGenerator()->startGenerateQuery();
-  uploadWorker(xpir,request);
+    xpir->getQGenerator()->startGenerateQuery();
+    uploadWorker(xpir,request);
 }
 
 /**
@@ -121,10 +125,10 @@ void PIRClientPipeline::startProcessQuery(uint64_t pack_pos,XPIRcPipeline* xpir,
     @return
 */
 void PIRClientPipeline::joinAllThreads(vector<XPIRcPipeline*> container){
-  for(int i=0;i<container.size();i++){
-    container[i]->getRExtractor()->replyThread.join();
-    container[i]->getReplyWriter()->join();
-  }
+    for(int i=0;i<container.size();i++){
+        container[i]->getRExtractor()->replyThread.join();
+        container[i]->getReplyWriter()->join();
+    }
 }
 
 //***PUBLIC METHODS***//
@@ -140,14 +144,18 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
     bool check=true;
 
     //#-------SETUP PHASE--------#
+    double start_t = omp_get_wtime();
     m_socket.sendInt(entry['f'].length()+1);
     m_socket.sendChar_s(const_cast<char*>(entry['f'].c_str()),entry['f'].length()+1);
 
-    std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);
+    std::vector<std::pair<uint64_t,std::string>> pos = listQueryPos(entry);
     m_socket.sendInt(pos.size());
+    double end_t = omp_get_wtime();
 
-    int max_bytesize = Constants::padding_size*Constants::data_hash_size/8;
-    int data_hash_size=ceil(Constants::data_hash_size/8);
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(int)+(entry['f'].length()+1)*sizeof(char) + sizeof(int), end_t-start_t);
+
+    int max_bytesize = ceil(Constants::padding_size*Constants::data_hash_size/8);
+    int data_hash_bytes = ceil(Constants::data_hash_size/8);
 
     std::vector<XPIRcPipeline*> container;
     std::vector<string> files = Tools::tokenize(entry['f'],",");
@@ -161,9 +169,8 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
             uint64_t pack_pos=considerPacking(pos[i].first,xpir->getAlpha());
 
             //#-------QUERY PHASE--------#
-            cout << endl;
-            char* request = generateRequest(pos[i].first,pos[i].second[0],data_hash_size);
-            char* request_encrypted = xpir->getCrypto()->encrypt(request,data_hash_size,Constants::padding_size);
+            unsigned char* request = generateRequest(pos[i].first,pos[i].second,data_hash_bytes);
+            vector<char*> request_encrypted = encryptRequest(request,xpir->getCrypto(),xpir->getAlpha(),736*6);
 
             startProcessQuery(pack_pos,xpir,request_encrypted);
 
@@ -179,7 +186,12 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
         m_AES_256->setIV(files[k]);
         for(int i=0;i<pos.size();i++,l++){
             char* response = container[l]->getReplyWriter()->extractResponse(pos[i].first,max_bytesize,container[l]->getAlpha(),container[l]->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte);
-            if(!checkContent(response,1,max_bytesize,pos[i])) check=false;
+
+            if(!checkContent(response,data_hash_bytes)) check=false;
+            //if(!checkContent(response,1,max_bytesize,pos[i])) check=false;
+
+            delete[] response;
+            container[l]->cleanup();
             delete container[l];
         }
     }
@@ -189,4 +201,3 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
 
     return check;
 }
-
