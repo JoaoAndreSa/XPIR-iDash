@@ -264,7 +264,6 @@ void PIRClient::uploadData(string foldername){
     std::vector<string> listFiles = Tools::listFilesFolder(foldername);
 
     int num_attempts=0;
-
     m_socket.senduInt64(listFiles.size());
     for(uint64_t i=0;i<listFiles.size();i++){
         try{
@@ -272,13 +271,13 @@ void PIRClient::uploadData(string foldername){
 
             m_socket.sendInt(listFiles[i].length()+1);
             m_socket.sendChar_s((char*)listFiles[i].c_str(),listFiles[i].length()+1);
-
+            
             std::string line;
             ifstream f(foldername+listFiles[i]);
             Error::error(f==NULL || f.is_open()==0,"Error opening vcf file");
 
             std::vector<std::string>catalog(pow(2,m_SHA_256->getHashSize()),"");
-
+    
             int redo=0;
             int max_collisions=0;
             if (f.is_open()){

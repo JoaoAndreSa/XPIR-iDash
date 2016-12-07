@@ -24,7 +24,7 @@ imported_database_t XPIRcPipeline::import_database(string filename){
 	DBDirectoryProcessor db(Constants::num_entries,filename);
 	PIRParameters params = Tools::readParamsPIR(Constants::num_entries);
 	HomomorphicCrypto* crypto=HomomorphicCryptoFactory::getCryptoMethod(params.crypto_params);
-	crypto->setandgetAbsBitPerCiphertext(params.n[0]);
+	crypto->setandgetAbsBitPerCiphertext(Constants::abs_bits);
 
 	std::vector<std::string> fields;
     boost::split(fields,params.crypto_params,boost::is_any_of(":"));

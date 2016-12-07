@@ -53,6 +53,7 @@ read -p "START THE SERVER (./server). Press any key to continue... " -n1 -s
 
 #####-------- 10,000 ENTRIES --------#####
 #./client -c 1 -p 161617087 -r T -a . -f RCV000015246_10000.vcf
+#./client -c 1 -p 161617087 -r T -a . -f RCV000015246_10000.vcf
 #./client -c 1 -p 164781110 -r . -a ATATAAG -f RCV000015246_10000.vcf
 #./client -c 1 -p 160952937 -r . -a GGAGGTTTCAGTGAGCT -f RCV000015246_10000.vcf
 #./client -c 1 -p 161777655 -r TTTTTTTTTTTTTTTTTTTT -a . -f RCV000015246_10000.vcf
