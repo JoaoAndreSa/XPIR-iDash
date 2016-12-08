@@ -31,6 +31,7 @@ public:
     void setPirParams(PIRParameters& param);
 private:
     bool lwe;
+    int first_;
     uint64_t current_query_index;
     uint64_t current_dim_index;
 #ifdef SHOUP

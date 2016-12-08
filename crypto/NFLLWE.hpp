@@ -70,7 +70,7 @@ class NFLLWE : public LatticesBasedCryptosystem
 
     // Data importation and exportation
     poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers,
-        uint64_t dataBitsizePerBuffer, uint64_t &polyNumber);
+        uint64_t dataBitsizePerBuffer, uint64_t &polyNumber,int first_);
 
     // Functions for PIROptimizer and PIRClient
     lwe_cipher chartocipher(char* c);

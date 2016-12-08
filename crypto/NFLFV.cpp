@@ -147,9 +147,9 @@ void NFLFV::setpolyDegree(unsigned int polyDegree_)
 //         Serialize/Deserialize
 // *********************************************************
 
-poly64 *NFLFV::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, uint64_t &polyNumber)
+poly64 *NFLFV::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, uint64_t &polyNumber,int first_)
 {
-  return fvobject->deserializeDataNFL(inArrayOfBuffers, nbrOfBuffers, dataBitsizePerBuffer, publicParams.getAbsorptionBitsize()/polyDegree, polyNumber);
+  return fvobject->deserializeDataNFL(inArrayOfBuffers, nbrOfBuffers, dataBitsizePerBuffer, publicParams.getAbsorptionBitsize()/polyDegree, polyNumber,first_);
 }
 
 
@@ -311,7 +311,30 @@ std::vector<char*> NFLFV::encryptsub(unsigned char* data, size_t s_coef, unsigne
 
 	}
 	return c;
+
+		//version for 12 bits
+/*
+	std::vector<char*> c(1 +(2*nb_coef)/(3*polyDegree));
+    for (int l=0;l<(2*nb_coef)/(3*polyDegree)+1;l++){
+        lwe_cipher c_tmp;
+        poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
+        uint64_t ui[polyDegree];
+        for (int j=0; j<min(polyDegree,2*nb_coef/3-l*polyDegree);j=j+2){
+                ui[j]=uint64_t(data[j/2+j+l*polyDegree+polyDegree/2*l]);
+                ui[j]=(ui[j]<<4)|(data[1+j/2+j+l*polyDegree+polyDegree/2*l]>>4);
+                ui[j+1]=uint64_t((data[1+j/2+j+l*polyDegree+polyDegree/2*l])&15);
+                ui[j+1]=(ui[j+1]<<8)|(data[2+j/2+j+l*polyDegree+polyDegree/2*l]);
+                m[j]=ui[j];
+                m[j+1]=ui[j+1];
+        }
+        fvobject->encNTT(&c_tmp,m);
+        c[l]=(char*)c_tmp.a;
+        free(m);
+    }
+	return c;*/
 }
+
+
 
 
 // Do a ciphertext for a plaintext with alternating bits (for performance tests)
@@ -346,10 +369,15 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
   fvobject->dec(clear_data, &ciphertext);
 
 uint32_t *tmp = (uint32_t *)clear_data;
-
+int test =0;
 for (int i =0;i<polyDegree;i++){
 tmp[i]&=255;
+/*if (tmp[i]==0){
+if (i<polyDegree-3)
+if((tmp[i+1]==0)&&(tmp[i+2]==0)&&(tmp[i+3]==0)) {test=test+1;}
+}*/
 }
+//std::cout<<test<<std::endl;
   //NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
   //NFLlwe_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
   //NFLlwe_DEBUG_MESSAGE("Result: ",clear_data, 4);

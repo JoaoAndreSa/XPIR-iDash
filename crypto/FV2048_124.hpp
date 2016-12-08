@@ -30,7 +30,7 @@ virtual long getnoise();
 virtual void setnbrbits(double nbr_bits);
 
 virtual poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers,
-        uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber);
+        uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber,int first_);
 virtual void serializeData64 (uint64_t* indata, unsigned char* outdata,
         unsigned int bitsPerChunk, uint64_t nb_of_uint64);
 virtual void serializeData32 (uint32_t* indata, unsigned char* outdata, unsigned int bitsPerChunk,
@@ -74,7 +74,7 @@ virtual long getnoise();
 virtual void setnbrbits(double nbr_bits);
 
 virtual poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers,
-        uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber);
+        uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber, int first_);
 virtual void serializeData64 (uint64_t* indata, unsigned char* outdata,
         unsigned int bitsPerChunk, uint64_t nb_of_uint64);
 virtual void serializeData32 (uint32_t* indata, unsigned char* outdata, unsigned int bitsPerChunk,

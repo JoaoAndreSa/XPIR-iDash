@@ -170,7 +170,7 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
 
             //#-------QUERY PHASE--------#
             unsigned char* request = generateRequest(pos[i].first,pos[i].second,data_hash_bytes);
-            vector<char*> request_encrypted = encryptRequest(request,xpir->getCrypto(),xpir->getAlpha(),736*6);
+            vector<char*> request_encrypted = encryptRequest(request,xpir->getCrypto(),xpir->getAlpha(),max_bytesize);
 
             startProcessQuery(pack_pos,xpir,request_encrypted);
 

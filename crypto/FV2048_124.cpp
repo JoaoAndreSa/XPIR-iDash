@@ -286,7 +286,7 @@ long FV2048_124c::getnoise()
 
 }
 
-poly64 *FV2048_124c::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber)
+poly64 *FV2048_124c::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber,int first_)
 {
 
   polyNumber = ceil((double)dataBitsizePerBuffer*(double)nbrOfBuffers/(double)(bitsPerCoordinate*FV::params::poly_p::degree));
@@ -565,20 +565,20 @@ void FV1024_62c::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint6
 {
 
 
-    FV::params::poly_p ropta{rop.a, rop.a+1024};
-    FV::params::poly_p roptb{rop.b, rop.b+1024};
+    FV::params::poly_p ropta{rop.a, rop.a+FV::params::poly_p::degree};
+    FV::params::poly_p roptb{rop.b, rop.b+FV::params::poly_p::degree};
 
-    FV::params::poly_p op2ta{op2.a, op2.a+1024};
-    FV::params::poly_p op2tb{op2.b, op2.b+1024};
+    FV::params::poly_p op2ta{op2.a, op2.a+FV::params::poly_p::degree};
+    FV::params::poly_p op2tb{op2.b, op2.b+FV::params::poly_p::degree};
 
-    FV::params::poly_p tmp{op1.p[current_poly], op1.p[current_poly]+1024};
+    FV::params::poly_p tmp{op1.p[current_poly], op1.p[current_poly]+FV::params::poly_p::degree};
 
     ropta=op2ta*tmp+ropta;
     roptb=op2tb*tmp+roptb;
 
 
 int i;
-        for (i = 0; i < 1024; i++) {
+        for (i = 0; i < FV::params::poly_p::degree; i++) {
             rop.a[i] = ropta(0, i);
             rop.b[i] = roptb(0, i);
         }
@@ -590,9 +590,9 @@ void FV1024_62c::mulrdm(lwe_cipher rop, poly64 rdm)
 {
 FV::ciphertext_t rop_t = transformtoFV_cipher(rop);
 rop_t.pk = const_cast<FV::pk_t*>(this->public_key);
-poly64 mask_t = (poly64) calloc(1024,  sizeof(uint64_t));
+poly64 mask_t = (poly64) calloc(FV::params::poly_p::degree,  sizeof(uint64_t));
 ifstream fichier("mask.txt", ios::in);
-for(int i=0;i<1024;i++){
+for(int i=0;i<FV::params::poly_p::degree;i++){
 uint64_t entier;
 fichier>>entier;
 mask_t[i]=entier;
@@ -603,7 +603,7 @@ FV::params::poly_p rdm_t = transformtopolyp(mask_t);
 rop_t = rop_t*rdm_t;
 
 int i;
-        for (i = 0; i < 1024; i++) {
+        for (i = 0; i < FV::params::poly_p::degree; i++) {
             rop.a[i] = rop_t.c0(0, i);
             rop.b[i] = rop_t.c1(0, i);
         }
@@ -659,11 +659,11 @@ long FV1024_62c::getnoise()
 
 }
 
-poly64 *FV1024_62c::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber)
+poly64 *FV1024_62c::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber, int first_)
 {
-poly64 mask_t = (poly64) calloc(1024,  sizeof(uint64_t));
+poly64 mask_t = (poly64) calloc(FV::params::poly_p::degree,  sizeof(uint64_t));
 ifstream fichier("mask2.txt", ios::in);
-for(int i=0;i<1024;i++){
+for(int i=0;i<FV::params::poly_p::degree;i++){
 uint64_t entier;
 fichier>>entier;
 mask_t[i]=entier;
@@ -671,7 +671,6 @@ mask_t[i]=entier;
 fichier.close();
 
   polyNumber = ceil((double)dataBitsizePerBuffer*(double)nbrOfBuffers/(double)(bitsPerCoordinate*FV::params::poly_p::degree));
-
   poly64* deserData = (poly64 *) calloc(polyNumber, sizeof(poly64));
 
   deserData[0] = bitsplit.bitsplitter(inArrayOfBuffers, nbrOfBuffers, dataBitsizePerBuffer, bitsPerCoordinate);
@@ -683,7 +682,9 @@ fichier.close();
   {
     deserData[i] = deserData[0]+i*FV::params::poly_p::nmoduli*FV::params::poly_p::degree;
     FV::params::polyP_p Pp{deserData[i], deserData[i]+FV::params::poly_p::degree, true};
+    if(first_==1){
     Pp=Pp*transformtopolyPp(mask_t);
+    }
     Pp.invntt_pow_invphi();
     FV::params::poly_p p;
     for (size_t cm = 0; cm < FV::params::poly_p::nmoduli; cm++)
@@ -745,12 +746,12 @@ FV1024_62::FV1024_62c::FV1024_62c()
         moduli[currentModulus] = FV::params::poly_p::get_modulus(currentModulus);
     }
     bitsplit = Bitsplit(moduli,FV::params::poly_p::nmoduli,FV::params::poly_p::degree);
-    mask = (poly64) calloc(1024,  sizeof(uint64_t));
-    poly64 mask2 = (poly64) calloc(1024,  sizeof(uint64_t));
+    mask = (poly64) calloc(FV::params::poly_p::degree,  sizeof(uint64_t));
+    poly64 mask2 = (poly64) calloc(FV::params::poly_p::degree,  sizeof(uint64_t));
     unsigned char * rnd = (unsigned char *)calloc (8192,8);
-    nfl::fastrandombytes(rnd, 1024*sizeof(uint64_t));
+    nfl::fastrandombytes(rnd, FV::params::poly_p::degree*sizeof(uint64_t));
     mask = (poly64) rnd;
-    for (int i =0;i<1024;i++){
+    for (int i =0;i<FV::params::poly_p::degree;i++){
         mask[i]=mask[i]&255;
         mask2[i]=mask[i]&255;
     }
@@ -765,7 +766,7 @@ FV1024_62::FV1024_62c::FV1024_62c()
         }
     }
     m_t.ntt_pow_phi();
-    for (int i =0;i<1024;i++){
+    for (int i =0;i<FV::params::poly_p::degree;i++){
         mask[i]=m_t(0,i);
     }
 
@@ -775,7 +776,7 @@ fichier.get(caractere);
 if(fichier.eof()){
 fichier.close();
 ofstream fichier("mask.txt", ios::out | ios::trunc);
-    for (int i =0;i<1024;i++){
+    for (int i =0;i<FV::params::poly_p::degree;i++){
         fichier<<mask[i]<<" ";
     }
 
@@ -787,7 +788,7 @@ fichier2.get(caractere2);
 if(fichier2.eof()){
 fichier2.close();
 ofstream fichier2("mask2.txt", ios::out | ios::trunc);
-    for (int i =0;i<1024;i++){
+    for (int i =0;i<FV::params::poly_p::degree;i++){
         fichier2<<mask2[i]<<" ";
     }
 

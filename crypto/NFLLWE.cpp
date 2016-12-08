@@ -151,7 +151,7 @@ void NFLLWE::setpolyDegree(unsigned int polyDegree_)
 //         Serialize/Deserialize
 // *********************************************************
 
-poly64 *NFLLWE::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, uint64_t &polyNumber) {
+poly64 *NFLLWE::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, uint64_t &polyNumber, int first_) {
   return nflInstance.deserializeDataNFL(inArrayOfBuffers, nbrOfBuffers, dataBitsizePerBuffer, publicParams.getAbsorptionBitsize()/polyDegree, polyNumber);
 }
 

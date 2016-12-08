@@ -63,7 +63,8 @@ public:
 		 	Warning here we suppose the biggest dimension is in d[0] otherwise absorbtion needs to be computed accordingly
 		*/
 		m_crypto=HomomorphicCryptoFactory::getCryptoMethod(params.crypto_params);
-		m_crypto->setandgetAbsBitPerCiphertext(1500*1500*4); //8 bits per coefficient
+		//m_crypto->setandgetAbsBitPerCiphertext(1500*1500*4); //8 bits per coefficient
+		m_crypto->setandgetAbsBitPerCiphertext(8192);
 	}
 
 	uint64_t getD();   						//m_params.d getter (recursion/dimension value)

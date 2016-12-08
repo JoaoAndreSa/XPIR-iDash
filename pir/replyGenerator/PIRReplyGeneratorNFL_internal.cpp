@@ -34,7 +34,7 @@ PIRReplyGeneratorNFL_internal::PIRReplyGeneratorNFL_internal():
   current_dim_index(0),
   input_data(NULL),
   cryptoMethod(NULL)
-{
+{first_=1;
 }
 
 /**
@@ -52,7 +52,7 @@ PIRReplyGeneratorNFL_internal::PIRReplyGeneratorNFL_internal( PIRParameters& par
   current_dim_index(0),
   input_data(NULL),
   cryptoMethod(NULL)
-{
+{first_=1;
   // cryptoMethod will be set later by setCryptoMethod
 }
 
@@ -118,7 +118,7 @@ void PIRReplyGeneratorNFL_internal::importDataNFL(uint64_t offset, uint64_t byte
     }
     input_data[i].nbPolys = nbpolys;
 #else
-    input_data[i].p = cryptoMethod->deserializeDataNFL((unsigned char**)&rawBits, (uint64_t) 1, fileByteSize*pirParam.alpha*GlobalConstant::kBitsPerByte, input_data[i].nbPolys);
+    input_data[i].p = cryptoMethod->deserializeDataNFL((unsigned char**)&rawBits, (uint64_t) 1, fileByteSize*pirParam.alpha*GlobalConstant::kBitsPerByte, input_data[i].nbPolys,1);
 #endif
 
 #ifdef PERF_TIMERS
@@ -190,7 +190,7 @@ imported_database_t PIRReplyGeneratorNFL_internal::generateReplyGeneric(bool kee
 	for (uint64_t it = 0 ; it < iterations ; it++)
   {
     dbhandler->readStream(0, rawBits[it], chunkBytesize+sizeof(int));
-    input[it].p = cryptoMethod->deserializeDataNFL((unsigned char**)&(rawBits[it]), (uint64_t) 1, chunkBytesize*GlobalConstant::kBitsPerByte, input[it].nbPolys);
+    input[it].p = cryptoMethod->deserializeDataNFL((unsigned char**)&(rawBits[it]), (uint64_t) 1, chunkBytesize*GlobalConstant::kBitsPerByte, input[it].nbPolys,0);
     index = *(int *)(rawBits[it]+chunkBytesize) & mask;
 		cryptoMethod->mul(resul[it], input[it], queries[0][index],queries[1][index], 0, 0);
   }
@@ -663,8 +663,8 @@ lwe_cipher* subtract)
 		memset(result[current_poly].a,0,
         2*cryptoMethod->getpolyDegree()*cryptoMethod->getnbModuli()*sizeof(uint64_t));
 		result[current_poly].b = (uint64_t *) result[current_poly].a +
-    cryptoMethod->getpolyDegree()*cryptoMethod->getnbModuli();
-    cryptoMethod-> mulrdm(subtract[current_poly],nullptr);
+        cryptoMethod->getpolyDegree()*cryptoMethod->getnbModuli();
+
     for (unsigned int offset = 0; offset < query_size; offset += 200)
     {
       for (unsigned int query_index = offset, ggg=0; query_index < query_size && ggg < 200 ;
@@ -711,6 +711,7 @@ lwe_cipher* subtract)
  }
  std::cout << "]" << std::dec << std::endl;
  */
+
         cryptoMethod-> sub(result[current_poly], result[current_poly], subtract[current_poly], 1);
   /*     std::cout << "Après subtract : ";
           std::cout << "[";
@@ -749,6 +750,7 @@ std::cout << "]" << std::dec << std::endl;*/
 
 void PIRReplyGeneratorNFL_internal::generateReply(lwe_cipher*subtract)
 {
+
   lwe_in_data *in_data = input_data;
   lwe_cipher **inter_reply;
 #ifdef SHOUP
@@ -785,12 +787,12 @@ void PIRReplyGeneratorNFL_internal::generateReply(lwe_cipher*subtract)
 
     inter_reply = new lwe_cipher*[reply_elt_nbr]();
     queries = queriesBuf[i];
-
     for (uint64_t j = 0 ; j < reply_elt_nbr ; j++) // Boucle de reply_elt_nbr PIR
     {
       inter_reply[j] = new lwe_cipher[currentMaxNbPolys];
 	  // Warning of the trick in case SHOUP is defined : we cast quesries to a (lwe_query*) and will have to uncast it
       generateReply((lwe_query*)queries , in_data + (pirParam.n[i] * j ),  i,  inter_reply[j], subtract);
+
 #ifdef DEBUG_WITH_FILE_OUTPUT
       if (i ==0 && j==1) {
         std::ofstream file(std::string("output_level_"+ std::to_string(i)).c_str(), std::ios::out| std::ios::binary);
@@ -874,6 +876,9 @@ void PIRReplyGeneratorNFL_internal::generateReplyGenericFromData(const imported_
 	boost::mutex::scoped_lock l(mutex);
   double start = omp_get_wtime();
   repliesAmount = computeReplySizeInChunks(database.beforeImportElementBytesize);
+for(int i=0;i<currentMaxNbPolys;i++){
+cryptoMethod-> mulrdm(subtract[i],nullptr);
+}
   generateReply(subtract);
 #else
   uint64_t max_readable_size, database_size, nbr_of_iterations;
@@ -923,10 +928,11 @@ lwe_in_data* PIRReplyGeneratorNFL_internal::fromResulttoInData(lwe_cipher** inte
       }
 
 	    // Ciphertexts can be serialized in a single block as a,b are allocatted contiguously
+
 	    in_data2b[i].p = cryptoMethod->deserializeDataNFL((unsigned char**)bufferOfBuffers,
 														currentMaxNbPolys,
 														cryptoMethod->getPublicParameters().getCiphertextBitsize(),
-														in_data2b[i].nbPolys);
+														in_data2b[i].nbPolys,0);
     }
     free(bufferOfBuffers);
 

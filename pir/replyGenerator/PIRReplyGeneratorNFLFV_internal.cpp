@@ -118,7 +118,7 @@ void PIRReplyGeneratorNFLFV_internal::importDataNFL(uint64_t offset, uint64_t by
     }
     input_data[i].nbPolys = nbpolys;
 #else
-    input_data[i].p = cryptoMethod->deserializeDataNFL((unsigned char**)&rawBits, (uint64_t) 1, fileByteSize*pirParam.alpha*GlobalConstant::kBitsPerByte, input_data[i].nbPolys);
+    input_data[i].p = cryptoMethod->deserializeDataNFL((unsigned char**)&rawBits, (uint64_t) 1, fileByteSize*pirParam.alpha*GlobalConstant::kBitsPerByte, input_data[i].nbPolys,0);
 #endif
 
 #ifdef PERF_TIMERS
@@ -190,7 +190,7 @@ imported_database_t PIRReplyGeneratorNFLFV_internal::generateReplyGeneric(bool k
 	for (uint64_t it = 0 ; it < iterations ; it++)
   {
     dbhandler->readStream(0, rawBits[it], chunkBytesize+sizeof(int));
-    input[it].p = cryptoMethod->deserializeDataNFL((unsigned char**)&(rawBits[it]), (uint64_t) 1, chunkBytesize*GlobalConstant::kBitsPerByte, input[it].nbPolys);
+    input[it].p = cryptoMethod->deserializeDataNFL((unsigned char**)&(rawBits[it]), (uint64_t) 1, chunkBytesize*GlobalConstant::kBitsPerByte, input[it].nbPolys,0);
     index = *(int *)(rawBits[it]+chunkBytesize) & mask;
 		cryptoMethod->mul(resul[it], input[it], queries[0][index],queries[1][index], 0, 0);
   }
@@ -520,7 +520,7 @@ double PIRReplyGeneratorNFLFV_internal::precomputationSimulation(const PIRParame
   for (unsigned int i = 0 ; i < files_nbr ; i++)
   {
       poly64 *tmp;
-      tmp = cryptoMethod->deserializeDataNFL((unsigned char**)(input_data[i].p), (uint64_t) plaintext_nbr, cryptoMethod->getPublicParameters().getCiphertextBitsize()/2 , input_data[i].nbPolys);
+      tmp = cryptoMethod->deserializeDataNFL((unsigned char**)(input_data[i].p), (uint64_t) plaintext_nbr, cryptoMethod->getPublicParameters().getCiphertextBitsize()/2 , input_data[i].nbPolys,0);
 	    free(tmp[0]);
       tmp = NULL;
   }
@@ -653,7 +653,7 @@ lwe_in_data* PIRReplyGeneratorNFLFV_internal::fromResulttoInData(lwe_cipher** in
 	    in_data2b[i].p = cryptoMethod->deserializeDataNFL((unsigned char**)bufferOfBuffers,
 														currentMaxNbPolys,
 														cryptoMethod->getPublicParameters().getCiphertextBitsize(),
-														in_data2b[i].nbPolys);
+														in_data2b[i].nbPolys,0);
     }
     free(bufferOfBuffers);
 
