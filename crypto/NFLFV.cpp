@@ -291,7 +291,7 @@ char* NFLFV::encrypt(char* data, size_t s_hash, unsigned int s_list ){
 }
 
 std::vector<char*> NFLFV::encryptsub(unsigned char* data, size_t s_coef, unsigned int nb_coef ){
-    std::vector<char*> c(1 +nb_coef/polyDegree);
+ /*   std::vector<char*> c(1 +nb_coef/polyDegree);
     for (int l=0;l<nb_coef/polyDegree +1;l++){
         lwe_cipher c_tmp;
         poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
@@ -310,11 +310,13 @@ std::vector<char*> NFLFV::encryptsub(unsigned char* data, size_t s_coef, unsigne
         free(m);
 
 	}
-	return c;
+	return c;*/
 
 		//version for 12 bits
-/*
-	std::vector<char*> c(1 +(2*nb_coef)/(3*polyDegree));
+		uint64_t test2;
+poly64* test = fvobject->deserializeData(&data, uint64_t(1), uint64_t(nb_coef*8), publicParams.getAbsorptionBitsize()/polyDegree, test2);
+std::vector<char*> c(test2);
+/*	std::vector<char*> c(1 +(2*nb_coef)/(3*polyDegree));
     for (int l=0;l<(2*nb_coef)/(3*polyDegree)+1;l++){
         lwe_cipher c_tmp;
         poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
@@ -330,8 +332,13 @@ std::vector<char*> NFLFV::encryptsub(unsigned char* data, size_t s_coef, unsigne
         fvobject->encNTT(&c_tmp,m);
         c[l]=(char*)c_tmp.a;
         free(m);
+    }*/
+    for(int i=0;i<test2;i++){
+        lwe_cipher c_tmp;
+        fvobject->encNTT(&c_tmp,test[i]);
+        c[i]=(char*)c_tmp.a;
     }
-	return c;*/
+	return c;
 }
 
 
@@ -371,7 +378,7 @@ char* NFLFV::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
 uint32_t *tmp = (uint32_t *)clear_data;
 int test =0;
 for (int i =0;i<polyDegree;i++){
-tmp[i]&=255;
+tmp[i]&=4095;
 /*if (tmp[i]==0){
 if (i<polyDegree-3)
 if((tmp[i+1]==0)&&(tmp[i+2]==0)&&(tmp[i+3]==0)) {test=test+1;}
@@ -468,7 +475,7 @@ long NFLFV::setandgetAbsBitPerCiphertext(unsigned int elt_nbr)
       nbr_bits = 0;
     }
 
-    nbr_bits = 8;
+    nbr_bits = 12;
     fvobject->setnbrbits(nbr_bits);
     publicParams.setAbsPCBitsize(nbr_bits);
 

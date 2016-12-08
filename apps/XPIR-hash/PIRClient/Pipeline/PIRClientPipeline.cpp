@@ -81,7 +81,7 @@ void PIRClientPipeline::uploadWorker(XPIRcPipeline* xpir,vector<char*> request){
 
     for(int i=0;i<request.size();i++){
         m_socket.sendXBytes(request_size,(void*)request[i]);
-        //delete[] request[i];
+        delete[] request[i];
     }
 
     uint64_t total_bytes=0;

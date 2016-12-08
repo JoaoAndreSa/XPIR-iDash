@@ -351,6 +351,11 @@ poly64 *FV2048_124c::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64
 
 }
 
+poly64 *FV2048_124c::deserializeData(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber)
+{
+bitsplit.deserializeDataNFL(inArrayOfBuffers,nbrOfBuffers,dataBitsizePerBuffer,bitsPerCoordinate,polyNumber);
+}
+
 void FV2048_124c::serializeData64 (uint64_t* indata, unsigned char* outdata, unsigned int bitsPerChunk, uint64_t nb_of_uint64)
 {
   bitsplit.serializeData64(indata,outdata,bitsPerChunk,nb_of_uint64);
@@ -713,6 +718,11 @@ free(mask_t);
 
 }
 
+poly64 *FV1024_62c::deserializeData(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, unsigned bitsPerCoordinate, uint64_t &polyNumber)
+{
+bitsplit.deserializeDataNFL(inArrayOfBuffers,nbrOfBuffers,dataBitsizePerBuffer,bitsPerCoordinate,polyNumber);
+}
+
 void FV1024_62c::serializeData64 (uint64_t* indata, unsigned char* outdata, unsigned int bitsPerChunk, uint64_t nb_of_uint64)
 {
   bitsplit.serializeData64(indata,outdata,bitsPerChunk,nb_of_uint64);
@@ -748,7 +758,7 @@ FV1024_62::FV1024_62c::FV1024_62c()
     bitsplit = Bitsplit(moduli,FV::params::poly_p::nmoduli,FV::params::poly_p::degree);
     mask = (poly64) calloc(FV::params::poly_p::degree,  sizeof(uint64_t));
     poly64 mask2 = (poly64) calloc(FV::params::poly_p::degree,  sizeof(uint64_t));
-    unsigned char * rnd = (unsigned char *)calloc (8192,8);
+    unsigned char * rnd = (unsigned char *)calloc (8*FV::params::poly_p::degree,8);
     nfl::fastrandombytes(rnd, FV::params::poly_p::degree*sizeof(uint64_t));
     mask = (poly64) rnd;
     for (int i =0;i<FV::params::poly_p::degree;i++){
