@@ -292,7 +292,7 @@ void PIRClient::uploadData(string foldername){
             std::vector<std::string>catalog(pow(2,m_SHA_256->getHashSize()),"");
 
             int redo=0;
-            //int max_collisions=0;
+            int max_collisions=0;
             if (f.is_open()){
                 while(getline(f,line)){
                     if(line[0]!='#'){
@@ -305,12 +305,14 @@ void PIRClient::uploadData(string foldername){
                             redo=1;
                             break;
                         }
-
-                        //if(catalog[pos].length()>max_collisions) max_collisions=catalog[pos].length();
+                        //TIME MEASURE (only for iDash challenge): max retrieved variants/per query 
+                        if(catalog[pos].length()>max_collisions) max_collisions=catalog[pos].length();
+                        //END
                     }
                 }
             }
-            //cout << max_collisions/Constants::data_hash_size << endl;
+            max_collisions = max_collisions/Constants::data_hash_size;
+            cout << "\nPIRClient: The maximum number of collisions is " << max_collisions;
 
             if(redo==1){
                 num_attempts++;

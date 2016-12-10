@@ -140,6 +140,7 @@ public:
    *  before starting the reply generation.
   **/
   void generateReply(const imported_database* database);
+  void generateReply(const imported_database* database, std::vector<char*> request);
  
   /** 
    *  Frees the queries allocated 
