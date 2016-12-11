@@ -20,10 +20,10 @@ namespace Constants{
     extern const bool encrypted(true);              //=true (DB is symmetrically encrypted); =false (DB is in plaintext)
     extern const bool pre_import(true);             //=true (pre-import data to RAM); =false (import data only during querying)
     //NOTE: pre_import should be false if the number of vcf files is higher than 80-100
-    extern const uint64_t num_entries(2048);        //number of entries for each vcf file in the server database
-    extern const int data_hash_size(56);            //number of bits of a mutations's hash to be stored
-    extern const int padding_size(20);              //number of elements for each entry (we pad with zeros until we reach this number of elements)
-    extern const int abs_bits(50000);               //to generate x number of noise bits (default params.n[0])  
+    extern const uint64_t num_entries(8192);        //number of entries for each vcf file in the server database
+    extern const int data_hash_size(48);            //number of bits of a mutations's hash to be stored
+    extern const int padding_size(736);              //number of elements for each entry (we pad with zeros until we reach this number of elements)
+    extern const int abs_bits(53);                  //to generate x number of noise bits (default params.n[0])  
 
     //server
     extern const int n_threads(10);

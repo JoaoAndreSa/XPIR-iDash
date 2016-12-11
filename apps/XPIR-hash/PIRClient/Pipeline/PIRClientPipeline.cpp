@@ -171,6 +171,7 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
         m_AES_256->setIV(files[k]);
         for(int i=0;i<pos.size();i++,l++){
             //#-------EXTRACTION PHASE--------#
+          cout << "asdad" << container[l]->getCrypto()->getPublicParameters().getAbsorptionBitsize() << endl;
             char* response = container[l]->getReplyWriter()->extractResponse(pos[i].first,max_bytesize,container[l]->getAlpha(),container[l]->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte);
             if(!checkContent(response,1,max_bytesize,pos[i])) check=false;
             delete container[l];
