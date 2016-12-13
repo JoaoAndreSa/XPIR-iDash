@@ -812,7 +812,7 @@ fichier2.close();
 
 namespace FV {
 namespace params {
-using poly_t = nfl::poly_from_modulus<uint64_t, 1 << 10, 62>;
+using poly_t = nfl::poly_from_modulus<uint64_t, 1 << 11, 62>;
 using polyP_p = nfl::poly_p<uint16_t, poly_t::degree,1>;
 template <typename T> struct plaintextModulus;
 template <> struct plaintextModulus<mpz_class> {
