@@ -29,14 +29,14 @@ struct params<uint16_t> {
   static constexpr unsigned int kModulusRepresentationBitsize = 16;
 
   // A primitive 2**10 root of unity for each one of the moduli
-  static constexpr value_type primitive_roots[kMaxNbModuli] = { 1945U};
+  static constexpr value_type primitive_roots[kMaxNbModuli] = { 1331U};
 
   // Inverses of kMaxPolyDegree (for the other degrees it can be derived easily)
   // for the different moduli
-  static constexpr value_type invkMaxPolyDegree[kMaxNbModuli] = { 12277U};
+  static constexpr value_type invkMaxPolyDegree[kMaxNbModuli] = { 12283U};
 
   // Polynomial related data
-  static constexpr unsigned int kMaxPolyDegree = 1024;
+  static constexpr unsigned int kMaxPolyDegree = 2048;
 };
 
 // Specialization for 32 bits
