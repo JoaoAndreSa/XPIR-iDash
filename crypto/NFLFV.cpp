@@ -90,6 +90,11 @@ void NFLFV::setNewParameters(const std::string& crypto_param_descriptor)
     fvobject = new FV1024_62::FV1024_62c();
     plainbits = 14;
   }
+    else if ((polyDegree_ == 2048) && (aggregatedModulusBitsize_ == 62) && (plainbits_ == 14)&& (securityBits<172))
+  {
+    fvobject = new FV2048_62::FV2048_62c();
+    plainbits = 14;
+  }
 
   setNewParameters(polyDegree_,aggregatedModulusBitsize_, abspc_bitsize);
 }
