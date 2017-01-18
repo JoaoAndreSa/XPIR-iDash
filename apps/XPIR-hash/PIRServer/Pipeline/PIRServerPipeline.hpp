@@ -2,7 +2,7 @@
     XPIR-hash
     PIRServerPipeline.hpp
     Purpose: Child class that binds to each server thread and executes pipeline PIR.
-    		 NOTE: In pipeline PIR, server does not have to wait for all query elements to start the reply generation.
+    		     NOTE: In pipeline PIR, server does not have to wait for all query elements to start the reply generation.
 
     @author Joao Sa
     @version 1.0 01/07/16

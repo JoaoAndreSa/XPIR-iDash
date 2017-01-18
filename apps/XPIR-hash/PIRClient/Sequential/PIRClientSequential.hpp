@@ -6,7 +6,7 @@
              Furthermore, he has to wait and get all reply elements before starting the reply extraction.
 
     @author Joao Sa
-    @version 1.0 07/09/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -34,7 +34,7 @@ public:
 	*/
 	PIRClientSequential(Socket socket) : PIRClient(socket){}
 
-	bool searchQuery(std::map<char,std::string>);	//main function for the class -> query variant(s)
+	bool searchQuery(std::map<char,std::string>);						//main function for the class -> query variant(s)
 
 private:
 	//QUERY GENERATION & SEND QUERY
@@ -43,8 +43,8 @@ private:
 
 	//READ REPLY
 	std::vector<char*> readReplyData();
-	XPIRcSequential::REPLY readReply();								/*read all elements of reply (not just data but also the number of reply
-																	  elements generated and the max file size)*/
+	XPIRcSequential::REPLY readReply();									/*read all elements of reply (not just data but also the number of reply
+																	  	elements generated and the max file size)*/
 
 	//REPLY EXTRACTION
 	char* replyExtraction(XPIRcSequential::REPLY,XPIRcSequential*);

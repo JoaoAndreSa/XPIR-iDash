@@ -4,7 +4,7 @@
     Purpose: Parent class (abstract) that binds to each thread. Can have to modes of operation: Sequential or Pipeline (child classes)
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -48,6 +48,6 @@ public:
 	}
 
 protected:
-	void removeDB();										//cleans DB folder to allow for another batch of files sent by the client
-	void downloadData();									//reads data to be stored by the server
+	void removeDB();		//cleans DB folder to allow for another batch of files sent by the client
+	void downloadData();	//reads data to be stored by the server
 };

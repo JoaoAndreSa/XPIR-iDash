@@ -6,7 +6,7 @@
              Furthermore, he does not need to wait and get all reply elements before starting the reply extraction.
 
     @author  Joao Sa, Marc-Olivier Killijian & Carlos Aguillar
-    @version 1.0 07/09/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -171,13 +171,13 @@ bool PIRClientPipeline::searchQuery(std::map<char,std::string> entry){
         m_AES_256->setIV(files[k]);
         for(int i=0;i<pos.size();i++,l++){
             //#-------EXTRACTION PHASE--------#
-          cout << "asdad" << container[l]->getCrypto()->getPublicParameters().getAbsorptionBitsize() << endl;
             char* response = container[l]->getReplyWriter()->extractResponse(pos[i].first,max_bytesize,container[l]->getAlpha(),container[l]->getCrypto()->getPublicParameters().getAbsorptionBitsize()/GlobalConstant::kBitsPerByte);
             if(!checkContent(response,1,max_bytesize,pos[i])) check=false;
             delete container[l];
         }
     }
 
+    //#-------CLEANUP PHASE--------#
     delete m_AES_256;
     delete m_SHA_256;
 

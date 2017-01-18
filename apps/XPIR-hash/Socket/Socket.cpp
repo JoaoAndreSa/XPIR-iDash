@@ -4,7 +4,7 @@
     Purpose: Class to manage sockets (creation and information flow).
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 #include "Socket.hpp"

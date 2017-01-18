@@ -4,7 +4,7 @@
     Purpose: Child class that encloses the XPIR library function calls for the sequential execution
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -65,11 +65,11 @@ public:
 		}
 
 	}
-	static imported_database* import_database(string);//import database and initialize imported_database object
+	static imported_database* import_database(string);		 //import database and initialize imported_database object (client/server)
+	void cleanup();											 //clean 'tools' (client/server)
 	vector<char*> queryGeneration(uint64_t chosen_element);  //generate query (client)
-	REPLY replyGeneration(vector<char*>);					 //generate reply (server)
 	char* replyExtraction(REPLY);							 //extract reply  (client)
 	void cleanQueryBuffer();								 //clean queries  (client)
+	REPLY replyGeneration(vector<char*>);					 //generate reply (server)
 	void cleanReplyBuffer();							     //clean queries in reply object (server)
-	void cleanup();											 //clean 'tools'
 };

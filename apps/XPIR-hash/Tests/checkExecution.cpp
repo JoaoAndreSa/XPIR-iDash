@@ -4,7 +4,7 @@
     Purpose: Check result of tests (by reading ../PIRClient/output.txt)
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 #include <iostream>
@@ -15,7 +15,7 @@
 #include <vector>
 #include <math.h>
 
-#define NUM_TESTS 1 		//number of different entries tested (10,000 - 100,000 - 5,000,000)
+#define NUM_TESTS 3 		//number of different entries tested (10,000 - 100,000 - 5,000,000)
 #define NUM_YES 10
 #define NUM_NO 5
 

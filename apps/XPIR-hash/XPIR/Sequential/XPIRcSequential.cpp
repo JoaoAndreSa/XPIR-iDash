@@ -3,8 +3,8 @@
     XPIRcSequential.cpp
     Purpose: Child class that encloses the XPIR library function calls for the sequential execution
 
-    @authors: Marc-Olivier Killijian, Carlos Aguillar & Joao Sa
-    @version 1.0 01/07/16
+    @authors: Joao Sa, Marc-Olivier Killijian & Carlos Aguillar 
+    @version 1.0 18/01/17
 */
 
 /**
@@ -27,14 +27,14 @@ void import_all_databases(){
 /**
 	Imports the database/filesystem (stored on the db/ folder) to be used by the remaining PIR operations.
 
-	@param
+	@param filename name of the VCF file with the data
 	@return
 */
 imported_database* XPIRcSequential::import_database(string filename){
 	DBDirectoryProcessor db(Constants::num_entries,filename);
 	PIRParameters params = Tools::readParamsPIR(Constants::num_entries);
 	HomomorphicCrypto* crypto=HomomorphicCryptoFactory::getCryptoMethod(params.crypto_params);
-	crypto->setandgetAbsBitPerCiphertext(Constants::abs_bits);
+	crypto->setandgetAbsBitPerCiphertext(params.n[0]);
 
 	/**
 		Import database
@@ -63,7 +63,7 @@ imported_database* XPIRcSequential::import_database(string filename){
 
 	@param chosen_element position of element queried
 
-	@return query array that cointains the corresponding encrypted query (all its elements)
+	@return query array that cointains the corresponding encrypted query
 */
 vector<char*> XPIRcSequential::queryGeneration(uint64_t chosen_element){
 	cout << "PIRClient: Generating query ..." << endl;
@@ -111,7 +111,7 @@ XPIRcSequential::REPLY XPIRcSequential::replyGeneration(vector<char*> query){
 	cout << "PIRServer: Reply generated in " << end-start << " seconds" << endl;
 
 	/**
-		The server would pop the replies from m_r_generator with popReply and
+		The server pops the replies from m_r_generator with popReply and
 		sends them through the network together with nbRepliesGenerated and maxFileSize
 		and the client would receive the replies and push them into m_r_extractor using pushEncryptedReply
 	*/

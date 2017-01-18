@@ -4,7 +4,7 @@
     Purpose: Parent class (abstract) that binds to each client. Can have to modes of operation: Sequential or Pipeline (child classes).
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -58,7 +58,7 @@ public:
 		m_socket=socket;
 	}
 
-	void uploadData(string);						//prepares and uploads the DB data to send to the server
+	void uploadData(string);								//prepares and uploads the DB data to send to the server
 	void initAES256();
 	void initSHA256();
 
@@ -71,16 +71,15 @@ public:
 	double getRTTStop();
 
 protected:
-	void removeData();
-	char* generateRequest(uint64_t,string,int);
-	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t);		//extract the exact ciphertext (with aggregation the reply contains more than one element)
-	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t);		//extract the exact plaintext (with aggregation the reply contains more than one element)
-	bool checkContent(char*,uint64_t,int,std::pair<uint64_t,std::vector<std::string>>);
-	uint64_t considerPacking(uint64_t,uint64_t);											//returns the position relative to the aggregation/packing value
-	std::vector<std::pair<uint64_t,std::vector<std::string>>> listQueryPos(std::map<char,std::string>);
+	void removeData();																					//delete the files in disk where the nonces are stored and reset the cryptographic keys														
+	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t);									//extract the exact ciphertext (with aggregation the reply contains more than one element)
+	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t);									//extract the exact plaintext (with aggregation the reply contains more than one element)
+	bool checkContent(char*,uint64_t,int,std::pair<uint64_t,std::vector<std::string>>);					//reply extraction/decryption and analysis			
+	uint64_t considerPacking(uint64_t,uint64_t);														//returns the position relative to the aggregation/packing value
+	std::vector<std::pair<uint64_t,std::vector<std::string>>> listQueryPos(std::map<char,std::string>);	//lists the positions to be queried
 
-	int symmetricEncrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric encrypt plaintext and return the result
-	int symmetricDecrypt(unsigned char*,unsigned char*,uint64_t,int);					//symmetric decrypt ciphertext and return the result
-	std::string padData(string,int);
-	void sendData(std::vector<std::string>,string);										//encrypt and send every variant in vcf file to server
+	int symmetricEncrypt(unsigned char*,unsigned char*,uint64_t,int);									//symmetric encrypt plaintext and return the result
+	int symmetricDecrypt(unsigned char*,unsigned char*,uint64_t,int);									//symmetric decrypt ciphertext and return the result
+	std::string padData(string,int);																	//add dummy data (0s) -> padding 
+	void sendData(std::vector<std::string>,string);														//encrypt and send every variant in vcf file to server
 };

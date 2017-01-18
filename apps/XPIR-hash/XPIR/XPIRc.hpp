@@ -4,7 +4,7 @@
     Purpose: Parent class (abstract) that encloses the XPIR library function calls
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -61,7 +61,7 @@ public:
 		 	Warning here we suppose the biggest dimension is in d[0] otherwise absorbtion needs to be computed accordingly
 		*/
 		m_crypto=HomomorphicCryptoFactory::getCryptoMethod(m_params.crypto_params);
-		m_crypto->setandgetAbsBitPerCiphertext(Constants::abs_bits);
+		m_crypto->setandgetAbsBitPerCiphertext(params.n[0]);
 	}
 
 	uint64_t getD();   						//m_params.d getter (recursion/dimension value)

@@ -4,7 +4,7 @@
     Purpose: Parent class (abstract) that binds to each thread. Can have to modes of operation: Sequential or Pipeline (child classes)
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -35,7 +35,7 @@ void PIRServer::removeDB(){
 }
 
 /**
-    Reads data to be stored by the server
+    Upload vcf data to be stored by the server
 
     @param
     @return

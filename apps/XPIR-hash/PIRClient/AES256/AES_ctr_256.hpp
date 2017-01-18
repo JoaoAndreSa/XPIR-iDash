@@ -4,7 +4,7 @@
     Purpose: Handles symmetric encryption/decryption (AES-CTR256)
 
     @author Joao Sa
-    @version 1.0 07/09/16
+    @version 1.0 18/01/17
 */
 
 #pragma once

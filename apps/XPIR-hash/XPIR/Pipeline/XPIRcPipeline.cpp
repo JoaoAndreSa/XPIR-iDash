@@ -3,8 +3,8 @@
     XPIRcPipeline.cpp
     Purpose: Child class that encloses the XPIR library function calls for the parallel execution
 
-    @authors: Marc-Olivier Killijian, Carlos Aguillar & Joao Sa
-    @version 1.0 01/07/16
+    @authors: Joao Sa, Marc-Olivier Killijian & Carlos Aguillar
+    @version 1.0 18/01/17
 */
 
 /**
@@ -20,11 +20,17 @@
 #include "XPIRcPipeline.hpp"
 
 //***PUBLIC METHODS***//
+/**
+	Imports the database/filesystem (stored on the db/ folder) to be used by the remaining PIR operations.
+
+	@param filename name of the VCF file with the data 
+	@return
+*/
 imported_database_t XPIRcPipeline::import_database(string filename){
 	DBDirectoryProcessor db(Constants::num_entries,filename);
 	PIRParameters params = Tools::readParamsPIR(Constants::num_entries);
 	HomomorphicCrypto* crypto=HomomorphicCryptoFactory::getCryptoMethod(params.crypto_params);
-	crypto->setandgetAbsBitPerCiphertext(Constants::abs_bits);
+	crypto->setandgetAbsBitPerCiphertext(params.n[0]);
 
 	std::vector<std::string> fields;
     boost::split(fields,params.crypto_params,boost::is_any_of(":"));

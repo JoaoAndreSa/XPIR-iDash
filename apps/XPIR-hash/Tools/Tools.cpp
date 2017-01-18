@@ -4,14 +4,14 @@
     Purpose: Class to manage a set of functions used by both client and server (e.g. read parameters, verify parameters, etc.).
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 #include "Tools.hpp"
 
 //***PRIVATE METHODS***//
 /**
-    Check 3rd error on the next list of errors - see function readParamsPIR().
+    Check (3rd) error on the next list of errors - see function readParamsPIR() (end of file).
 
     @param d recursion/dimension value
     @param alpha aggregation value
@@ -32,6 +32,13 @@ int Tools::verifyParams(uint64_t d, uint64_t alpha, unsigned int* n, uint64_t nu
 }
 
 //***PUBLIC METHODS***//
+/**
+    Get all the names of the VCF files inside a specific folder.
+
+    @param foldername folder absolute path
+
+    @return list of filenames.
+*/
 std::vector<string> Tools::listFilesFolder(string foldername){
     std::vector<string> listFiles;
 
@@ -52,7 +59,15 @@ std::vector<string> Tools::listFilesFolder(string foldername){
     return listFiles;
 }
 
+/**
+    Read data from binary file.
 
+    @param filename name of the binary file
+    @param recvBuf data container
+    @param size number of bytes to read from the binary file
+
+    @return
+*/
 void Tools::readFromBinFile(string filename, char* recvBuf, int size){
     try{
         ifstream f(filename,ios::in|ios::binary);
@@ -67,6 +82,15 @@ void Tools::readFromBinFile(string filename, char* recvBuf, int size){
     }
 }
 
+/**
+    Write data to binary file.
+
+    @param filename name of the binary file
+    @param recvBuf data container
+    @param size number of bytes to write to the binary file
+
+    @return
+*/
 void Tools::writeToBinFile(string filename, char* recvBuf, int size){
     try{
         ofstream f(filename,ios::out|ios::binary|std::fstream::app);
@@ -81,6 +105,13 @@ void Tools::writeToBinFile(string filename, char* recvBuf, int size){
     }
 }
 
+/**
+    Read data from text file.
+
+    @param filename name of the text file
+
+    @return content
+*/
 string Tools::readFromTextFile(string filename){
     try{
         string content="";
@@ -100,6 +131,14 @@ string Tools::readFromTextFile(string filename){
     }
 }
 
+/**
+    Write data to text file.
+
+    @param filename name of the text file
+    @param output content to save in file
+
+    @return
+*/
 void Tools::writeToTextFile(string filename, string output){
     try{
         ofstream f(filename, std::ios_base::app);
@@ -188,6 +227,14 @@ PIRParameters Tools::readParamsPIR(uint64_t num_entries){
     return params;
 }
 
+/**
+    Split string using a specific delimiter.
+
+    @param entry input string
+    @param delimiter (e.g. ",./' )
+
+    @return list of splitting parts (tokens)
+*/
 std::vector<std::string> Tools::tokenize(std::string entry,std::string delimiter){
     std::vector<std::string> tokens;
 

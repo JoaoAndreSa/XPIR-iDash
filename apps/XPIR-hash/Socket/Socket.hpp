@@ -4,7 +4,7 @@
     Purpose: Class to manage sockets (creation and information flow).
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 #pragma once
@@ -61,7 +61,7 @@ public:
 	void acceptConnection();				//accepts connection betwen server and client and stores socket's file descriptor
 
 	//BANDWIDTH
-	void sleepForBytes(uint64_t,double);//sleep a number o nanoseconds necessary to emulate a given bandwith value
+	void sleepForBytes(uint64_t,double);	//sleep a number o nanoseconds necessary to emulate a given bandwith value
 
 	//READING
 	void readXBytes(uint64_t, void*);   	//read X amount of bytes from the socket (we can then cast it to whatever type we need)

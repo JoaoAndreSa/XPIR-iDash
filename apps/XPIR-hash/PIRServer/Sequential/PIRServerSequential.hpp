@@ -5,7 +5,7 @@
              NOTE: In sequential PIR, server has to wait and get all query elements before starting the reply generation.
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 /**

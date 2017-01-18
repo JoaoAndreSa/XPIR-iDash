@@ -3,7 +3,7 @@
     server.cpp
     Purpose: SERVER main
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 #include "Pipeline/PIRServerPipeline.hpp"
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]){
 		}
     }
 
-	/**clear
+	/**
 		This will stop the ioService processing loop. Any tasks you add behind this point will not execute.
 	*/
 	ioService.stop();

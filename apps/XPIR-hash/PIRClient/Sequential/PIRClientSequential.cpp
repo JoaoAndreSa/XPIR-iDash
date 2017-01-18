@@ -6,7 +6,7 @@
              Furthermore, he has to wait and get all reply elements before starting the reply extraction.
 
     @author Joao Sa
-    @version 1.0 07/09/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -116,15 +116,14 @@ char* PIRClientSequential::replyExtraction(XPIRcSequential::REPLY reply,XPIRcSeq
 /**
     Main function of PIRClientSequential class. Queries server!
 
-    @param num_entries total number of entries (size of database)
     @param entry a map/dictionary the stores que variant(s) beeing queried in a key-value way
 
-    @return response_s stores the variant(s) we are looking for or "" otherwise
+    @return true or false whether all variants were found or at least one was missing
 */
 bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
     bool check=true;
 
-    //#-------SETUP PHASE--------#
+    //#-------INITIALIZATION PHASE--------#
     m_socket.sendInt(entry['f'].length()+1);
     m_socket.sendChar_s(const_cast<char*>(entry['f'].c_str()),entry['f'].length()+1);
 
@@ -141,19 +140,21 @@ bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
             XPIRcSequential* xpir= new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),1,nullptr);
             container.push_back(xpir);
 
-            //#-------SETUP PHASE--------#
+            //#-------INITIALIZATION PHASE--------#
             uint64_t pack_pos=considerPacking(pos[i].first,xpir->getAlpha());
 
             //#-------QUERY PHASE--------#
             std::vector<char*> query=queryGeneration(pack_pos,xpir);
             sendQuery(query,xpir);
 
+            //#-------CLEANUP PHASE--------#
             container[i]->cleanQueryBuffer();
             Tools::cleanupVector(query);
         }
     }
     std::cout << "PIRClient: Query sent" << "\n\n";
 
+    //#-------CHECK RESPONSE PHASE--------#
     for(int k=0,l=0;k<files.size();k++){
         m_AES_256->setIV(files[k]);
         for(int i=0;i<pos.size();i++,l++){
@@ -164,6 +165,7 @@ bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
         }
     }
 
+    //#-------CLEANUP PHASE--------#
     delete m_AES_256;
     delete m_SHA_256;
 

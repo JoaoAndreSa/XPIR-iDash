@@ -4,7 +4,7 @@
     Purpose: Define global constants
 
     @author Joao Sa
-    @version 1.0 07/09/16
+    @version 1.0 18/01/17
 */
 
 #include <cstdint>
@@ -22,9 +22,8 @@ namespace Constants{
     //NOTE: pre_import should be false if the number of vcf files is higher than 80-100
     extern const uint64_t num_entries(8192);        //number of entries for each vcf file in the server database
     extern const int data_hash_size(48);            //number of bits of a mutations's hash to be stored
-    extern const int padding_size(736);              //number of elements for each entry (we pad with zeros until we reach this number of elements)
-    extern const int abs_bits(53);                  //to generate x number of noise bits (default params.n[0])  
-
+    extern const int padding_size(736);             //number of elements for each entry (we pad with zeros until we reach this number of elements)
+    
     //server
     extern const int n_threads(10);
     extern const int max_connects(10);

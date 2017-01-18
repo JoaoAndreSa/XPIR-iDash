@@ -4,8 +4,8 @@
     Purpose: Child class that binds to each server thread and executes pipeline PIR.
              NOTE: In pipeline PIR, server does not have to wait for all query elements to start the reply generation.
 
-    @author Marc-Olivier Killijian, Carlos Aguillar & Joao Sa
-    @version 1.0 01/07/16
+    @author Joao Sa, Marc-Olivier Killijian & Carlos Aguillar
+    @version 1.0 18/01/17
 */
 
 /**
@@ -117,18 +117,17 @@ void PIRServerPipeline::uploadWorker(XPIRcPipeline* xpir){
 void PIRServerPipeline::job (){
     m_id = boost::this_thread::get_id();
     std::cout << "THREAD [" << m_id << "]" << "\n";
-
-    //#-------SETUP PHASE--------#
-    //read file from client
-    if(m_socket.readInt()==1){
+    if(m_socket.readInt()==1){ //#-------INITIALIZATION PHASE--------#
        downloadData();
        if(Constants::pre_import){
             try{
+                //clear previous imported data
                 (*m_imported_dbs).clear();
                 std::vector<string> files = Tools::listFilesFolder("db/");
                 for(int i=0;i<files.size();i++){
                     m_imported_dbs->operator[](files[i]) = XPIRcPipeline::import_database(files[i]);
                 }
+                //0->NO SUCCESS; 1->SUCCESS
                 m_socket.sendInt(1);
             }catch(int e){
                 cout << "Error while importing files" << e << '\n';
@@ -137,7 +136,7 @@ void PIRServerPipeline::job (){
        }else{
             m_socket.sendInt(1);
        }
-    }else{
+    }else{  //#-------QUERYING PHASE--------#
         char* list = m_socket.readChar(m_socket.readInt());
         vector<string> list_clients =  Tools::tokenize(string(list),",");
 

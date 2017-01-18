@@ -4,7 +4,7 @@
     Purpose: Parent class (abstract) that binds to each client. Can have to modes of operation: Sequential or Pipeline (child classes).
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -20,6 +20,13 @@
 #include "PIRClient.hpp"
 
 //***PRIVATE METHODS***//
+/**
+    Remove the files where the nonces are stored (data/).
+
+    @param 
+
+    @return 
+*/
 void PIRClient::removeData(){
     int ret_val=std::system("exec rm -rf data/*");
     if (ret_val==1) cout << "Error performing system call" << endl;
@@ -29,8 +36,8 @@ void PIRClient::removeData(){
     delete m_SHA_256;
     delete m_AES_256;
 
-    initAES256();
-    initSHA256();
+    initAES256();   //Reset AES key
+    initSHA256();   //Reset SHA key
 }
 
 /**
@@ -79,6 +86,16 @@ std::string PIRClient::extractPlaintext(char* response, uint64_t alpha, uint64_t
     return m_SHA_256->uchar_to_binary(reinterpret_cast<unsigned char*>(response+aggregated_entrySize*(pos%alpha)),aggregated_entrySize,aggregated_entrySize*8);
 }
 
+/**
+    Extract the exact plaintext (with aggregation the reply contains more than one element).
+
+    @param response reply data
+    @param alpha aggregation value
+    @param max_bytesize reply element size
+    @param elements queried position and a list of hashes of variants (being queried) that happen to be in that same index
+
+    @return true if the variant is present in the response/reply given by the server (and vice-versa)
+*/
 bool PIRClient::checkContent(char* response, uint64_t alpha, int max_bytesize, std::pair<uint64_t,std::vector<std::string>> elements){
     bool check=true;
 
@@ -89,7 +106,7 @@ bool PIRClient::checkContent(char* response, uint64_t alpha, int max_bytesize, s
         response_s = extractCiphertext(response,alpha,max_bytesize,elements.first);
     }
 
-    //TIME MEASURE (only for iDash challenge): retrieved variants/per query 
+    //TIME MEASURE (only for iDash challenge): retrieved # variants/per query 
     int variants_retrieved=0;
     string zeros(Constants::data_hash_size,'0');
     for(int i=0;i<response_s.length();i+=Constants::data_hash_size){
@@ -127,6 +144,14 @@ uint64_t PIRClient::considerPacking(uint64_t pos, uint64_t alpha){
     }
 }
 
+/**
+    This function converts the variant raw data into a tag/hash (m_SHA_256->hash(query_str)) as well as the position it maps to in the 
+    database file. Note that one position can contain data related to multiple variants.
+
+    @param entry hashMap that contains the queried variants' data for chromosome, position, reference allele and alternate allele
+
+    @return a list of positions (with the respective variants' hashes) that are to be queried by the client
+*/
 std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPos(std::map<char,std::string> entry){
     std::vector<std::string> chr = Tools::tokenize(entry['c'],",");
     std::vector<std::string> pos = Tools::tokenize(entry['p'],",");
@@ -142,8 +167,8 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
     for(int i=0;i<chr.size();i++){
         //string query_str=chr[i]+"\t"+pos[i]+"\t.\t"+ref[i]+"\t"+alt[i]; //the . is to represent the missing id field
         string query_str=chr[i]+pos[i]+ref[i]+alt[i];
-        string data_hash=m_SHA_256->hash(query_str);
-        uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);
+        string data_hash=m_SHA_256->hash(query_str);                                //hash encoding
+        uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);  //mapping to a index/position
 
         bool exists=false;
         int j;
@@ -169,7 +194,14 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
     Symmetric encrypt plaintext (AES_CBS256) and return the result.
 
     @param ciphertext variable that stores the ciphertext
-    @param line variant(s) to be encrypted
+    @param plaintext variable that holds the plaintext data
+    @param pos relative position of variant (needed for symmetric encryption to compute the AES IV)
+
+    e.g.
+    (variant) pos=0 || (variant) pos=1 || (variant) pos=2 || (dummy) pos=3
+    (variant) pos=4 || (variant) pos=5 || (dummy) pos=6   || (dummy) pos=7
+
+    @param size bytesize of the plaintext
 
     @return ciphertexlen length of the ciphertext (needed for write())
 */
@@ -181,8 +213,15 @@ int PIRClient::symmetricEncrypt(unsigned char* ciphertext, unsigned char* plaint
 /**
     Symmetric decrypt ciphertext (AES_CBS256) and return the result.
 
-    @param decryptedtext variable that stores the decrypted plaintext
-    @param line ciphertext to be decrypted
+    @param plaintext  variable that stores the plaintext
+    @param ciphertext variable that holds the ciphertext data
+    @param pos relative position of variant (needed for symmetric encryption to compute the AES IV)
+
+    e.g.
+    (variant) pos=0 || (variant) pos=1 || (variant) pos=2 || (dummy) pos=3
+    (variant) pos=4 || (variant) pos=5 || (dummy) pos=6   || (dummy) pos=7
+
+    @param size bytesize of the plaintext
 
     @return decryptedtextlen length of the decrypted text (not needed for anything really, but just in case...)
 */
@@ -191,6 +230,16 @@ int PIRClient::symmetricDecrypt(unsigned char* plaintext, unsigned char* ciphert
     return plaintexlen;
 }
 
+/**
+    Fill remaining row with dummy data (in this case 0s).
+
+    TODO: different padding scheme PKCS #7
+
+    @param input what we are padding to
+    @param max_bits the maximum length of a Constants::row_size
+
+    @return final padded result
+*/
 std::string PIRClient::padData(string input, int max_bits){
     int len=input.length();
 
@@ -206,6 +255,7 @@ std::string PIRClient::padData(string input, int max_bits){
     If there is nothing to send simply send byte 0.
 
     @param catalog where all the data (SNPs) is stored
+    @param filename where the respective nonce, needed for the AES IV, is stored
 
     @return
 */
@@ -338,7 +388,7 @@ void PIRClient::initSHA256(){
 }
 
 void PIRClient::initAES256(){
-    m_AES_256= new AES_ctr_256();                      //=0 CBC mode, =1 CTR mode
+    m_AES_256= new AES_ctr_256();
 }
 
 void PIRClient::setRTTStart(){

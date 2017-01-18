@@ -4,7 +4,7 @@
     Purpose: CLIENT main
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 #include "PIRClient.hpp"

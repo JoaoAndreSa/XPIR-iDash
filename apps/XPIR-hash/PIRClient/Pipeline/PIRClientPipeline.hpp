@@ -5,8 +5,8 @@
        NOTE: In pipeline PIR, client sends query to the server while he generates it.
              Furthermore, he does not need to wait and get all reply elements before starting the reply extraction.
 
-    @author  Joao Sa, Marc-Olivier Killijian & Carlos Aguillar
-    @version 1.0 07/09/16
+    @author  Joao Sa
+    @version 1.0 18/01/17
 */
 
 /**
@@ -34,7 +34,7 @@ public:
 	*/
 	PIRClientPipeline(Socket socket) : PIRClient(socket){}
 
-	bool searchQuery(std::map<char,std::string>);	//main function for the class -> query variant(s)
+	bool searchQuery(std::map<char,std::string>);	       //main function for the class -> query variant(s)
 
 private:
 	void downloadWorker(int,XPIRcPipeline*);             //donwload reply thread handler (reads reply)

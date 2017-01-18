@@ -5,7 +5,7 @@
              NOTE: In sequential PIR, server has to wait and get all query elements before starting the reply generation.
 
     @author Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -52,6 +52,7 @@ vector<char*> PIRServerSequential::readVector_s(){
         total+=end_t-start_t;
         total_bytes+=message_length*n_size;
     }
+    //everywhere to enforce bandwith
     if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(uint64_t)+sizeof(uint64_t)+((sizeof(uint32_t)+sizeof(int))*size)+total_bytes,total);
     return vector_s;
 }
@@ -108,13 +109,12 @@ void PIRServerSequential::job (){
     m_id = boost::this_thread::get_id();
 	std::cout << "THREAD [" << m_id << "]" << "\n";
 
-    //#-------SETUP PHASE--------#
-    //read file from client
-    if(m_socket.readInt()==1){
+    if(m_socket.readInt()==1){ //#-------INITIALIZATION PHASE--------#
 	   downloadData();
 
         if(Constants::pre_import){
             try{
+                //clear previous imported data
                 for (auto const& x : (*m_imported_dbs)){
                     delete x.second;
                 }
@@ -123,6 +123,7 @@ void PIRServerSequential::job (){
                 for(int i=0;i<files.size();i++){
                     m_imported_dbs->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
                 }
+                //0->NO SUCCESS; 1->SUCCESS
                 m_socket.sendInt(1);
             }catch(int e){
                 cout << "Error while importing files" << e << '\n';
@@ -131,7 +132,7 @@ void PIRServerSequential::job (){
        }else{
             m_socket.sendInt(1);
        }
-    }else{
+    }else{ //#-------QUERYING PHASE--------#
         char* list = m_socket.readChar(m_socket.readInt());
         vector<string> list_clients =  Tools::tokenize(string(list),",");
 
@@ -156,7 +157,6 @@ void PIRServerSequential::job (){
                 //#-------QUERY PHASE--------#
                 vector<char*> query=readVector_s();
                 container_queries.push_back(query);
-
 
                 if(k==list_clients.size()-1 && i==num_variants-1){
                     for(int j=0;j<container.size();j++){

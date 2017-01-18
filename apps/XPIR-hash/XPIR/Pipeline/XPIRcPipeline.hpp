@@ -4,7 +4,7 @@
     Purpose: Child class that encloses the XPIR library function calls for the parallel execution
 
     @authors: Joao Sa
-    @version 1.0 01/07/16
+    @version 1.0 18/01/17
 */
 
 /**
@@ -40,7 +40,7 @@ private:
 
 	imported_database_t m_imported_db;				//it seems the same object as in XPIRcSequential but it's not
 
-	PIRReplyWriter* m_replyWriter;					//needed for the reply extraction
+	PIRReplyWriter* m_replyWriter;					//needed for the asynchronous reply extraction
 	messageListener m_messageListeners; 
     writeListener	m_writeListeners;
 
@@ -81,7 +81,7 @@ public:
 
 	PIRReplyWriter* getReplyWriter();				//m_replyWriter getter (needed to proceed with the reply extraction)
 	PIRQueryGenerator_internal* getQGenerator();	/*m_q_generator getter (opposite to what happens in the sequential execution
-													the PIR methods are called within threads)*/
+													the PIR methods are called within concurrent threads)*/
 	GenericPIRReplyGenerator* getRGenerator();		//m_r_generator getter
 	PIRReplyExtraction_internal* getRExtractor();	//m_r_extractor getter
 	imported_database_t getImportedDB();			//m_imported_db getter

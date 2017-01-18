@@ -4,7 +4,7 @@
     Purpose: Change PIR parameters
 
     @author Joao Sa
-    @version 1.0 07/09/16
+    @version 1.0 18/01/17
 */
 
 /**
