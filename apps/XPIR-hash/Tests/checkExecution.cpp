@@ -57,8 +57,8 @@ int main(int argc, char* argv[]){
 
 		if (f.is_open()){
 			for(int i=0;i<NUM_TESTS;i++){
-				//std::cout << "#######-----NUM ENTRIES: " << pow(10,i+3) << "-----#######" << std::endl;
-				std::cout << "#######-----NUM ENTRIES: 5000000 -----#######" << std::endl;
+				std::cout << "#######-----NUM ENTRIES: " << pow(10,i+3) << "-----#######" << std::endl;
+				//std::cout << "#######-----NUM ENTRIES: 5000000 -----#######" << std::endl;
 
 				int j;
 				for(j=0;j<NUM_YES;j++){
