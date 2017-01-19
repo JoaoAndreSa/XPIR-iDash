@@ -139,6 +139,7 @@ public:
    *  Can be called on a separate thread but the database must be imported and the query pushed
    *  before starting the reply generation.
   **/
+  void generateReply(const imported_database* database, std::vector<char*> request);
   void generateReply(const imported_database* database);
  
   /** 
