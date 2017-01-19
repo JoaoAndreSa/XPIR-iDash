@@ -176,7 +176,6 @@ bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
             //Tools::printCharArray(response+max_bytesize*((pos[i].first)%(container[l]->getAlpha())),736*8);
             if(!checkContent(response,data_hash_bytes)) check=false;
             //if(!checkContent(response+max_bytesize*((pos[i].first)%(container[l]->getAlpha())),data_hash_bytes)) check=false;
-            //if(!checkContent(response,container[l]->getAlpha(),max_bytesize,pos[i])) check=false;
 
             delete[] response;
             container[l]->cleanup();

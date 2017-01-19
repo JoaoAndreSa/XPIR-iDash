@@ -688,7 +688,7 @@ fichier.close();
     deserData[i] = deserData[0]+i*FV::params::poly_p::nmoduli*FV::params::poly_p::degree;
     FV::params::polyP_p Pp{deserData[i], deserData[i]+FV::params::poly_p::degree, true};
     if(first_==1){
-    //Pp=Pp*transformtopolyPp(mask_t);
+    Pp=Pp*transformtopolyPp(mask_t);
     }
     Pp.invntt_pow_invphi();
     FV::params::poly_p p;

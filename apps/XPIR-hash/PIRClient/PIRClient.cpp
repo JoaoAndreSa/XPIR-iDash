@@ -152,7 +152,7 @@ bool PIRClient::checkContent(char* response, int data_hash_bytes){
     char test[data_hash_bytes];
     memset(test,0,data_hash_bytes);
 
-    for(int h=0;h<Constants::padding_size;h++){
+    for(int h=0;h<Constants::padding_size*3;h++){
         if(memcmp(response+h*data_hash_bytes,test,data_hash_bytes)==0){
             check=true;
         }

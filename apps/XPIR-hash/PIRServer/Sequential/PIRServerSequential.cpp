@@ -163,22 +163,6 @@ void PIRServerSequential::job (){
                     for(int j=0;j<container.size();j++){
                         //#-------REPLY PHASE--------#
                         XPIRcSequential::REPLY reply=container[j]->replyGeneration(container_queries[j]);
-
-
-                        lwe_cipher* containera = new lwe_cipher[reply.reply.size()];
-                        for(int p=0;p<reply.reply.size();p++){
-                          containera[p].a=(poly64)reply.reply[p];
-                          containera[p].b=containera[p].a + 1024;
-                        }
-                        
-                        //unsigned char* rnd = (unsigned char*)malloc(sizeof(uint64_t)); 
-                        //NFLIBfastrandombytes(rnd,sizeof(uint64_t));
-                        //for(int p=0;p<reply.reply.size();p++){
-                        //    container[j]->getCrypto()->mulrdm(containera[p],2);
-                        //    reply.reply[p]=(char*)containera[p].a;
-                        //}
-
-
                         sendReply(reply,container[j]->getRsize(container[j]->getD()));
 
                         //#-------CLEANUP PHASE--------#
