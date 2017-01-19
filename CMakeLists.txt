@@ -1,15 +1,14 @@
 cmake_minimum_required(VERSION 2.6.0)
-project(XPIR)
-include(CMakeCompilers.txt)
+project(XPIR CXX ASM-ATT)
 
-enable_language(CXX ASM)
+include(CMakeCompilers.txt)
 
 if(APPLE)
     cmake_policy(SET CMP0042 NEW)
 endif()
 
-set(CMAKE_C_COMPILER "gcc")
-set(CMAKE_CXX_COMPILER "g++")
+#set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_CXX_COMPILER "c++")
 set(CMAKE_CXX_FLAGS "-std=c++11 -fopenmp -ggdb -Wno-deprecated-declarations")
 set(CMAKE_EXE_LINKER_FLAGS "-fopenmp")
 set(BOOST_ROOT "./local")
@@ -20,7 +19,7 @@ find_package(Boost 1.55.0  REQUIRED
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 	
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(GMP 6 REQUIRED)
 find_package(MPFR 3.1.2 REQUIRED)
 
@@ -53,9 +52,10 @@ include_directories("/opt/local/include")
 
 
 
-	add_subdirectory("apps")
+	add_subdirectory("external_components")
 	add_subdirectory("crypto")
 	add_subdirectory("pir")
+	add_subdirectory("apps")
 	
 	
 

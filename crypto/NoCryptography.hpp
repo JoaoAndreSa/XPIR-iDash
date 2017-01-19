@@ -24,29 +24,30 @@
 #include "AbstractPublicParameters.hpp"
 
 
-class NoCryptography : public HomomorphicCrypto 
+class NoCryptography : public HomomorphicCrypto
 {
   public:
     NoCryptography();
     NoCryptography(const std::string& crypto_name);
-    AbstractPublicParameters& getPublicParameters(); 
+    AbstractPublicParameters& getPublicParameters();
     unsigned int getAllCryptoParams(std::set<std::string>& crypto_params_set);
     void setNewParameters(const std::string& crypto_param);
     std::string& toString();
     PIRParameters* pirParam;
     NoCryptographyPublicParameters publicParams;
     static unsigned int default_security_bits;
-    
+
     char* encrypt(unsigned int ui, unsigned int );
     char* encrypt(char* data, size_t, unsigned int exponent );
     char* encrypt_perftest();
+    std::vector<char*> encryptsub(unsigned char* data, size_t, unsigned int exponent );
     char* decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t);
-    
+
     unsigned int getCryptoParams(unsigned int k, std::set<std::string>& crypto_params);
     long setandgetAbsBitPerCiphertext(unsigned int elt_nbr);
     std::string getSerializedCryptoParams(bool shortversion=true);
     double estimateAbsTime(std::string crypto_param);
-    
+
 };
 
 #endif

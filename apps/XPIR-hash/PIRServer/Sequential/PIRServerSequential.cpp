@@ -121,7 +121,7 @@ void PIRServerSequential::job (){
                 (*m_imported_dbs).clear();
                 std::vector<string> files = Tools::listFilesFolder("db/");
                 for(int i=0;i<files.size();i++){
-                    m_imported_dbs->operator[](files[i]) = XPIRcSequential::import_database(files[i]);
+                    m_imported_dbs->operator[](files[i]) = XPIRcSequential::import_database(Constants::num_entries,files[i]);
                 }
                 //0->NO SUCCESS; 1->SUCCESS
                 m_socket.sendInt(1);
@@ -150,11 +150,12 @@ void PIRServerSequential::job (){
                     xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db,m_imported_dbs->operator[](list_clients[k]));
                 }
                 else{
-                    xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db,XPIRcSequential::import_database(list_clients[k]));
+                    xpir = new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),0,&db,XPIRcSequential::import_database(Constants::num_entries,list_clients[k]));
                 }
                 container.push_back(xpir);
 
                 //#-------QUERY PHASE--------#
+                xpir->setRequest(readRequest(xpir->getCrypto()->getCiphertextBytesize()));
                 vector<char*> query=readVector_s();
                 container_queries.push_back(query);
 
@@ -162,6 +163,22 @@ void PIRServerSequential::job (){
                     for(int j=0;j<container.size();j++){
                         //#-------REPLY PHASE--------#
                         XPIRcSequential::REPLY reply=container[j]->replyGeneration(container_queries[j]);
+
+
+                        lwe_cipher* containera = new lwe_cipher[reply.reply.size()];
+                        for(int p=0;p<reply.reply.size();p++){
+                          containera[p].a=(poly64)reply.reply[p];
+                          containera[p].b=containera[p].a + 1024;
+                        }
+                        
+                        //unsigned char* rnd = (unsigned char*)malloc(sizeof(uint64_t)); 
+                        //NFLIBfastrandombytes(rnd,sizeof(uint64_t));
+                        //for(int p=0;p<reply.reply.size();p++){
+                        //    container[j]->getCrypto()->mulrdm(containera[p],2);
+                        //    reply.reply[p]=(char*)containera[p].a;
+                        //}
+
+
                         sendReply(reply,container[j]->getRsize(container[j]->getD()));
 
                         //#-------CLEANUP PHASE--------#

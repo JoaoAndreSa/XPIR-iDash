@@ -58,11 +58,11 @@ public:
 		m_socket=socket;
 	}
 
-	void uploadData(string);								//prepares and uploads the DB data to send to the server
+	void uploadData(string);																			//prepares and uploads the DB data to send to the server
 	void initAES256();
 	void initSHA256();
 
-	virtual bool searchQuery(std::map<char,std::string>)=0;	//kind of the main function of all PIRClient classes (children)
+	virtual bool searchQuery(std::map<char,std::string>)=0;												//kind of the main function of all PIRClient classes (children)
 
 	//Getters and Setters
 	void setRTTStart();
@@ -71,12 +71,14 @@ public:
 	double getRTTStop();
 
 protected:
-	void removeData();																					//delete the files in disk where the nonces are stored and reset the cryptographic keys														
+	void removeData();																					//delete the files in disk where the nonces are stored and reset the cryptographic keys	
+	unsigned char* generateRequest(uint64_t,string,int);												//generate sub/request (subtraction element)
+	vector<char*> encryptRequest(unsigned char*,HomomorphicCrypto*,uint64_t,int);						//homomorphically encrypt the subtraction element
 	std::string extractCiphertext(char*, uint64_t, uint64_t, uint64_t);									//extract the exact ciphertext (with aggregation the reply contains more than one element)
 	std::string extractPlaintext(char*, uint64_t, uint64_t, uint64_t);									//extract the exact plaintext (with aggregation the reply contains more than one element)
-	bool checkContent(char*,uint64_t,int,std::pair<uint64_t,std::vector<std::string>>);					//reply extraction/decryption and analysis			
+	bool checkContent(char*, int);																		//reply extraction/decryption and analysis
 	uint64_t considerPacking(uint64_t,uint64_t);														//returns the position relative to the aggregation/packing value
-	std::vector<std::pair<uint64_t,std::vector<std::string>>> listQueryPos(std::map<char,std::string>);	//lists the positions to be queried
+	std::vector<std::pair<uint64_t,std::string>> listQueryPos(std::map<char,std::string>);				//lists the positions to be queried
 
 	int symmetricEncrypt(unsigned char*,unsigned char*,uint64_t,int);									//symmetric encrypt plaintext and return the result
 	int symmetricDecrypt(unsigned char*,unsigned char*,uint64_t,int);									//symmetric decrypt ciphertext and return the result

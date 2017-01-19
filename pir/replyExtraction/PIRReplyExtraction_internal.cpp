@@ -18,6 +18,7 @@
 #include "PIRReplyExtraction_internal.hpp"
 #include "apps/client/PIRViewCLI.hpp"
 //#define DEBUG
+//#define CRYPTO_DEBUG
 
 /**
  *	Class constructor.
@@ -74,9 +75,9 @@ void PIRReplyExtraction_internal::extractReply(int aggregated_maxFileSize, share
 #endif
     cout << "PIRReplyExtraction_internal: Waiting for first replies..." << endl;
 
-    for (unsigned int j = 0 ; j < ciphertext_nbr ; j++)
+    for (unsigned int j = 0 ; j < ciphertext_nbr; j++)
     {
-      data = (rec_lvl == pirParams.d) ? repliesBuffer.pop_front() : in_data+(j*data_size); 
+      data = (rec_lvl == pirParams.d) ? repliesBuffer.pop_front() : in_data+(j*data_size);
       if (rec_lvl == pirParams.d && j == 0 ) 
       { 
         cout << "PIRReplyExtraction_internal: Starting reply extraction..." << endl;

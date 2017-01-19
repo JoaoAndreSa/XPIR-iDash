@@ -22,9 +22,17 @@
 #include "PIRClientSequential.hpp"
 
 //***PRIVATE METHODS***//
-//QUERY GENERATION & QUERY SENDING
-void PIRClientSequential::sendQuery(std::vector<char*> query,XPIRcSequential* xpir){
+//QUERY GENERATION & SEND QUERY
+void PIRClientSequential::sendQuery(std::vector<char*> query, XPIRcSequential* xpir, vector<char*> request){
     double start = omp_get_wtime(), start_t, end_t, total=0;
+
+    uint64_t request_size = xpir->getCrypto()->getCiphertextBytesize();
+    m_socket.sendInt(request.size());
+
+    for(int i=0;i<request.size();i++){
+        m_socket.sendXBytes(request_size,(void*)request[i]);
+        delete[] request[i];
+    }
 
     uint64_t pos=0;
     m_socket.senduInt64(xpir->getD());                //number of dimensions
@@ -46,7 +54,7 @@ void PIRClientSequential::sendQuery(std::vector<char*> query,XPIRcSequential* xp
 
         total+=end_t-start_t;
     }
-     if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t) + xpir->getD()*(sizeof(uint32_t)+sizeof(int)) + total_bytes,total);
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(request_size*request.size() + sizeof(int) + sizeof(uint64_t) + xpir->getD()*(sizeof(uint32_t)+sizeof(int)) + total_bytes,total);
 
     double end = omp_get_wtime();
     cout << "PIRClient: Send query (" << total_bytes << " bytes) took " << end-start << " seconds" << endl;
@@ -127,25 +135,29 @@ bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
     m_socket.sendInt(entry['f'].length()+1);
     m_socket.sendChar_s(const_cast<char*>(entry['f'].c_str()),entry['f'].length()+1);
 
-    std::vector<std::pair<uint64_t,std::vector<std::string>>> pos = listQueryPos(entry);
+    std::vector<std::pair<uint64_t,std::string>> pos = listQueryPos(entry);
     m_socket.sendInt(pos.size());
 
-    int max_bytesize = Constants::padding_size*Constants::data_hash_size/8;
+    int max_bytesize = ceil(Constants::padding_size*Constants::data_hash_size/8);
+    int data_hash_bytes = ceil(Constants::data_hash_size/8);
 
     std::vector<XPIRcSequential*> container;
     std::vector<string> files = Tools::tokenize(entry['f'],",");
     for(int k=0;k<files.size();k++){
         m_AES_256->setIV(files[k]);
         for(int i=0;i<pos.size();i++){
-            XPIRcSequential* xpir= new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),1,nullptr);
+            XPIRcSequential* xpir= new XPIRcSequential(Tools::readParamsPIR(Constants::num_entries),1,nullptr,nullptr);
             container.push_back(xpir);
 
             //#-------INITIALIZATION PHASE--------#
             uint64_t pack_pos=considerPacking(pos[i].first,xpir->getAlpha());
 
             //#-------QUERY PHASE--------#
+            unsigned char* request = generateRequest(pos[i].first,pos[i].second,data_hash_bytes);
+            vector<char*> request_encrypted = encryptRequest(request,xpir->getCrypto(),xpir->getAlpha(),max_bytesize);
+
             std::vector<char*> query=queryGeneration(pack_pos,xpir);
-            sendQuery(query,xpir);
+            sendQuery(query,xpir,request_encrypted);
 
             //#-------CLEANUP PHASE--------#
             container[i]->cleanQueryBuffer();
@@ -160,7 +172,14 @@ bool PIRClientSequential::searchQuery(std::map<char,std::string> entry){
         for(int i=0;i<pos.size();i++,l++){
             XPIRcSequential::REPLY reply = readReply();
             char* response=replyExtraction(reply,container[l]);
-            if(!checkContent(response,container[l]->getAlpha(),max_bytesize,pos[i])) check=false;
+
+            //Tools::printCharArray(response+max_bytesize*((pos[i].first)%(container[l]->getAlpha())),736*8);
+            if(!checkContent(response,data_hash_bytes)) check=false;
+            //if(!checkContent(response+max_bytesize*((pos[i].first)%(container[l]->getAlpha())),data_hash_bytes)) check=false;
+            //if(!checkContent(response,container[l]->getAlpha(),max_bytesize,pos[i])) check=false;
+
+            delete[] response;
+            container[l]->cleanup();
             delete container[l];
         }
     }

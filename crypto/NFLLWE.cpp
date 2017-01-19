@@ -35,7 +35,7 @@ return ret;
 void NFLLWE_DEBUG_MESSAGE(const char *s,poly64 p, unsigned int n){
 #ifdef CRYPTO_DEBUG
 	std::cout<<s;
-	NFLlib::print_poly64hex(p,n);
+	NFLlib_old::print_poly64hex(p,n);
 #endif
 }
 
@@ -131,6 +131,7 @@ void  NFLLWE::setNewParameters(unsigned int polyDegree_, unsigned int aggregated
 // *********************************************************
 poly64* NFLLWE::getsecretKey() { return secretKey; }
 unsigned int NFLLWE::getpolyDegree() { return polyDegree; }
+NFLlib_old& NFLLWE::getnflInstance() { return nflInstance; }
 
 // *********************************************************
 // Setters
@@ -150,7 +151,7 @@ void NFLLWE::setpolyDegree(unsigned int polyDegree_)
 //         Serialize/Deserialize
 // *********************************************************
 
-poly64 *NFLLWE::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, uint64_t &polyNumber) {
+poly64 *NFLLWE::deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, uint64_t dataBitsizePerBuffer, uint64_t &polyNumber, int first_) {
   return nflInstance.deserializeDataNFL(inArrayOfBuffers, nbrOfBuffers, dataBitsizePerBuffer, publicParams.getAbsorptionBitsize()/polyDegree, polyNumber);
 }
 
@@ -171,6 +172,11 @@ void NFLLWE::sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)
 {
   nflInstance.submodPoly(rop.a, op1.a, op2.a);
   nflInstance.submodPoly(rop.b, op1.b, op2.b);
+}
+
+void NFLLWE::mulrdm(lwe_cipher rop, poly64 rdm)
+{
+
 }
 
 void NFLLWE::mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly, int rec_lvl)
@@ -510,10 +516,34 @@ char* NFLLWE::encrypt(unsigned int ui, unsigned int d)
 	return (char*) c.a;
 }
 
+std::vector<char*> NFLLWE::encryptsub(unsigned char* data, size_t s_coef, unsigned int nb_coef ){
+    std::vector<char*> c(1 +nb_coef/polyDegree);
+    for (int l=0;l<nb_coef/polyDegree +1;l++){
+        lwe_cipher c_tmp;
+        poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
+        uint64_t ui[polyDegree];
+        for (int j=0; j<min(polyDegree,nb_coef-l*polyDegree);j++){
+            for (int i = s_coef -1; i>-1;i--){
+                if (i==s_coef -1) {ui[j]=uint64_t(data[i+j*s_coef+l*s_coef*polyDegree]);}
+                else {ui[j] = (ui[j]<<8) | data[i+j*s_coef+l*s_coef*polyDegree];}
+            }
+            for (unsigned int cm = 0 ; cm < nbModuli ; cm++){
+                m[cm*polyDegree+j]=ui[j];
+            }
+        }
+        enc(&c_tmp,m);
+        c[l]=(char*)c_tmp.a;
+        free(m);
+
+	}
+	return c;
+}
+
 char* NFLLWE::encrypt(char* data, size_t s_hash, unsigned int s_list ){
+
     lwe_cipher c;
 	poly64 m = (poly64)calloc(nbModuli*polyDegree,sizeof(uint64_t));
-	uint64_t *ui;
+	uint64_t ui[s_list];
 	for (int j=0; j<s_list;j++){
         for (int i = 0; i<s_hash;i++){
             if (i==0) {ui[j]=uint64_t(data[i+j*s_hash]);}
@@ -523,7 +553,6 @@ char* NFLLWE::encrypt(char* data, size_t s_hash, unsigned int s_list ){
             m[cm*polyDegree+j]=ui[j];
         }
     }
-
   	enc(&c,m);
 	free(m);
 	return (char*) c.a;
@@ -554,7 +583,7 @@ char* NFLLWE::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, size_t)
 #endif
 
   dec(clear_data, &ciphertext);
-
+  //std::cout<<clear_data[0]<<std::endl;
   NFLLWE_DEBUG_MESSAGE("Decrypting ciphertext a: ",ciphertext.a, 4);
   NFLLWE_DEBUG_MESSAGE("Decrypting ciphertext b: ",ciphertext.b, 4);
   NFLLWE_DEBUG_MESSAGE("Result: ",clear_data, 4);

@@ -21,14 +21,13 @@ public:
 	static vector<string> listFilesFolder(string);								//list the VCF files inside a folder
 	static string readFromTextFile(string);										//read from text file
 	static void writeToTextFile(string, string);								//write to text file
+	static void clearBinFile(string filename);									//empty a binary file
 	static void readFromBinFile(string, char*, int);							//read from binary file
 	static void writeToBinFile(string, char*, int);								//write to binary file
-
 	static int readParamsSHA();													//reads SHA params needed for hashing (number of bits for mapping)
 	static PIRParameters readParamsPIR(uint64_t);								//reads PIR params needed to create an XPIRc object
-
 	static std::vector<std::string> tokenize(std::string,std::string);			//just like java split
-
+	static void printCharArray(char*,int);										//to print stuff
 	static void cleanupVector(vector<char*>);  									//free allocated memory
 private:
 	static int verifyParams(uint64_t, uint64_t, unsigned int*, uint64_t);		//validate PIR params

@@ -110,6 +110,7 @@ void PIRReplyGeneratorTrivial::generateReply()
 
 }
 
+imported_database_t PIRReplyGeneratorTrivial::generateReplyGeneric(bool keep_imported_data, bool import, vector<char*> request){}
 
 imported_database_t PIRReplyGeneratorTrivial::generateReplyGeneric(bool keep_imported_data, bool import){
   imported_database_t database_wrapper;
@@ -132,6 +133,8 @@ imported_database_t PIRReplyGeneratorTrivial::generateReplyGeneric(bool keep_imp
 
   return database_wrapper;
 }
+
+void PIRReplyGeneratorTrivial::generateReplyGenericFromData(const imported_database_t database,vector<char*> request){}
 
 
 void PIRReplyGeneratorTrivial::generateReplyGenericFromData(const imported_database_t database)

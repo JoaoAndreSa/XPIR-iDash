@@ -41,6 +41,59 @@ void PIRClient::removeData(){
 }
 
 /**
+    Generate the subtraction element. This is an array of padding_size different AES encryptions of the element we are looking for.  
+
+    @param pos the relative position inside the 'pack' we want to extract
+    @param variant_hash the hash of the variant that we are searching for
+    @param data_hash_bytes number of bytes of a mutations's hash
+
+    @return subtraction element sub symmetrically encrypted
+*/
+unsigned char* PIRClient::generateRequest(uint64_t pos, string variant_hash, int data_hash_bytes){
+    unsigned char* line = new unsigned char[Constants::padding_size*data_hash_bytes];
+
+    for(int i=0;i<Constants::padding_size;i++){
+        unsigned char* variant = m_SHA_256->binary_to_uchar(variant_hash);
+
+        if(Constants::encrypted){
+            unsigned char* ciphertext = new unsigned char[data_hash_bytes];
+            //Encrypt with the right IV (depends on the position of the element)
+            int ciphertexlen = symmetricEncrypt(ciphertext,variant,pos*Constants::padding_size+i,data_hash_bytes);
+            memcpy(line+data_hash_bytes*i,ciphertext,data_hash_bytes);
+            delete[] ciphertext;
+        }else{
+            memcpy(line+data_hash_bytes*i,variant,data_hash_bytes);
+        }
+
+        delete[] variant;
+    }
+
+    return line;
+}
+
+/**
+    Homomorphically encrypt the subtraction element. The server will subtract this to the reply.
+
+    @param request subtraction element sub symmetrically encrypted
+    @param crypto crypto handler object
+    @param alpha aggregation value
+    @param max_bytesize reply element size
+
+    @return subtraction element homomorphically encrypted
+*/
+vector<char*> PIRClient::encryptRequest(unsigned char* request, HomomorphicCrypto* crypto, uint64_t alpha, int max_bytesize){
+    std::vector<char*> encrypt_request;
+    unsigned char* reply= new unsigned char[alpha*max_bytesize];
+
+    for(uint64_t i=0;i<alpha;i++){
+        memcpy(reply+i*max_bytesize,request,max_bytesize);
+    }
+
+    encrypt_request=crypto->encryptsub(reply,1,alpha*max_bytesize);
+    return encrypt_request;
+}
+
+/**
     Extract the exact ciphertext (with aggregation the reply contains more than one element).
 
     @param response reply data (ciphertext)
@@ -87,44 +140,23 @@ std::string PIRClient::extractPlaintext(char* response, uint64_t alpha, uint64_t
 }
 
 /**
-    Extract the exact plaintext (with aggregation the reply contains more than one element).
+    Check response (true-> the variant is there; false-> the variant is not there).
 
     @param response reply data
-    @param alpha aggregation value
-    @param max_bytesize reply element size
-    @param elements queried position and a list of hashes of variants (being queried) that happen to be in that same index
+    @param data_hash_bytes number of bytes of a mutations's hash
 
     @return true if the variant is present in the response/reply given by the server (and vice-versa)
 */
-bool PIRClient::checkContent(char* response, uint64_t alpha, int max_bytesize, std::pair<uint64_t,std::vector<std::string>> elements){
-    bool check=true;
+bool PIRClient::checkContent(char* response, int data_hash_bytes){
+    bool check=false;
+    char test[data_hash_bytes];
+    memset(test,0,data_hash_bytes);
 
-    string response_s;
-    if(!Constants::encrypted){   //if PLAINTEXT
-        response_s = extractPlaintext(response,alpha,max_bytesize,elements.first);
-    }else{                       //if CIPHERTEXT
-        response_s = extractCiphertext(response,alpha,max_bytesize,elements.first);
-    }
-
-    //TIME MEASURE (only for iDash challenge): retrieved # variants/per query 
-    int variants_retrieved=0;
-    string zeros(Constants::data_hash_size,'0');
-    for(int i=0;i<response_s.length();i+=Constants::data_hash_size){
-        if(zeros.compare(response_s.substr(i,Constants::data_hash_size))!=0){
-            variants_retrieved++;
+    for(int h=0;h<Constants::padding_size;h++){
+        if(memcmp(response+h*data_hash_bytes,test,data_hash_bytes)==0){
+            check=true;
         }
     }
-    cout << "PIRClient: " << variants_retrieved << " variants retrieved" << endl;
-    //END
-
-    for(int j=0;j<elements.second.size();j++){
-        if(m_SHA_256->search(elements.second[j],response_s)==false){
-            check=false;
-        }
-    }
-
-    //#-------CLEANUP PHASE--------#
-    delete[] response;
     return check;
 }
 
@@ -152,7 +184,7 @@ uint64_t PIRClient::considerPacking(uint64_t pos, uint64_t alpha){
 
     @return a list of positions (with the respective variants' hashes) that are to be queried by the client
 */
-std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPos(std::map<char,std::string> entry){
+std::vector<std::pair<uint64_t,std::string>> PIRClient::listQueryPos(std::map<char,std::string> entry){
     std::vector<std::string> chr = Tools::tokenize(entry['c'],",");
     std::vector<std::string> pos = Tools::tokenize(entry['p'],",");
     std::vector<std::string> ref = Tools::tokenize(entry['r'],",");
@@ -162,7 +194,7 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
         Error::error(1,"Input Error\nUploading: ./client [-f folderPath]\nQuerying: ./client [-c chromosome1,2,...] [-p startPosition1,2,...] [-r refAllele1,2,...] [-a altAllele1,2,...] [-f vcfFile1,2,...]\n");
     }
 
-    std::vector<std::pair<uint64_t,std::vector<std::string>>> all_pos;
+    std::vector<std::pair<uint64_t,std::string>> all_pos;
 
     for(int i=0;i<chr.size();i++){
         //string query_str=chr[i]+"\t"+pos[i]+"\t.\t"+ref[i]+"\t"+alt[i]; //the . is to represent the missing id field
@@ -170,22 +202,7 @@ std::vector<std::pair<uint64_t,std::vector<std::string>>> PIRClient::listQueryPo
         string data_hash=m_SHA_256->hash(query_str);                                //hash encoding
         uint64_t pos=stol(data_hash.substr(0,m_SHA_256->getHashSize()),nullptr,2);  //mapping to a index/position
 
-        bool exists=false;
-        int j;
-        for(j=0;j<all_pos.size();j++){
-            if(all_pos[j].first==pos){
-                exists=true;
-                break;
-            }
-        }
-
-        if(exists){
-            all_pos[j].second.push_back(data_hash);
-        }else{
-            std::vector<string> container;
-            container.push_back(data_hash);
-            all_pos.push_back(std::make_pair(pos,container));
-        }
+        all_pos.push_back(std::make_pair(pos,data_hash));
     }
     return all_pos;
 }

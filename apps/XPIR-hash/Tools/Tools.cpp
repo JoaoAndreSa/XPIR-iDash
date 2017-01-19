@@ -60,13 +60,26 @@ std::vector<string> Tools::listFilesFolder(string foldername){
 }
 
 /**
+    Empty/Truncate a binary file.
+
+    @param filename name of the binary file
+*/
+void Tools::clearBinFile(string filename){
+    try{
+        ofstream f(filename,ios::out|ios::binary|ofstream::trunc);
+        Error::error(f==nullptr || f.is_open()==0,"Error opening binary file");
+        f.close();
+    }catch(std::ios_base::failure &fail){
+        Error::error(1,"Error clearing binary file");
+    }
+}
+
+/**
     Read data from binary file.
 
     @param filename name of the binary file
     @param recvBuf data container
     @param size number of bytes to read from the binary file
-
-    @return
 */
 void Tools::readFromBinFile(string filename, char* recvBuf, int size){
     try{
@@ -246,6 +259,15 @@ std::vector<std::string> Tools::tokenize(std::string entry,std::string delimiter
     tokens.push_back(entry.substr(0,pos));
 
     return tokens;
+}
+
+void Tools::printCharArray(char* str, int size){
+    for(int i=0;i<size;i++){
+        for (int j = 0; j<8; j++) {
+            printf("%d", !!((str[i] << j) & 0x80));
+        }
+    }
+    cout << endl << endl;
 }
 
 /**

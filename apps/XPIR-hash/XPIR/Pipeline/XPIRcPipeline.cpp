@@ -13,7 +13,7 @@
 			      |
 	   ----------- -----------
 	   |                     |
-  XPIRcPipeline (*)    XPIRcSequential 
+  XPIRcPipeline (*)    XPIRcSequential
 
 */
 
@@ -26,8 +26,8 @@
 	@param filename name of the VCF file with the data 
 	@return
 */
-imported_database_t XPIRcPipeline::import_database(string filename){
-	DBDirectoryProcessor db(Constants::num_entries,filename);
+imported_database_t XPIRcPipeline::import_database(uint64_t num_entries,string filename){
+	DBDirectoryProcessor db(num_entries,filename);
 	PIRParameters params = Tools::readParamsPIR(Constants::num_entries);
 	HomomorphicCrypto* crypto=HomomorphicCryptoFactory::getCryptoMethod(params.crypto_params);
 	crypto->setandgetAbsBitPerCiphertext(params.n[0]);
@@ -45,6 +45,17 @@ imported_database_t XPIRcPipeline::import_database(string filename){
     delete crypto;
 
     return imported_db;
+}
+
+GenericPIRReplyGenerator* XPIRcPipeline::initRGenerator(DBHandler* db,PIRParameters params){
+	std::vector<std::string> fields;
+    boost::split(fields,m_params.crypto_params,boost::is_any_of(":"));
+
+	GenericPIRReplyGenerator* r_generator = PIRReplyGeneratorFactory::getPIRReplyGenerator(fields.at(0),m_params,db);
+    r_generator->setCryptoMethod(m_crypto);
+    r_generator->setPirParams(m_params);
+
+    return r_generator;
 }
 
 

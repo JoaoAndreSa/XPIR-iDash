@@ -24,6 +24,7 @@ const std::vector<std::string>  HomomorphicCryptoFactory_internal::crypto_method
   std::vector<std::string> v;
   v.push_back("Paillier");
   v.push_back("LWE");
+  v.push_back("FV");
   return v;
 }();
 
@@ -38,6 +39,10 @@ HomomorphicCrypto* HomomorphicCryptoFactory_internal::getCrypto(std::string cryp
   else if (cryptoType == "LWE")
   {
     h = new NFLLWE();
+  }
+  else if (cryptoType == "FV")
+  {
+    h = new NFLFV();
   }
   else if(cryptoType == "NoCryptography")
   {
@@ -71,6 +76,8 @@ void HomomorphicCryptoFactory_internal::getAllCryptoSystems(std::vector<Homomorp
   HomomorphicCrypto* crypto_ptr = new PaillierAdapter();
   crypto_sys_vec.push_back(crypto_ptr);
   crypto_ptr = new NFLLWE();
+  crypto_sys_vec.push_back(crypto_ptr);
+  crypto_ptr = new NFLFV();
   crypto_sys_vec.push_back(crypto_ptr);
 }
 

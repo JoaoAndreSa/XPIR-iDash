@@ -21,6 +21,7 @@
 #include <string>
 #include "PaillierAdapter.hpp"
 #include "NFLLWE.hpp"
+#include "NFLFV.hpp"
 #include "NoCryptography.hpp"
 
 class HomomorphicCryptoFactory_internal

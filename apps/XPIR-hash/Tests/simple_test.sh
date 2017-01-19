@@ -12,11 +12,15 @@
 cd ..
 cd Constants
 ./changeParamsSHA 13
-./changeParamsPIR 2 3 53 52 0 0 LWE:97:1024:60
+./changeParamsPIR 2 3 53 52 0 0 FV:80:1024:62:14
 
 cd ..
 cd PIRServer
 rm -rf db/*
+rm mask.txt
+rm mask2.txt
+>> mask.txt
+>> mask2.txt
 
 cd ..
 cd PIRClient
@@ -75,7 +79,7 @@ read -p "START THE SERVER (./server). Press any key to continue... " -n1 -s
 ./client -c 1 -p 80349420 -r . -a AAAAGGCAAGTCCCTCCCACCTATGAGCCTGTAAAATCA -f RCV000015246_100000.vcf
 ./client -c 1 -p 80412577 -r AT -a CAC -f RCV000015246_100000.vcf
 ./client -c 1,1 -p 73931553,73931594 -r G,G -a A,C -f RCV000015246_100000.vcf
-./client -c 1,1 -p 73934717,73934895 -r .,A -a T,G -f RCV000015246_100000.vcf
+./client -c 1,1,1,1 -p 73934717,73934895,160955085,161617087 -r .,A,CTA,T -a T,G,TTG,. -f RCV000015246_100000.vcf
 
 ./client -c 1 -p 161617087 -r T -a . -f RCV000015246_1000.vcf,RCV000015246_10000.vcf,RCV000015246_100000.vcf
 ./client -c 1 -p 161645470 -r A -a C -f RCV000015246_1000.vcf,RCV000015246_100000.vcf

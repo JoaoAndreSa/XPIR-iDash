@@ -17,8 +17,8 @@
 
 #include "NoCryptography.hpp"
 
- 
-NoCryptography::NoCryptography(): 
+
+NoCryptography::NoCryptography():
   HomomorphicCrypto("NoCryptography")
 {}
 
@@ -26,25 +26,25 @@ NoCryptography::NoCryptography(const std::string& crypto_name):
   HomomorphicCrypto(crypto_name)
 {}
 
-AbstractPublicParameters& NoCryptography::getPublicParameters(){ return publicParams; } 
+AbstractPublicParameters& NoCryptography::getPublicParameters(){ return publicParams; }
 
-unsigned int NoCryptography::getAllCryptoParams(std::set<std::string>& crypto_params_set) 
-{ 
+unsigned int NoCryptography::getAllCryptoParams(std::set<std::string>& crypto_params_set)
+{
   crypto_params_set.insert(std::string("NoCryptography"));
-  return 1; 
+  return 1;
 }
 
 void NoCryptography::setNewParameters(const std::string& crypto_param) {}
 std::string& NoCryptography::toString() { return cryptoName; }
 
 char* NoCryptography::encrypt(unsigned int ui, unsigned int d )
-{ 
-  char* charptr = (char *) malloc(sizeof(char)); 
+{
+  char* charptr = (char *) malloc(sizeof(char));
   *charptr =  (char) ui;
-  return charptr; 
+  return charptr;
 }
-
-char* NoCryptography::encrypt(char* data, size_t lkjlkj, unsigned int exponent ) 
+std::vector<char*> NoCryptography::encryptsub(unsigned char* data, size_t, unsigned int exponent ) {}
+char* NoCryptography::encrypt(char* data, size_t lkjlkj, unsigned int exponent )
 {
   unsigned int ciphBytesize = publicParams.getCiphertextBitsize()/8;
   char* encrypted_data = (char *) malloc(ciphBytesize);
@@ -68,7 +68,7 @@ char* NoCryptography::decrypt(char* cipheredData, unsigned int rec_lvl, size_t, 
 unsigned int NoCryptography::getCryptoParams(unsigned int k, std::set<std::string>& crypto_params)
 {
   crypto_params.insert(std::string("NoCryptography"));
-  return 1; 
+  return 1;
 }
 
 long NoCryptography::setandgetAbsBitPerCiphertext(unsigned int elt_nbr)

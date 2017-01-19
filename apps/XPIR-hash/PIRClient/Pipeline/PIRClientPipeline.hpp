@@ -37,10 +37,9 @@ public:
 	bool searchQuery(std::map<char,std::string>);	       //main function for the class -> query variant(s)
 
 private:
-	void downloadWorker(int,XPIRcPipeline*);             //donwload reply thread handler (reads reply)
-	void startProcessResult(int,XPIRcPipeline*);         //initiate reply extraction
-	void uploadWorker(XPIRcPipeline*);                   //upload query thread handler
-	void startProcessQuery(uint64_t,XPIRcPipeline*);     //initiate query generation
-
-	void joinAllThreads(vector<XPIRcPipeline*>);         //terminate threads
+	void downloadWorker(int,XPIRcPipeline*);                            //donwload thread handler (reads reply)
+	void startProcessResult(int,XPIRcPipeline*);                        //initiate reply extraction (reading and exctraction are do)
+	void uploadWorker(XPIRcPipeline*,vector<char*>);                    //upload query thread handler
+  void startProcessQuery(uint64_t,XPIRcPipeline*,vector<char*>);      //initiate query generation
+	void joinAllThreads(vector<XPIRcPipeline*>);                        //terminate threads
 };

@@ -48,6 +48,7 @@ public:
 	}
 
 protected:
+	vector<char*> readRequest(uint64_t);
 	void removeDB();		//cleans DB folder to allow for another batch of files sent by the client
 	void downloadData();	//reads data to be stored by the server
 };

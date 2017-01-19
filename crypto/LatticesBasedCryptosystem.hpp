@@ -17,8 +17,9 @@
 
 #ifndef DEF_LATTICESBASEDCRYPTOSYSTEM
 #define DEF_LATTICESBASEDCRYPTOSYSTEM
-#include "NFLlib.hpp"
+#include "NFLlib_old.hpp"
 #include "NFLLWEDatatypes.hpp"
+#include "Bitsplit.hpp"
 #include "HomomorphicCrypto.hpp"
 
 class LatticesBasedCryptosystem : public HomomorphicCrypto {
@@ -26,25 +27,25 @@ class LatticesBasedCryptosystem : public HomomorphicCrypto {
     LatticesBasedCryptosystem(const std::string& crypto_name);
 
     virtual unsigned int getpolyDegree()=0;
-    virtual void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime, 
+    virtual void sub(lwe_cipher rop, lwe_cipher op1, lwe_cipher op2, int d)=0;
+    virtual void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime,
         uint64_t current_poly, int rec_lvl)=0;
-    virtual void mul(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime, 
+    virtual void mul(lwe_cipher rop, lwe_in_data op1, lwe_query op2, lwe_query op2prime,
         uint64_t current_poly, int rec_lvl)=0;
-
+    virtual void mulrdm(lwe_cipher rop, poly64 rdm)=0;
     virtual long setandgetAbsBitPerCiphertext(unsigned int elt_nbr)=0;
 
-    NFLlib& getnflInstance();
     uint64_t* getmoduli();
     uint64_t getsecurityBits();
     unsigned short getnbModuli();
     void setsecurityBits(uint64_t security_bits);
-//    virtual void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly, 
-//        int rec_lvl)=0;
-    virtual poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers, 
-        uint64_t dataBitsizePerBuffer, uint64_t &polyNumber)=0;
+    virtual void mulandadd(lwe_cipher rop, lwe_in_data op1, lwe_query op2, uint64_t current_poly,
+        int rec_lvl)=0;
+    virtual poly64* deserializeDataNFL(unsigned char **inArrayOfBuffers, uint64_t nbrOfBuffers,
+        uint64_t dataBitsizePerBuffer, uint64_t &polyNumber,int first_)=0;
 
   protected:
-    NFLlib nflInstance;
+
     uint64_t *moduli;
     uint64_t securityBits;
     unsigned short nbModuli;

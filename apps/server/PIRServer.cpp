@@ -24,7 +24,7 @@
  *		- tcp::endpoint& endpoint_down : download enpoint ;
  *		- tcp::endpoint& endpoint_up   : upload endpoit.
  **/
-PIRServer::PIRServer(boost::asio::io_service &ios, unsigned int port, uint64_t split_value, bool usedbgenerator, uint64_t dbgenerator_n, uint64_t dbgenerator_l) : 
+PIRServer::PIRServer(boost::asio::io_service &ios, unsigned int port, uint64_t split_value, bool usedbgenerator, uint64_t dbgenerator_n, uint64_t dbgenerator_l) :
 	acceptor(ios, tcp::endpoint(tcp::v4(), port)),
   drivenMode(true),
   pirParamsFilePath("exp/PIRParams.cfg"),
@@ -37,7 +37,7 @@ PIRServer::PIRServer(boost::asio::io_service &ios, unsigned int port, uint64_t s
   if (usedbgenerator)
   {
     std::cout << "PIRServer: Launching DBGenerator" << std::endl;
-    dbhandler = new DBGenerator(dbgenerator_n, dbgenerator_l, false); 
+    dbhandler = new DBGenerator(dbgenerator_n, dbgenerator_l, false);
   }
   else if (split_value == 1)
   {
@@ -46,7 +46,7 @@ PIRServer::PIRServer(boost::asio::io_service &ios, unsigned int port, uint64_t s
   }
   else
   {
-    std::cout << "PIRServer: Launching DBDirectoryProcessor with split_value=" << split_value 
+    std::cout << "PIRServer: Launching DBDirectoryProcessor with split_value=" << split_value
       << std::endl;
     dbhandler = new DBDirectoryProcessor(split_value);
   }
@@ -64,7 +64,7 @@ void PIRServer::serve()
 
   if (!drivenMode) new_session->setPIRParams(savedPIRParams);
 
-	acceptor.async_accept(new_session->getSessionSocket(), 
+	acceptor.async_accept(new_session->getSessionSocket(),
     boost::bind( &PIRServer::handleAccept, this, new_session, boost::asio::placeholders::error ));
 }
 
@@ -78,7 +78,7 @@ void PIRServer::processDrivenSession(const std::string & file_path)
 
   // Loop while we get dry-run queries
   PIRSession* session_ptr = new PIRSession(acceptor.get_io_service());
-  do 
+  do
   {
     // Trick to have only one PIRSession at a time ... must be a better way :)
     delete session_ptr;
@@ -87,7 +87,7 @@ void PIRServer::processDrivenSession(const std::string & file_path)
     session_ptr->no_pipeline(no_pipeline_mode);
     acceptor.accept(session_ptr->getSessionSocket());
   }while(session_ptr->start(session_option));
- 
+
   savedPIRParams = session_ptr->getPIRParams();
   session_option.data = session_ptr->getSavedDatabase();
 
@@ -130,5 +130,5 @@ void PIRServer::no_pipeline(bool b)
 
 PIRServer::~PIRServer()
 {
-  delete dbhandler; 
+  delete dbhandler;
 }

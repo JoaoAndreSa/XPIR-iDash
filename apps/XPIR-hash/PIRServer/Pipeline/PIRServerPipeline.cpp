@@ -125,7 +125,7 @@ void PIRServerPipeline::job (){
                 (*m_imported_dbs).clear();
                 std::vector<string> files = Tools::listFilesFolder("db/");
                 for(int i=0;i<files.size();i++){
-                    m_imported_dbs->operator[](files[i]) = XPIRcPipeline::import_database(files[i]);
+                    m_imported_dbs->operator[](files[i]) = XPIRcPipeline::import_database(Constants::num_entries,files[i]);
                 }
                 //0->NO SUCCESS; 1->SUCCESS
                 m_socket.sendInt(1);
@@ -136,11 +136,18 @@ void PIRServerPipeline::job (){
        }else{
             m_socket.sendInt(1);
        }
-    }else{  //#-------QUERYING PHASE--------#
-        char* list = m_socket.readChar(m_socket.readInt());
+    }else{
+        double start_t = omp_get_wtime();
+
+        int length = m_socket.readInt();
+        char* list = m_socket.readChar(length);
         vector<string> list_clients =  Tools::tokenize(string(list),",");
 
         int num_variants = m_socket.readInt();
+
+        double end_t = omp_get_wtime();
+
+        if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(int)+length*sizeof(char)+sizeof(int),end_t-start_t);
 
         for(int k=0;k<list_clients.size();k++){
             DBDirectoryProcessor db(Constants::num_entries,list_clients[k]);
@@ -154,6 +161,7 @@ void PIRServerPipeline::job (){
                 }
 
                 //#-------QUERY PHASE--------#
+                xpir->setRequest(readRequest(xpir->getCrypto()->getCiphertextBytesize()));
                 // This is just a download thread. Reply generation is unlocked (by a mutex) when this thread finishes.
                 boost::thread downThread = boost::thread(&PIRServerPipeline::downloadWorker, this, xpir);      //thread for uploading reply
 
@@ -168,16 +176,18 @@ void PIRServerPipeline::job (){
                     Generate reply once unlocked by the query downloader thread.
                     If we got a preimported database generate reply directly from it.
                 */
+
                 if(Constants::pre_import){
-                    xpir->getRGenerator()->generateReplyGenericFromData(m_imported_dbs->operator[](list_clients[k]));
+                    xpir->getRGenerator()->generateReplyGenericFromData(m_imported_dbs->operator[](list_clients[k]),xpir->getRequest());
                 }else{
-                    xpir->setImportedDB(xpir->getRGenerator()->generateReplyGeneric(false));
+                    xpir->setImportedDB(xpir->getRGenerator()->generateReplyGeneric(false,false,xpir->getRequest()));
                 }
 
                 if(downThread.joinable()) downThread.join();
                 if(upThread.joinable()) upThread.join();
 
                 //#-------CLEANUP PHASE--------#
+                Tools::cleanupVector(xpir->getRequest());
                 xpir->cleanup();
                 delete xpir;
             }

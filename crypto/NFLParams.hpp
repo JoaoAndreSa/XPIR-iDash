@@ -15,8 +15,8 @@
  *  along with XPIR.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARAMS_H
-#define PARAMS_H
+#ifndef PARAMS_H_OLD
+#define PARAMS_H_OLD
 #include <inttypes.h> 
 
 // signed and unsigned 128-bit types

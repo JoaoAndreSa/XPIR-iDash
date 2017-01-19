@@ -35,6 +35,28 @@ void PIRServer::removeDB(){
 }
 
 /**
+    Reads the subtraction element (sub/request) from the client.
+
+    @param size number of bytes of each element in the subtraction element 
+
+    @return subtraction element
+*/
+vector<char*> PIRServer::readRequest(uint64_t size){
+    int request_length = m_socket.readInt();
+
+    vector<char*> request;
+    double start_t = omp_get_wtime();
+    for(int i=0;i<request_length;i++){
+        char* request_part = new char[size];
+        m_socket.readXBytes(size,(void*)request_part);
+        request.push_back(request_part);
+    }
+    double end_t = omp_get_wtime();
+    if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(request_length*size+sizeof(int),end_t-start_t);
+    return request;
+}
+
+/**
     Upload vcf data to be stored by the server
 
     @param
@@ -76,11 +98,11 @@ void PIRServer::downloadData(){
                 total+=end_t-start_t;
 
                 //Create file where entries will be stored
-                Tools::writeToBinFile("db/"+filename,recvBuff,m_max_bytesize),
+                Tools::writeToBinFile("db/"+filename,recvBuff,m_max_bytesize);
                 delete[] recvBuff;
             }
             delete[] filename_c;
-            if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(uint64_t)+sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+sizeof(int)+m_max_bytesize*num_entries,total);
+            if(Constants::bandwith_limit!=0) m_socket.sleepForBytes(sizeof(int)+(filename.length()+1)*sizeof(char)+sizeof(int)+sizeof(int)+sizeof(int)+m_max_bytesize*num_entries,total);
         }catch (std::ios_base::failure &fail){
             Error::error(1,"Error writing DB files");
         }

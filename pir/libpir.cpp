@@ -101,10 +101,10 @@
 		precomputed->beforeImportElementBytesize=bytes_per_db_element;
 		return precomputed;
   }
-	
 
   void PIRReplyGenerator::generateReply(const imported_database* database)
   {
+
     // Init
 		nbRepliesToHandle=0;
 		nbRepliesGenerated=0;
@@ -130,8 +130,40 @@
     
     // Define the reply size
     repliesAmount = computeReplySizeInChunks(database->beforeImportElementBytesize);
-		PIRReplyGeneratorNFL_internal::generateReply();
+	PIRReplyGeneratorNFL_internal::generateReply();
 
+  }
+
+  void PIRReplyGenerator::generateReply(const imported_database* database, std::vector<char*> request)
+  {
+
+    // Init
+		nbRepliesToHandle=0;
+		nbRepliesGenerated=0;
+		currentReply=0;
+    freeResult();
+
+    // Test memory
+		uint64_t usable_memory = getTotalSystemMemory();
+		nbRepliesGenerated=nbRepliesToHandle=computeReplySizeInChunks(database->beforeImportElementBytesize);
+		uint64_t polysize = cryptoMethod->getpolyDegree() * cryptoMethod->getnbModuli()*sizeof(uint64_t);
+		uint64_t sizeOfReply=nbRepliesToHandle*polysize;
+		if(sizeOfReply>usable_memory/10) {
+			std::cerr<<"WARNING: going to use more than one tenth of the available memory for storing the reply"<<std::flush<<std::endl;
+		}
+
+		input_data = (lwe_in_data*) database->imported_database_ptr;
+		currentMaxNbPolys = database->polysPerElement;
+    
+   	// The internal generator is locked by default waiting for the query to be received 
+    // in this API we let the user deal with synchronisation so the lock is not needed
+    PIRReplyGeneratorNFL_internal::mutex.try_lock();
+    PIRReplyGeneratorNFL_internal::mutex.unlock();
+    
+    // Define the reply size
+    repliesAmount = computeReplySizeInChunks(database->beforeImportElementBytesize);
+    lwe_cipher* subtract = PIRReplyGeneratorNFL_internal::charToLWECipher(request);
+	PIRReplyGeneratorNFL_internal::generateReply(subtract);
   }
 
   void PIRReplyGenerator::freeQueries(){
