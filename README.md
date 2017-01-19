@@ -77,24 +77,8 @@ Usage of XPIR as a library:
 Contributors:
 =============
 
-This project has been imported to GitHub once mature enough by Joao Sa Sousa which erased all the possible "blames" attributing to each contributor each line of code. In order to give a fair idea of the line contributions per author, the following command:
-```
-git ls-tree --name-only -z -r HEAD|egrep -z -Z -E '\.(cc|h|cpp|hpp|c|txt)$'  |egrep -z -Z -E -v dependencies|egrep -z -Z -E -v boost|xargs -0 -n1 git blame --line-porcelain|grep "^author "|sort|uniq -c|sort -nr
-```
-which counts the lines by contributor for the initial commit put into GitHub (removing the dependencies directory which does not correspond to code we developed) gave the following output (aggregating aliases) just before transfering the project to GitHub:
-```
-7655 author Carlos Aguilar-Melchor
-5693 author Joris Barrier
-1153 author Marc-Olivier Killijian
-```
-Besides this line counting, the roles were distributed as follows:    
-Carlos Aguilar-Melchor (Associate Professor): co-supervisor, developer    
-Joris Barrier (PhD student): developer    
-Marc-Olivier Killijian (Researcher): co-supervisor, developer    
+This project has been imported to GitHub once mature enough by Joao Sa Sousa.........  
 
 Affiliations:
 =============
-Carlos Aguilar Melchor has been during almost all this project affiliated to the XLIM laboratory in Limoges, he is currently at IRIT laboratory in Toulouse. Joris Barrier and Marc-Olivier Killijian are affiliated to the LAAS-CNRS laboratory in Toulouse. 
-
-The contributors thank Laurent Fousse for his help on evaluating the performance of NTRU.
  
